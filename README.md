@@ -110,3 +110,5 @@ In **Places & addresses**, search an offline street address, select a record, th
 Both launch actions position the car on the nearest mapped drivable road, reset its heading/camera and save the new safe position. The map shows the offset from a tapped point before launch. Floating street labels now include short named streets and repeat along longer streets, with nearby duplicates suppressed. Long names wrap across multiple lines; screen-overlapping labels yield to the nearest street. Unnamed source roads are not assigned invented names.
 
 `tools/build_city.py` regenerates the address index and overview during each city refresh. To regenerate them from an existing tile set: `python3 tools/build_navigation_assets.py`. All map content remains offline and retains OpenStreetMap attribution.
+
+The driving minimap defaults to **Heading up**: streets and the route rotate with the car while its arrow points forward. Tap the button underneath to switch to **North up · locked**, or tap again to follow your heading. The N compass marker always indicates geographic north. This preference is saved on the device; the expanded city-selection map stays north-up.

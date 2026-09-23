@@ -7,6 +7,7 @@ var heading := District.START_HEADING
 var discovered: Array[String] = []
 var muted := false
 var fps := 30
+var north_locked := false
 var last_error := ""
 
 func load_journey() -> void:
@@ -26,6 +27,7 @@ func load_journey() -> void:
 	if data.get("discovered", []) is Array and "sagrada_familia" in data.get("discovered", []):
 		discovered.assign(["sagrada_familia"])
 	muted = data.get("muted", false) == true
+	north_locked = data.get("north_locked", false) == true
 	fps = 60 if data.get("fps", 30) == 60 else 30
 
 func write_journey() -> bool:
@@ -33,7 +35,7 @@ func write_journey() -> bool:
 	if file == null:
 		last_error = "Could not save this journey."
 		return false
-	file.store_string(JSON.stringify({"version": 1, "district": District.ID, "position": [safe_position.x, safe_position.y, safe_position.z], "heading": heading, "discovered": discovered, "muted": muted, "fps": fps}))
+	file.store_string(JSON.stringify({"version": 1, "district": District.ID, "position": [safe_position.x, safe_position.y, safe_position.z], "heading": heading, "discovered": discovered, "muted": muted, "fps": fps, "north_locked": north_locked}))
 	file.close()
 	var result := DirAccess.rename_absolute(path + ".tmp", path)
 	last_error = "" if result == OK else "Could not save this journey."

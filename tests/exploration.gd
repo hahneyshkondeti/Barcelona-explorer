@@ -26,6 +26,25 @@ func run() -> void:
 	game.save.path = "user://exploration_test.json"
 	if FileAccess.file_exists(game.save.path): DirAccess.remove_absolute(game.save.path)
 	root.add_child(game)
+	var original_heading: float = game.car.rotation.y
+	for heading in [0.0, PI * 0.5, PI, -PI * 0.5]:
+		game.car.rotation.y = heading
+		game.hud.map.north_locked = false
+		var ahead: Vector3 = game.car.position - game.car.basis.z * 30
+		var projected: Vector2 = game.hud.map.map_point(ahead) - game.hud.map.size * 0.5
+		game.hud.map.north_locked = true
+		var north: Vector2 = game.hud.map.map_point(game.car.position + Vector3(0, 0, -30)) - game.hud.map.size * 0.5
+		check(absf(projected.x) < 0.01 and projected.y < 0 and absf(north.x) < 0.01 and north.y < 0, "Heading-up and north-up transforms agree at heading %.2f" % heading)
+	game.car.rotation.y = original_heading
+	game.hud.map.north_locked = false
+	game.hud.map_orientation_button.pressed.emit()
+	check(game.hud.map.north_locked and game.save.north_locked and not game.is_paused, "Minimap lock toggles without pausing driving")
+	var settings := SaveStore.new()
+	settings.path = game.save.path
+	settings.load_journey()
+	check(settings.north_locked, "North-lock preference survives save and reload")
+	game.hud.map_orientation_button.pressed.emit()
+	check(not game.hud.map.north_locked, "Tapping the map mode again restores heading-following")
 	game.hud.open_map()
 	await process_frame
 	check(game.is_paused and game.hud.map_overlay.visible, "Expanded map pauses driving")

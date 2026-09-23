@@ -7,6 +7,7 @@ signal camera_requested
 signal destination_requested
 signal sound_requested
 signal fps_requested
+signal map_orientation_requested
 signal place_requested(place: Dictionary)
 signal area_requested(index: int)
 signal start_requested(point: Vector3)
@@ -17,6 +18,7 @@ var car: TouringCar
 var navigation: RoadNavigation
 var root: Control
 var map: MiniMap
+var map_orientation_button: Button
 var speed_label: Label
 var route_label: Label
 var progress_label: Label
@@ -71,8 +73,12 @@ func _ready() -> void:
 	map.car = car
 	map.navigation = navigation
 	place(map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
-	var north := label("N ↑    TAP MAP TO EXPAND", 11)
-	place(north, Vector2(-201, 275), Vector2(184, 24), Vector2(1, 0))
+	map_orientation_button = button("Heading up", map_orientation_requested.emit)
+	map_orientation_button.add_theme_font_size_override("font_size", 14)
+	map_orientation_button.tooltip_text = "Toggle between following the car and locking north at the top"
+	place(map_orientation_button, Vector2(-212, 280), Vector2(184, 48), Vector2(1, 0))
+	var hint := label("TAP MAP TO EXPAND", 11)
+	place(hint, Vector2(-201, 332), Vector2(184, 20), Vector2(1, 0))
 	var expand_map := button("", open_map)
 	place(expand_map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
 	for state in ["normal", "hover", "pressed"]:
@@ -278,6 +284,7 @@ func refresh(discovered: bool, muted: bool, fps: int) -> void:
 			route_label.text = "No permitted route inside this map extract"
 		elif car.position.distance_to(navigation.destination) < 15:
 			route_label.text = "Destination nearby · slow to a stop"
+	map_orientation_button.text = "North up · locked" if map.north_locked else "Heading up"
 	map.queue_redraw()
 
 func build_credits() -> void:

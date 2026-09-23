@@ -3,6 +3,7 @@ extends Control
 
 var car: TouringCar
 var navigation: RoadNavigation
+var north_locked := false
 const RANGE := 190.0
 var cached_cell := Vector2i(99999, 99999)
 var nearby: Dictionary = {}
@@ -13,9 +14,12 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = true
 
+func orientation_angle() -> float:
+	return 0.0 if north_locked or not is_instance_valid(car) else car.rotation.y
+
 func map_point(point: Vector3) -> Vector2:
 	var center := car.global_position if is_instance_valid(car) else District.START
-	return Vector2(point.x - center.x, point.z - center.z) / (RANGE * 2) * size + size * 0.5
+	return Vector2(point.x - center.x, point.z - center.z).rotated(orientation_angle()) / (RANGE * 2) * size + size * 0.5
 
 func _draw() -> void:
 	draw_style_box(background, Rect2(Vector2.ZERO, size))
@@ -47,8 +51,12 @@ func _draw() -> void:
 		draw_circle(marker, 5, Color("f6cf79"))
 	var arrow := PackedVector2Array()
 	for v in [Vector2(0, -7), Vector2(-5, 5), Vector2(5, 5)]:
-		arrow.append(size * 0.5 + v.rotated(-car.rotation.y))
+		arrow.append(size * 0.5 + v.rotated(-car.rotation.y + orientation_angle()))
 	draw_colored_polygon(arrow, Color("fff9e8"))
+	var north := Vector2(0, -1).rotated(orientation_angle())
+	var compass := size * 0.5 + north * (minf(size.x, size.y) * 0.5 - 15)
+	draw_circle(compass, 10, Color("233d40"))
+	draw_string(ThemeDB.fallback_font, compass + Vector2(-5, 5), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("fff9e8"))
 
 func panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

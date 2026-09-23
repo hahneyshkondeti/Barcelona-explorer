@@ -55,6 +55,8 @@ func _ready() -> void:
 	hud.destination_requested.connect(select_destination)
 	hud.sound_requested.connect(toggle_sound)
 	hud.fps_requested.connect(toggle_fps)
+	hud.map.north_locked = save.north_locked
+	hud.map_orientation_requested.connect(toggle_map_orientation)
 	hud.continue_requested.connect(close_card)
 	update_route()
 
@@ -141,6 +143,12 @@ func close_card() -> void:
 func toggle_sound() -> void:
 	save.muted = not save.muted
 	audio.muted = save.muted
+	persist()
+
+func toggle_map_orientation() -> void:
+	save.north_locked = not save.north_locked
+	hud.map.north_locked = save.north_locked
+	hud.refresh(landmarks.discovered, save.muted, save.fps)
 	persist()
 
 func toggle_fps() -> void:
