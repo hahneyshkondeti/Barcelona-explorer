@@ -21,6 +21,8 @@ CI also runs automatically for code pushes and pull requests. Pull requests neve
 
 ## Later: signed archive or upload
 
+The GitHub `app-store` environment is already created and restricted to the `main` branch; no Apple credentials have been added.
+
 Create/register the matching App ID and App Store Connect app record in your Apple account. Make an Apple Distribution certificate (export as password-protected `.p12` with its private key) and an App Store provisioning profile for that exact ID and certificate. Store these as GitHub **app-store environment secrets** (repository secrets are also accepted):
 
 | Secret | Value |
@@ -32,7 +34,7 @@ Create/register the matching App ID and App Store Connect app record in your App
 | `ASC_KEY_ID` | API key ID, upload mode only |
 | `ASC_ISSUER_ID` | API issuer ID, upload mode only |
 
-Do not commit these files or paste values into chat. On macOS, `base64 -i /path/to/file | pbcopy` copies a file's encoded content for the GitHub secret field. The API key must have access to upload this app. Configure the `app-store` environment to allow `main` deployments and, if desired, require your review.
+Do not commit these files or paste values into chat. On macOS, `base64 -i /path/to/file | pbcopy` copies a file's encoded content for the GitHub secret field. The API key must have access to upload this app. The environment allows `main` deployments; you can optionally require your review before signing.
 
 Run Actions → iOS build → `archive` to obtain a signed IPA. Choose `upload` only when ready to send the build to App Store Connect/TestFlight. The signing script validates profile identity, expiry and distribution type, creates a temporary keychain, archives/exports with manual signing, and removes signing files afterward. It does not create certificates or accept account agreements.
 
@@ -49,3 +51,7 @@ Required device checks: first launch in airplane mode, a 15-minute drive through
 No accounts, analytics, advertisements, runtime network calls, GPS or external SDKs are used by game scripts. Local saves contain virtual car position, discoveries and settings. The export declares no tracking/collected data; engine required-reason API declarations cover app-container file metadata, on-device time measurement and local file writing. Reassess privacy declarations when adding SDKs or network services.
 
 Sources: [Godot iOS export](https://docs.godotengine.org/en/4.5/tutorials/export/exporting_for_ios.html), [GitHub Xcode signing](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications), [Apple SDK requirements](https://developer.apple.com/news/upcoming-requirements/), [Apple upload workflow](https://developer.apple.com/help/app-store-connect/manage-builds/upload-builds).
+
+## Verified build
+
+The unsigned iPhone compile and exported-app checks passed in [GitHub run 35929020609](https://github.com/hahneyshkondeti/Barcelona-explorer/actions/runs/35929020609), using source commit `b5ac516`. Download **Brisa-Xcode-2** from that run's Artifacts section (about 160 MB compressed; expires after 7 days). This contains the exported project for local signing. No signing or App Store upload was performed.

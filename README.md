@@ -91,7 +91,7 @@ The product target remains **iPhone 11 / A13, iOS 16+, landscape, 30 FPS**, with
 5. Export, open the generated Xcode project, choose the signing team and connected iPhone, enable Developer Mode if required, then build/run.
 6. Verify airplane-mode launch, district jumps, a continuous drive across tiles, safe areas, physical touch input, app backgrounding and memory/thermal behavior.
 
-Only Command Line Tools were available during development; no signed IPA, TestFlight release or physical iPhone test is claimed. A successful Godot PCK export is a resource bundle, not an iOS executable.
+Only Command Line Tools are installed locally. GitHub has now compiled an unsigned physical-iPhone app and packaged its Xcode project; no signed IPA, TestFlight release or physical iPhone test is claimed. A successful Godot PCK export is a resource bundle, not an iOS executable.
 
 ## Verification and next work
 
