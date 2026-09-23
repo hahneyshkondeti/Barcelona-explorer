@@ -18,6 +18,10 @@ The controller test validates the first trip, not every intersection, turn restr
 godot --headless --path . --script tests/handling.gd
 ```
 
+## Future building-asset integration
+
+Eleven checks in `tests/building_assets.gd` pass with an actual imported original glTF fixture: placement transforms, source credits, visual replacement without removing collision, missing/invalid assets, unknown or overlapping footprint IDs, mobile fallback and schema rejection. The production manifest is empty. The full 29-check gameplay suite passes with the adapter enabled. No real scan, scan alignment or scan performance is claimed.
+
 ## Municipal tree verification
 
 Six checks in `tests/check_trees.py` passed: preserved coordinates, distinct IDs/provenance, park-only OSM fallback with municipal deduplication, reproducible source transformation, rejected invalid input and count consistency. The full 29-check scene suite passes with the new tree layer. Desktop captures were refreshed; the older `*-mobile.png` captures document the previous OSM-only tree layer. Tree shapes and heights remain illustrative and no field/photo verification has been performed.

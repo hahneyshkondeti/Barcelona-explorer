@@ -8,6 +8,8 @@
 | Plaster004 color, OpenGL normal, roughness, 1K JPG | https://ambientcg.com/view?id=Plaster004 | CC0 1.0; https://docs.ambientcg.com/license/ |
 | Asphalt030 color, OpenGL normal, roughness, 1K JPG | https://ambientcg.com/view?id=Asphalt030 | CC0 1.0; generic 2.2 m scanned asphalt surface |
 | Façade details, windows, balconies, estimated storefront appearance, car, tower interpretation, trees, interface, road shaders | Original procedural game assets | Original project material; appearance does not establish real-building fidelity |
+| glTF integration test triangle | Original fixture under `assets/buildings/_test_only/` | Original project test geometry; excluded from iOS export |
+| Future imported buildings | `data/building_assets.json` (currently empty) | Each entry must carry its own source/license/attribution; no licensed scans currently bundled |
 | Engine sound | Original synthesis | No sampled commercial audio |
 | Default font and Godot runtime | Godot 4.5 | MIT and bundled third-party font/component notices; shown in Credits & licenses |
 | Landmark facts | Official Basilica history and columns articles | Facts summarized in original wording; no images or models taken |

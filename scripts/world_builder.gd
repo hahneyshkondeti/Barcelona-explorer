@@ -3,6 +3,7 @@ extends Node3D
 
 static var materials: Dictionary = {}
 var batches: Dictionary = {}
+var building_assets := BuildingAssets.new()
 var surfaces: Dictionary = {}
 var route_root: Node3D
 var landmark_beacon: MeshInstance3D
@@ -87,6 +88,10 @@ func _ready() -> void:
 		flat_polygon(park.ring, 0.06, material(Color("5c7050")))
 	for road in District.DATA.roads:
 		build_road(road)
+	var manifest = JSON.parse_string(FileAccess.get_file_as_string("res://data/building_assets.json"))
+	building_assets.install(self, manifest, District.DATA.buildings, RenderingServer.get_current_rendering_method() == "mobile")
+	for issue in building_assets.issues:
+		push_warning(issue)
 	for building in District.DATA.buildings:
 		build_building(building)
 	if not wall_faces.is_empty():
@@ -101,7 +106,12 @@ func _ready() -> void:
 		wall_faces.clear()
 	for tree in District.TREE_DATA.trees:
 		build_tree(District.vector(tree.point, 0), tree)
-	build_landmark()
+	var replace_landmark := false
+	for building in District.DATA.buildings:
+		if building.landmark and building_assets.replaced.has(building.id):
+			replace_landmark = true
+	if not replace_landmark:
+		build_landmark()
 	build_addresses()
 	build_shop_signs()
 	build_boundary()
@@ -221,6 +231,7 @@ func flat_polygon(coords: Array, y: float, mat: Material) -> void:
 		st.add_vertex(Vector3(polygon[i].x, y, polygon[i].y))
 
 func build_building(building: Dictionary) -> void:
+	var custom_visual := building_assets.replaced.has(building.id)
 	var height: float = building.height
 	var mat: ShaderMaterial = plaster[abs(hash(building.id)) % plaster.size()]
 	for ring_data in building.rings:
@@ -235,8 +246,11 @@ func build_building(building: Dictionary) -> void:
 			if length < 0.1:
 				continue
 			var up := Vector3.UP * height
-			quad(surface(a, mat), a, b, b + up, a + up, length, height)
+			if not custom_visual:
+				quad(surface(a, mat), a, b, b + up, a + up, length, height)
 			wall_faces.append_array(PackedVector3Array([a, b, b + up, a, b + up, a + up]))
+			if custom_visual:
+				continue
 			var heading := atan2(-(b - a).z, (b - a).x)
 			instance_box(Vector3(length, 0.32, 0.45), (a + b) / 2 + Vector3.UP * height, heading, Color("b9b2a2"), false)
 			if ring_data != building.rings[0] or length < 3 or building.landmark:
@@ -250,7 +264,7 @@ func build_building(building: Dictionary) -> void:
 			if nearest.distance < 32:
 				facade(a, b, normal, height, heading, hash(building.id))
 	# Preserve courtyard openings rather than covering them with a false solid roof.
-	if building.rings.size() == 1:
+	if not custom_visual and building.rings.size() == 1:
 		flat_polygon(building.rings[0], height + 0.1, material(Color("80796c")))
 
 func facade(a: Vector3, b: Vector3, normal: Vector3, height: float, heading: float, seed_value: int) -> void:

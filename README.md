@@ -42,6 +42,10 @@ Handling uses progressive throttle, tighter low-speed turns, speed-sensitive ste
 
 The north-up minimap uses real geometry and follows the car. Multi-touch driving, pause, audio, 30/60 FPS caps and local saves remain. The previous fictional map's save is invalidated by the new district ID rather than restoring its coordinates into an unrelated map.
 
+## Future building scans
+
+A replacement adapter is ready for local imported GLB/glTF or static Godot scenes. The empty `data/building_assets.json` manifest can assign assets to real building IDs with geographic placement, an optional mobile variant, and source/license credits. Invalid or missing assets retain procedural buildings; successful replacements retain map collision. See [the integration contract and workflow](docs/BUILDING_ASSETS.md). No scan source is currently required or included.
+
 ## Tree placement
 
 Street trunks now use **2,154 records from Barcelona City Council’s street-tree inventory**, preserving their WGS84 coordinates without random placement or snapping to approximate road edges. The game also retains 225 OSM trees inside mapped parks, suppressing four park points within three metres of municipal trees. The old OSM street-tree layer is no longer rendered alongside the municipal layer.

@@ -48,3 +48,18 @@ RESULT: 11 handling checks, 0 failures
 
 Municipal tree checks: python3 tests/check_trees.py
 Ran 6 tests: OK
+
+Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
+
+PASS: Imported glTF replaces the selected footprint
+PASS: Geographic anchor, elevation, orientation and scale are applied
+PASS: Successful assets expose source credits
+PASS: Replacement keeps footprint collision and suppresses procedural visual geometry
+PASS: Missing model preserves fallback and clears prior installed instance
+PASS: Invalid transform cannot hide a building
+PASS: Missing license metadata preserves fallback
+PASS: Unknown footprint IDs are rejected
+PASS: Overlapping replacements are rejected
+PASS: Missing mobile variant falls back rather than loading desktop geometry
+PASS: Unknown manifest version preserves fallback
+RESULT: 11 asset integration checks, 0 failures
