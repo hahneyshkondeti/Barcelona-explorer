@@ -21,10 +21,10 @@ This is geographic expansion, **not a photorealistic or survey-complete digital 
 
 Install [Godot 4.5 stable](https://godotengine.org/download/archive/4.5-stable/), import `project.godot`, and press **F5**. Initial startup now parses a city-wide routing/places index and builds nearby geometry; allow more startup time than the original district prototype.
 
-Development engine on this Mac (temporary installation):
+Development engine on this Mac (installed in Applications):
 
 ```sh
-/tmp/barcelona-godot/Godot.app/Contents/MacOS/Godot --path /Users/hahneyshkondeti/Documents/ChatGPT/Explorer
+/Applications/Godot.app/Contents/MacOS/Godot --path /Users/hahneyshkondeti/Documents/ChatGPT/Explorer
 ```
 
 | Control | Action |
