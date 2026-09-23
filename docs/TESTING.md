@@ -44,3 +44,20 @@ The global routing/places index remains in memory. Nearby geometry generation/JS
 Terrain/coastline, grade-separated roads and surveyed collision shapes are incomplete. Tunnels and nonzero road layers are excluded; private/pedestrian-only and disconnected roads are not routed. Full road-law compliance, every intersection, every street and every municipal boundary segment have not been playtested. Large imported scans still need alignment checks and mobile optimization.
 
 Physical-device acceptance still requires full Xcode, Godot iOS templates and signing, then safe-area/touch tests, app interruptions, airplane-mode cold launch, save recovery, long drives across tile boundaries, repeated district jumps, sound, memory pressure and thermal profiling. The iPhone 11/iOS 16/30 FPS baseline remains an unverified target.
+
+## Streaming optimization — 24 September 2026
+
+Local regression suites passed: 29 gameplay, 42 city, 11 handling, 11 future-building-asset integration, 10 streaming/navigation and 8 Python city-data checks (111 total). Import completed successfully after correcting shader resource ownership. The new streaming test covers interruption by recovery and preserves collision geometry. The city test's immediate teardown while a background coroutine was pending emitted an exit-only ObjectDB warning; the actual rendered benchmark drains pending tiles before teardown and exits cleanly.
+
+A single controlled before/after rendered drive on Apple M2 Pro, Godot 4.5, desktop Forward+ / Metal, 1280×720, 60 FPS cap: 120 stationary warm-up frames then 720 frames accelerating along the introductory road and crossing a streaming boundary. Previous code: `6a27cf8`; optimized code: `efac21b`. Both use the same offline map and rendering configuration. This measures frame intervals, including rendering and scheduling, not just geometry CPU time.
+
+| Frame measure | Previous | Optimized |
+| --- | ---: | ---: |
+| Median | 16.653 ms | 16.642 ms |
+| 95th percentile | 29.070 ms | 28.130 ms |
+| 99th percentile | 184.355 ms | 31.683 ms |
+| Maximum | 329.098 ms | 93.089 ms |
+| Frames over 50 ms | 13 | 2 |
+| Frames over 100 ms | 13 | 0 |
+
+Reproduce with `Godot --path . --script tools/benchmark_drive.gd` using a graphical session; never use `--headless` for this frame comparison. It uses a disposable save and does not overwrite the player's journey. Close other running game instances first. These are one-run desktop measurements, not a comprehensive benchmark or an iPhone FPS guarantee. The remaining stalls, initial city index load, synchronous district jumps, JSON decoding and individual physics/mesh uploads still need device profiling. The 2.5 ms construction budget is cooperative, not a hard frame-time ceiling.

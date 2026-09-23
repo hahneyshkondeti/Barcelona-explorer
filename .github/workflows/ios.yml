@@ -18,6 +18,22 @@ concurrency:
   group: ios-${{ github.ref }}-${{ inputs.mode || 'unsigned' }}
   cancel-in-progress: ${{ inputs.mode != 'upload' }}
 jobs:
+  tests:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install verified Godot editor
+        run: bash tools/ci/install_godot.sh editor
+      - name: Import and test
+        run: |
+          Godot --headless --editor --import --quit
+          python3 tests/check_city.py
+          for test in handling smoke city building_assets performance; do
+            Godot --headless --script "tests/$test.gd"
+          done
   validate:
     runs-on: macos-26
     timeout-minutes: 40
@@ -27,13 +43,8 @@ jobs:
           persist-credentials: false
       - name: Install verified Godot and iOS templates
         run: bash tools/ci/install_godot.sh
-      - name: Import and test
-        run: |
-          Godot --headless --editor --import --quit
-          python3 tests/check_city.py
-          for test in handling smoke city building_assets performance; do
-            Godot --headless --script "tests/$test.gd"
-          done
+      - name: Import mobile textures
+        run: Godot --headless --editor --import --quit
       - name: Check supported SDK
         run: |
           xcodebuild -version
@@ -56,7 +67,7 @@ jobs:
           retention-days: 7
   release:
     if: github.event_name == 'workflow_dispatch' && inputs.mode != 'unsigned' && github.ref == 'refs/heads/main'
-    needs: validate
+    needs: [tests, validate]
     runs-on: macos-26
     timeout-minutes: 30
     environment: app-store

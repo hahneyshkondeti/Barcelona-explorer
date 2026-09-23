@@ -44,6 +44,10 @@ func run() -> void:
 		if game.world.stream_center != before: break
 	check(game.world.stream_center != before and game.car.position.y > -1, "Physical driving crosses a streaming boundary without falling")
 	DirAccess.remove_absolute(game.save.path)
+	# Drain background work before tearing down its coroutine owners.
+	game.world.stream_at(game.car.position, true)
+	await process_frame
+	await process_frame
 	game.queue_free()
 	await process_frame
 	District.tile_cache.clear()
