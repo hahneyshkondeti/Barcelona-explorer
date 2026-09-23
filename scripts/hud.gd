@@ -364,6 +364,8 @@ func filter_places() -> void:
 	for record in filtered_places:
 		var text := "%s  ·  %s %s" % [record.name, record.street, record.number]
 		if record.category.begins_with("Recorded address"): text = record.name + "  ·  " + record.category
+		if record.category.begins_with("Metro") or record.category == "Bus stop":
+			text = "%s · %s %s" % [record.name, record.category, record.get("ref", "")]
 		if record.get("suggested", false): text = "Suggested: " + text
 		places_list.add_item(text)
 	if filtered_places.is_empty(): places_info.text = "No recorded match. Try the street name without a number, or choose a starting point on the city map."
@@ -373,7 +375,7 @@ func select_place(index: int) -> void:
 	selected_place = filtered_places[index]
 	var p := selected_place
 	var address := "%s %s" % [p.street, p.number] if not p.street.is_empty() and not p.number.is_empty() else "Full street address not recorded"
-	places_info.text = "%s · %s\n%s\nOSM %s · edited %s\nSurvey/check date: %s · Storefront appearance is illustrative" % [p.name, p.category, address, p.id, p.timestamp.left(10), p.check_date if not p.check_date.is_empty() else "not recorded"]
+	places_info.text = "%s · %s\n%s\nOSM %s · edited %s\nSurvey/check date: %s · Appearance is illustrative" % [p.name, p.category, address, p.id, p.timestamp.left(10), p.check_date if not p.check_date.is_empty() else "not recorded"]
 	route_place_button.disabled = false
 	start_place_button.disabled = false
 	places_info.text += "\nStart here places your car on the nearest drivable road. Address ranges retain the source location."

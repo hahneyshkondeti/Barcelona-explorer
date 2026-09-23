@@ -16,10 +16,19 @@ static var road_cells: Dictionary = {}
 static var tile_cache: Dictionary = {}
 static var CELL := 192.0
 static var AREAS: Array = []
+static var INFRASTRUCTURE: Dictionary = {}
+static var TRANSIT: Array = []
 
 static func _static_init() -> void:
 	DATA = JSON.parse_string(FileAccess.get_file_as_string("res://data/city/manifest.json"))
+	INFRASTRUCTURE = JSON.parse_string(FileAccess.get_file_as_string("res://data/city/infrastructure.json"))
+	for records in INFRASTRUCTURE.cells.values():
+		for record in records:
+			if record.kind in ["metro_station", "metro_entrance", "bus_stop"]: TRANSIT.append(record)
 	AREAS = JSON.parse_string(FileAccess.get_file_as_string("res://data/city/areas.json"))
+	for key in INFRASTRUCTURE.cells:
+		if not DATA.tile_dependencies.has(key): DATA.tile_dependencies[key] = []
+		if key not in DATA.tile_dependencies[key]: DATA.tile_dependencies[key].append(key)
 	TREE_DATA = {"metadata": DATA.tree_metadata, "trees": []}
 	START = vector(DATA.start)
 	START_HEADING = float(DATA.start_heading)
@@ -96,13 +105,18 @@ static func needed_tiles(point: Vector3, radius: int) -> Dictionary:
 
 static func tile(key: String) -> Dictionary:
 	if not tile_cache.has(key):
-		tile_cache[key] = JSON.parse_string(FileAccess.get_file_as_string(DATA.tiles[key]))
+		if DATA.tiles.has(key):
+			tile_cache[key] = JSON.parse_string(FileAccess.get_file_as_string(DATA.tiles[key]))
+		else:
+			tile_cache[key] = {"roads":[], "buildings":[], "trees":[], "parks":[], "addresses":[], "places":[]}
+		tile_cache[key]["infrastructure"] = INFRASTRUCTURE.cells.get(key, [])
 	return tile_cache[key]
 
 static func nearby_features(point: Vector3, radius: int = 1) -> Dictionary:
-	var result := {"roads":[],"buildings":[]}
+	var result := {"roads":[],"buildings":[],"infrastructure":[]}
 	for key in needed_tiles(point, radius):
 		var data := tile(key)
 		result.roads.append_array(data.roads)
 		result.buildings.append_array(data.buildings)
+		result.infrastructure.append_array(data.infrastructure)
 	return result

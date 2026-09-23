@@ -112,3 +112,15 @@ Both launch actions position the car on the nearest mapped drivable road, reset 
 `tools/build_city.py` regenerates the address index and overview during each city refresh. To regenerate them from an existing tile set: `python3 tools/build_navigation_assets.py`. All map content remains offline and retains OpenStreetMap attribution.
 
 The driving minimap defaults to **Heading up**: streets and the route rotate with the car while its arrow points forward. Tap the button underneath to switch to **North up · locked**, or tap again to follow your heading. The N compass marker always indicates geographic north. This preference is saved on the device; the expanded city-selection map stays north-up.
+
+## Metro, bus stops and traffic signs
+
+The offline city now includes **461 mapped metro entrances**, **174 metro station records**, **3,772 bus stops**, **8,205 traffic-signal records**, **725 stop controls**, **1,427 yield controls**, and **594 other mapped signs** from the existing OSM snapshot. Counts cover the city bounding envelope, including neighboring fringe, and are not a guarantee of every real-world installation. Station records can represent individual line platforms rather than unique named interchanges.
+
+- Metro entrances have original red M markers; bus stops have blue BUS poles and recorded names/references. Shelters and benches appear only where those attributes are recorded, with estimated geometry.
+- Search **Metro Sagrada Família**, **Bus stop**, or a stop name under **Places and addresses**, then route or start on the nearest drivable road. Nearby transit appears on the minimap. On the enlarged map, zoom in for M metro markers and further for B bus stops.
+- Station centers are map/search markers only: no invented surface entrance or underground interior is created there.
+- Stop, yield, speed and no-entry signs have distinct simplified graphics. Unsupported sign codes use a neutral plaque displaying the source code. Traffic lights have static, unlit lenses; traffic phases and enforcement are not simulated.
+- Original coordinates are preserved. Control nodes mapped on the roadway are offset to an estimated roadside for rendering, with this approximation recorded separately. Sign orientation, pole dimensions and shelters are illustrative. Furniture is streamed and batched, has distance-limited labels, and has no additional collision bodies.
+
+Rebuild these records with `python3 tools/build_infrastructure.py`. The full-city refresh pipeline also rebuilds them automatically from its new dated source snapshot. No runtime service or API key is needed.

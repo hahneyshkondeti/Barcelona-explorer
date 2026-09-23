@@ -43,6 +43,11 @@ func _draw() -> void:
 		var b := map_point(District.vector(road.b))
 		if a.distance_to(size * 0.5) < size.x or b.distance_to(size * 0.5) < size.x:
 			draw_line(a, b, Color("8d9890") if road.drivable else Color("587069"), maxf(1, road.width * size.x / (RANGE * 2)), true)
+	for record in nearby.get("infrastructure", []):
+		if record.kind not in ["metro_station", "metro_entrance", "bus_stop"]: continue
+		var marker := map_point(District.vector(record.point))
+		if not Rect2(Vector2(5, 5), size - Vector2(10, 10)).has_point(marker): continue
+		draw_circle(marker, 3, Color("6abde3") if record.kind == "bus_stop" else Color("f17c75"))
 	if navigation != null and navigation.active:
 		for i in range(1, navigation.points.size()):
 			draw_line(map_point(navigation.points[i - 1]), map_point(navigation.points[i]), Color("f6cf79"), 2, true)

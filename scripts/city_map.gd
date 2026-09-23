@@ -107,6 +107,16 @@ func _draw() -> void:
 		for area in District.AREAS:
 			var at := BuildingAssets.anchor_position(area.lonlat[0], area.lonlat[1], 0)
 			draw_string(ThemeDB.fallback_font, map_point(at), area.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("fff3d4"))
+	if zoom >= 5:
+		for record in District.TRANSIT:
+			if record.kind == "bus_stop" and zoom < 12: continue
+			if record.kind == "metro_entrance" and zoom < 20: continue
+			var marker := map_point(District.vector(record.point))
+			if not Rect2(Vector2(8, 8), size - Vector2(16, 16)).has_point(marker): continue
+			var metro: bool = record.kind != "bus_stop"
+			draw_circle(marker, 6, Color("bf413c") if metro else Color("24617b"))
+			draw_string(ThemeDB.fallback_font, marker + Vector2(-4, 4), "M" if metro else "B", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+		draw_string(ThemeDB.fallback_font, Vector2(12, size.y - 12), "M  Metro    B  Bus stop · mapped locations", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("fff3d4"))
 	if is_instance_valid(car): draw_circle(map_point(car.position), 6, Color("fff9e8"))
 	if navigation != null and navigation.active: draw_circle(map_point(navigation.destination), 6, Color("f6cf79"))
 	if selected.is_finite():

@@ -62,6 +62,21 @@ class CityChecks(unittest.TestCase):
     def test_refresh_rejects_coverage_change(self):
         self.assertTrue(flags(M,dict(M,bbox_lonlat=[0,0,1,1])))
         self.assertEqual(flags(M,M),[])
+    def test_infrastructure_integrity(self):
+        data=json.loads((args.city/'infrastructure.json').read_text())
+        counts=collections.Counter(); seen=set(); lo,hi=M['bounds']
+        for cell,records in data['cells'].items():
+            for r in records:
+                self.assertNotIn(r['id'],seen);seen.add(r['id']);counts[r['kind']]+=1
+                x,z=r['point'];self.assertTrue(lo[0]<=x<=hi[0] and lo[1]<=z<=hi[1])
+                self.assertEqual(cell,f'{math.floor(x/M["cell_size"])}:{math.floor(z/M["cell_size"])}')
+                self.assertTrue(all(math.isfinite(v) for v in r['render_point']))
+                if r['kind'] in ('metro_entrance','bus_stop','metro_station'): self.assertEqual(r['point'],r['render_point'])
+        self.assertEqual(dict(counts),data['metadata']['counts'])
+        self.assertEqual(data['metadata']['retrieved_at'],M['metadata']['retrieved_at'])
+        self.assertGreater(counts['metro_entrance'],300);self.assertGreater(counts['bus_stop'],2000)
+        self.assertEqual(data['metadata']['license'],'ODbL-1.0')
+
     def test_preserved_intro_location(self):
         pilot=json.loads((ROOT/'data/eixample.json').read_text())
         self.assertEqual(M['origin_lonlat'],pilot['origin_lonlat'])

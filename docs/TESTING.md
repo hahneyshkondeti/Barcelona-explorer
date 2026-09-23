@@ -73,3 +73,9 @@ Actual rendered UI captures: `expanded-map.png`, `expanded-map-detail.png`, `add
 ## Minimap orientation
 
 The exploration suite now passes 24 checks, including heading-up and north-up transforms at all four cardinal headings, switching mode without pausing, and saved north-lock preference restoration. In heading-up mode all map geometry, route points and destination markers use the same rotation; the car arrow stays forward and N indicates geographic north. The expanded selection map remains north-up. Saves without the new optional `north_locked` field default to heading-up.
+
+### Transit and traffic furniture
+
+`python3 tests/check_infrastructure.py` checks transit tag semantics, source-coordinate preservation, stop-area names, polygon/pole deduplication, envelope filtering, and estimated roadside offsets. `tests/check_city.py` validates every shipped infrastructure record and its cell ownership. `Godot --headless --script tests/infrastructure.gd` checks runtime tile attachment, transit search, geometry reuse, bounded labels, and the absence of fabricated entrances at underground station centers. CI runs these alongside the existing driving/exploration suites.
+
+Current local checks: 10 city data checks, 2 importer fixture tests, 14 infrastructure checks, 24 exploration checks, 10 streaming/performance checks, and 42 full-city checks pass (102 total). These are functional checks, not a physical-iPhone FPS measurement.

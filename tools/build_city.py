@@ -119,6 +119,8 @@ if __name__=='__main__':
     records.extend(park)
     trees={'trees':records,'metadata':{'municipal_street_trees':len(selected),'osm_park_trees':len(park),'retrieved_at':args.tree_retrieved_at or json.loads((ROOT/'data/trees.json').read_text())['metadata']['retrieved_at'],'attribution':'Ajuntament de Barcelona / Open Data BCN — CC BY 4.0; park fallback © OpenStreetMap contributors — ODbL 1.0','coverage':'Municipal street trees and mapped OSM park-tree fallback citywide'}}
     pack(data,trees,rings,args.output)
+    from build_infrastructure import build as build_infrastructure
+    build_infrastructure(args.source,args.output)
     groups=collections.defaultdict(list)
     for row in selected:
         if row['codi_districte']:

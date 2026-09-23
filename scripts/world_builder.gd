@@ -171,6 +171,14 @@ func _ready() -> void:
 				return
 			slice_started = Time.get_ticks_usec()
 		build_tree(District.vector(tree.point, 0), tree)
+	for record in features.get("infrastructure", []):
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired:
+				queue_free()
+				return
+			slice_started = Time.get_ticks_usec()
+		StreetFurniture.build(self, record)
 	await build_addresses()
 	if retired:
 		queue_free()

@@ -60,6 +60,14 @@ func search(query: String, limit: int = 300) -> Array:
 						item.suggested = fuzzy
 						results.append(item)
 						if results.size() >= limit: return results
+	for record in District.TRANSIT:
+		var category := "Bus stop" if record.kind == "bus_stop" else ("Metro entrance" if record.kind == "metro_entrance" else "Metro station")
+		var title: String = record.name if not str(record.name).is_empty() else record.station_name
+		if title.is_empty(): title = category
+		var text := normalize("%s %s %s %s" % [category, title, record.ref, record.station_name])
+		if words_match(tokens, text) and (number.is_empty() or number == str(record.ref)):
+			results.append({"id":record.id, "name":title, "category":category, "point":record.point, "street":"", "number":"", "timestamp":record.timestamp, "check_date":record.tags.get("check_date", ""), "ref":record.ref})
+			if results.size() >= limit: return results
 	for item in District.DATA.places:
 		var text := normalize("%s %s %s" % [item.name, item.street, item.number])
 		if words_match(tokens, text) and (number.is_empty() or number_matches(number, item.number)):
