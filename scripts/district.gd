@@ -5,6 +5,7 @@ const ID := "sagrada_osm_v2"
 const TITLE := "Sagrada Família"
 const DESCRIPTION := "Antoni Gaudí transformed this basilica into a forest of branching columns, sculpted façades and soaring towers. Construction began in 1882. Its architecture draws on nature, geometry and light.\n\nYou are at its mapped Barcelona location. Streets and footprints come from OpenStreetMap. The basilica's upper structure and façade details remain illustrative models, not a photographic reconstruction."
 static var DATA: Dictionary = {}
+static var TREE_DATA: Dictionary = {}
 static var START := Vector3.ZERO
 static var START_HEADING := 0.0
 static var DESTINATION := Vector3.ZERO
@@ -14,6 +15,7 @@ static var ROAD_SEGMENTS: Array = []
 
 static func _static_init() -> void:
 	DATA = JSON.parse_string(FileAccess.get_file_as_string("res://data/eixample.json"))
+	TREE_DATA = JSON.parse_string(FileAccess.get_file_as_string("res://data/trees.json"))
 	START = vector(DATA.start)
 	START_HEADING = float(DATA.start_heading)
 	DESTINATION = vector(DATA.destination)

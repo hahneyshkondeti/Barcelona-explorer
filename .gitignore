@@ -9,3 +9,5 @@ export_credentials.cfg
 __pycache__/
 data/.refresh/
 data/source/*.csv*
+
+!data/source/street_trees.csv.gz

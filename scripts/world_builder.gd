@@ -99,8 +99,8 @@ func _ready() -> void:
 		collider.add_child(shape)
 		add_child(collider)
 		wall_faces.clear()
-	for p in District.DATA.trees:
-		build_tree(District.vector(p, 0))
+	for tree in District.TREE_DATA.trees:
+		build_tree(District.vector(tree.point, 0), tree)
 	build_landmark()
 	build_addresses()
 	build_shop_signs()
@@ -303,7 +303,15 @@ func instance(mesh: Mesh, transform: Transform3D, color: Color, detail: bool) ->
 	transform.origin -= batches[key].origin
 	batches[key].transforms.append(transform)
 
-func build_tree(at: Vector3) -> void:
+func build_tree(at: Vector3, record: Dictionary = {}) -> void:
+	# Trunk remains at the recorded coordinate. Species appearance is illustrative.
+	if record.get("form", "broadleaf") == "palm":
+		instance_box(Vector3(0.42, 8, 0.42), at + Vector3.UP * 4, 0, Color("746b55"), false)
+		for frond in 10:
+			var angle := frond * TAU / 10.0
+			var offset := Vector3(cos(angle), 0, -sin(angle))
+			instance_box(Vector3(3.5, 0.12, 0.65), at + Vector3.UP * 7.7 + offset * 1.5, angle, Color("536345"), false)
+		return
 	instance_box(Vector3(0.35, 5.5, 0.35), at + Vector3.UP * 2.75, 0.35, Color("5e5849"), false)
 	var variation := absf(sin(at.x * 17.3 + at.z * 8.1))
 	for i in 19:

@@ -45,3 +45,6 @@ PASS: Reverse steering turns in the opposite direction
 PASS: Both pedals stop the car without changing direction
 PASS: Handling remains consistent across 30/60/120 Hz steps
 RESULT: 11 handling checks, 0 failures
+
+Municipal tree checks: python3 tests/check_trees.py
+Ran 6 tests: OK

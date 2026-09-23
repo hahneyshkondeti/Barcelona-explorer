@@ -8,7 +8,7 @@ An offline Godot 4.5 driving prototype using **real OpenStreetMap roads, buildin
 
 The current bounded pilot covers **about 0.72 km² around Sagrada Família**, not all of Eixample. Source coordinates and street names are retained, projected into metres with east = +X and north = −Z. The road graph respects imported one-way tags and excludes pedestrian-only/private roads from routing. Road surfaces also display mapped paths.
 
-The snapshot contains 1,048 building records, 540 shops/cafés/restaurants and other selected places, 1,667 address records, 1,021 tree points and seven parks. **292 places have both a street and house number recorded.** Unknown address fields remain unknown. The 2,930 rendered road/path segments include 616 routable segments; they are not 2,930 distinct streets. 800 building heights are based on OSM height or floor-count tags; floor counts are converted using an estimated floor height.
+The snapshot contains 1,048 building records, 540 shops/cafés/restaurants and other selected places, 1,667 address records, 1,021 original OSM tree points and seven parks. **292 places have both a street and house number recorded.** Unknown address fields remain unknown. The 2,930 rendered road/path segments include 616 routable segments; they are not 2,930 distinct streets. 800 building heights are based on OSM height or floor-count tags; floor counts are converted using an estimated floor height.
 
 This is **not a photorealistic digital twin or a live city feed**. Detailed façades, balconies, storefront appearance, missing heights, lane widths/markings, kerbs and street furniture are generated estimates. Sagrada Família occupies its mapped location/footprint but its upper structure is still an illustrative model. Terrain is flat. Shop names and addresses are source records, not independently verified current tenants. Some record edits are years old; a fresh download is not a fresh survey. Turn-restriction relations, traffic laws/signals, real pavement elevations, complex roofs and surveyed building interiors are not implemented.
 
@@ -42,6 +42,14 @@ Handling uses progressive throttle, tighter low-speed turns, speed-sensitive ste
 
 The north-up minimap uses real geometry and follows the car. Multi-touch driving, pause, audio, 30/60 FPS caps and local saves remain. The previous fictional map's save is invalidated by the new district ID rather than restoring its coordinates into an unrelated map.
 
+## Tree placement
+
+Street trunks now use **2,154 records from Barcelona City Council’s street-tree inventory**, preserving their WGS84 coordinates without random placement or snapping to approximate road edges. The game also retains 225 OSM trees inside mapped parks, suppressing four park points within three metres of municipal trees. The old OSM street-tree layer is no longer rendered alongside the municipal layer.
+
+`data/trees.json` retains inventory IDs, species, addresses and available planting dates. Palms use a separate illustrative form. Heights, canopy sizes and seasonal appearance remain estimates; the snapshot is not a field survey or a guarantee of current tree condition. Road widths and sidewalk edges are still estimated, so apparent pavement conflicts must be corrected using surveyed street geometry rather than moving recorded trees.
+
+Source: [Ajuntament de Barcelona / Open Data BCN](https://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari), CC BY 4.0. The bounded source CSV and attribution are included.
+
 ## Refresh roughly weekly
 
 Run from the repository using Python 3 and system `curl`; there are no Python package dependencies or API keys.
@@ -51,7 +59,11 @@ python3 tools/refresh_map.py --check
 python3 tools/refresh_map.py --download
 python3 tests/check_map.py --candidate data/.refresh/eixample.json
 python3 tools/refresh_map.py --apply
+python3 tools/refresh_trees.py --download
+python3 tests/check_trees.py
 ```
+
+Tree refresh is separate: it downloads the official street inventory, validates columns, finite coordinates, unique IDs and coverage, clips it to the pilot, and replaces the offline tree layer. A count change over 30% is rejected for review. Run it after map refresh so park fallback reflects the updated map. `python3 tools/refresh_trees.py` rebuilds from the included bounded CSV without downloading.
 
 `--check` is offline and reports whether the snapshot is at least seven days old. `--download` makes one bounded OSM API request and stages the result. It does not alter the working map. `--apply` rebuilds from the staged source, verifies consistency, rejects large unexpected coverage/count changes, retains the previous JSON, and atomically replaces the runtime JSON. If a step fails, keep the current snapshot and inspect the reported failure. Reopen the desktop game after an update.
 

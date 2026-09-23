@@ -18,6 +18,10 @@ The controller test validates the first trip, not every intersection, turn restr
 godot --headless --path . --script tests/handling.gd
 ```
 
+## Municipal tree verification
+
+Six checks in `tests/check_trees.py` passed: preserved coordinates, distinct IDs/provenance, park-only OSM fallback with municipal deduplication, reproducible source transformation, rejected invalid input and count consistency. The full 29-check scene suite passes with the new tree layer. Desktop captures were refreshed; the older `*-mobile.png` captures document the previous OSM-only tree layer. Tree shapes and heights remain illustrative and no field/photo verification has been performed.
+
 ## Data and refresh
 
 `tests/check_map.py` validates real street names, per-place geographic projection, finite building rings/heights, connected routing nodes/edges, honest partial-address counts, presence of one-way data, projection scale, rejection of a truncated refresh, acceptance of unchanged geometry and reproducibility from the included source extract.
