@@ -9,6 +9,7 @@ PASS: Right steering changes heading correctly
 PASS: Left steering changes heading correctly
 PASS: Imported building wall has a collision surface
 PASS: Driving into a mapped façade is stopped by collision
+PASS: Wall impact removes stored forward speed
 PASS: Chase camera shortens against mapped façade
 PASS: Snapshot boundary prevents escape
 PASS: Ground and chase camera remain stable
@@ -28,4 +29,19 @@ PASS: Save reload restores real-map safe position and discovery
 PASS: Sound and frame-cap settings persist
 PASS: Recovery returns invalid position to a mapped road
 PASS: Malformed save falls back to correct map spawn
-RESULT: 28 checks, 0 failures
+RESULT: 29 checks, 0 failures
+
+Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
+
+PASS: Steering at rest cannot rotate the car
+PASS: Throttle ramps smoothly from rest
+PASS: Slow-speed steering allows tight city turns
+PASS: Full steering at speed stays within lateral acceleration budget
+PASS: Releasing steering settles back to straight driving
+PASS: Full braking stops from cruising speed within 16 metres
+PASS: Holding brake briefly after stopping does not reverse
+PASS: Continued brake hold engages bounded reverse
+PASS: Reverse steering turns in the opposite direction
+PASS: Both pedals stop the car without changing direction
+PASS: Handling remains consistent across 30/60/120 Hz steps
+RESULT: 11 handling checks, 0 failures

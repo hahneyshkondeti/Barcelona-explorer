@@ -1,6 +1,6 @@
 # Real-map verification — 2026-09-23
 
-Godot 4.5 stable (`876b29033`), macOS on Apple M2 Pro; Forward+ and Mobile renderer paths exercised with Metal 3.2. **28 gameplay/geometry checks and 10 map/import/refresh checks passed.** This is desktop validation; no iOS build or device performance benchmark is claimed.
+Godot 4.5 stable (`876b29033`), macOS on Apple M2 Pro; Forward+ and Mobile renderer paths exercised with Metal 3.2. **29 gameplay/geometry checks, 11 handling checks and 10 map/import/refresh checks passed.** This is desktop validation; no iOS build or device performance benchmark is claimed.
 
 ## Gameplay
 
@@ -9,6 +9,14 @@ Godot 4.5 stable (`876b29033`), macOS on Apple M2 Pro; Forward+ and Mobile rende
 The end-to-end test drives the real car from the mapped start along Carrer de Mallorca to the Sagrada Família arrival point using a steering/throttle controller. It does not teleport to complete arrival. It verifies the discovery card, continue exploring, offline street-name search, provenance dates, nonmutating place filtering, selected-place routing, save restoration, settings, safe-road recovery and malformed-save fallback. Test saves are isolated from the player save. Headless audio generation is disabled; audio settings are still tested.
 
 The controller test validates the first trip, not every intersection, turn restriction or possible collision. Physical iPhone multitouch, audio output and interruptions remain untested. Directions respect one-way tags, but imported turn-restriction relations and live traffic restrictions are not implemented.
+
+## Handling refinement
+
+`tests/handling.gd` exercises the controller at 30/60/120 Hz: stationary steering, progressive takeoff, tight low-speed turning, bounded lateral acceleration at cruising speed, recentering, braking distance, the delay before reverse, reverse steering and both-pedal braking. The full scene test additionally checks that a wall impact removes stored speed and still completes the physical drive to the landmark. These are automated behavior checks, not a subjective playtest or a real-vehicle simulation claim.
+
+```sh
+godot --headless --path . --script tests/handling.gd
+```
 
 ## Data and refresh
 

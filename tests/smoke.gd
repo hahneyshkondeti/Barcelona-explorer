@@ -78,6 +78,7 @@ func run() -> void:
 			await physics_frame
 			contact = contact or car.collided
 		check(contact and (car.position - hit.position).dot(hit.normal) > 0, "Driving into a mapped façade is stopped by collision")
+		check(absf(car.speed) < 1.5, "Wall impact removes stored forward speed")
 		game.controls.throttle = 0
 		car.speed = 0
 		car.velocity = Vector3.ZERO

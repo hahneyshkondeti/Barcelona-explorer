@@ -38,6 +38,8 @@ Temporary development engine (not bundled or guaranteed to survive reboot):
 | P / Escape / Pause | Pause/resume |
 | Places & addresses | Search place/name/street/house number; inspect source dates; route nearby |
 
+Handling uses progressive throttle, tighter low-speed turns, speed-sensitive steering with a lateral-acceleration limit, smoother recentering, and subtle body lean. Brake stops forward motion; keep holding for 0.35 seconds at rest to engage reverse (capped at 18 km/h). Holding both pedals stops the car. Wall impacts remove stored forward speed.
+
 The north-up minimap uses real geometry and follows the car. Multi-touch driving, pause, audio, 30/60 FPS caps and local saves remain. The previous fictional map's save is invalidated by the new district ID rather than restoring its coordinates into an unrelated map.
 
 ## Refresh roughly weekly
