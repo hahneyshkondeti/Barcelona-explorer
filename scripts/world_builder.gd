@@ -28,6 +28,7 @@ var asphalt: ShaderMaterial
 var plaster: Array[ShaderMaterial] = []
 var leaves: SphereMesh
 var street_signs: Array[Label3D] = []
+var street_label_timer := 0.2
 const CHUNK := 100.0
 
 static func material(color: Color) -> StandardMaterial3D:
@@ -249,10 +250,53 @@ func stream_at(point: Vector3, immediate: bool = false) -> void:
 			load_chunk(key)
 		pending_chunks.clear()
 
-func _process(_delta: float) -> void:
-	if is_chunk or pending_chunks.is_empty(): return
+func _process(delta: float) -> void:
+	if is_chunk: return
+	street_label_timer += delta
+	if street_label_timer >= 0.2:
+		refresh_street_labels()
+		street_label_timer = 0
+	if pending_chunks.is_empty(): return
 	if is_instance_valid(active_chunk) and not active_chunk.build_complete: return
 	load_chunk(pending_chunks.pop_front(), true)
+
+func refresh_street_labels() -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null: return
+	var nearest := {}
+	for chunk in loaded_chunks.values():
+		for sign: Label3D in chunk.street_signs:
+			sign.visible = false
+			if camera.is_position_behind(sign.global_position): continue
+			var distance := stream_position.distance_squared_to(sign.global_position)
+			if distance > 55.0 * 55.0: continue
+			var street_name: String = sign.get_meta("street_name", sign.text)
+			if not nearest.has(street_name) or distance < nearest[street_name].distance:
+				nearest[street_name] = {"sign": sign, "distance": distance}
+	var candidates := nearest.values()
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary): return a.distance < b.distance)
+	var occupied: Array[Rect2] = []
+	var viewport := get_viewport().get_visible_rect()
+	for candidate in candidates:
+		var sign: Label3D = candidate.sign
+		var at := camera.unproject_position(sign.global_position)
+		var top := camera.unproject_position(sign.global_position + Vector3.UP * sign.font_size * sign.pixel_size)
+		var height := maxf(0.1, at.distance_to(top))
+		var readable_height := clampf(height, 14, 24)
+		sign.scale = Vector3.ONE * (readable_height / height)
+		height = readable_height
+		var lines := sign.text.split("\n")
+		var longest := 0
+		for line in lines: longest = maxi(longest, line.length())
+		var extent := Vector2(longest * height * 0.65, height * (lines.size() + 0.5))
+		var rect := Rect2(at - extent * 0.5, extent).grow(5)
+		if not viewport.intersects(rect): continue
+		var crowded := false
+		for existing in occupied:
+			if existing.intersects(rect): crowded = true; break
+		if crowded: continue
+		sign.visible = true
+		occupied.append(rect)
 
 func build_lighting() -> void:
 	var environment := WorldEnvironment.new()
@@ -494,6 +538,17 @@ func build_landmark() -> void:
 	box(self, Vector3(1.2, 12, 1.2), center + Vector3.UP * 161, Color("ddd7bf"))
 	box(self, Vector3(8, 1.2, 1.2), center + Vector3.UP * 164, Color("ddd7bf"))
 
+static func wrap_street_name(street_name: String) -> String:
+	var lines: Array[String] = []
+	var line := ""
+	for word in street_name.split(" ", false):
+		if not line.is_empty() and line.length() + word.length() + 1 > 22:
+			lines.append(line)
+			line = ""
+		line += (" " if not line.is_empty() else "") + word
+	if not line.is_empty(): lines.append(line)
+	return "\n".join(lines)
+
 func build_addresses() -> void:
 	# Ground-level plaques display supplied address tags only. Missing fields stay missing.
 	for address in features.addresses:
@@ -540,15 +595,18 @@ func build_addresses() -> void:
 			if crowded: continue
 			named_positions[street_name].append(at)
 			var sign := Label3D.new()
-			sign.text = street_name
+			sign.text = wrap_street_name(street_name)
+			sign.set_meta("street_name", street_name)
 			sign.font_size = 32
-			sign.pixel_size = 0.025
+			sign.pixel_size = 0.012
 			sign.modulate = Color("dedbd0")
 			sign.outline_modulate = Color("252e30")
 			sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 			sign.visibility_range_end = 55
 			add_child(sign)
 			sign.position = at + Vector3.UP * 4
+			sign.visible = false
+			street_signs.append(sign)
 
 func build_boundary() -> void:
 	var rect := District.BOUNDS

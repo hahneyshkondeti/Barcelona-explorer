@@ -58,8 +58,30 @@ func run() -> void:
 	var old: Vector3 = game.car.position
 	game.start_at(Vector3.INF)
 	check(game.car.position == old, "Invalid launch coordinates cannot move the car")
+	var wrapped := WorldBuilder.wrap_street_name("Carrer de Gretel Ammann Martínez")
+	check("\n" in wrapped and wrapped.replace("\n", " ") == "Carrer de Gretel Ammann Martínez", "Long street labels wrap without dropping any part of the name")
+	var covered := true
+	for chunk in game.world.loaded_chunks.values():
+		var names := {}
+		for sign in chunk.street_signs: names[sign.get_meta("street_name", sign.text)] = true
+		for road in chunk.features.roads:
+			if road.name != "Unnamed mapped way" and not str(road.name).strip_edges().is_empty():
+				covered = covered and names.has(road.name)
+	check(covered, "Every named street in loaded tiles has a label, including short segments")
+	game.world.refresh_street_labels()
+	var visible_names := {}
+	var unique := true
+	for chunk in game.world.loaded_chunks.values():
+		for sign in chunk.street_signs:
+			if sign.visible:
+				unique = unique and not visible_names.has(sign.text)
+				visible_names[sign.get_meta("street_name", sign.text)] = true
+	check(unique, "Floating labels suppress same-street repeats across tile boundaries")
 	# Capture the actual interfaces when run with -- --capture.
 	if "--capture" in OS.get_cmdline_user_args():
+		await create_timer(0.3).timeout
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://docs/street-labels.png")
 		game.hud.open_map()
 		await process_frame
 		await RenderingServer.frame_post_draw
