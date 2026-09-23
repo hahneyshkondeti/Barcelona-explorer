@@ -46,7 +46,7 @@ Progressive acceleration, speed-sensitive steering, reverse delay, collision res
 
 `data/city/manifest.json` holds the city-wide connected road graph, places, footprint identifiers and tile index. Geometry, addresses, parks and trees live in 192 m spatial tiles. The loader keeps a nearby 5×5 cell neighborhood plus ownership dependencies, so a building spanning tile edges is loaded once rather than cut or duplicated. Immediate neighboring collision tiles are loaded before movement enters them; farther tiles are added one per frame. Old tiles and cached payloads are released as the car travels. District jumps load their neighborhood before resuming driving.
 
-The global routing/places index remains resident. Geometry generation and JSON loading are still on the main thread, so startup, tile crossings and district jumps can hitch. This is bounded local geometry loading, not a completed iPhone memory/frame-time optimization. The 30 FPS iPhone target is unverified at city scale.
+The global routing/places index remains resident. Background geometry construction yields between small batches with a 2.5 ms target budget; route refreshes reuse the directed path while following it. Materials are shared across tiles and small facade details do not cast shadows. JSON parsing, collision creation and individual mesh uploads remain indivisible main-thread work. Startup, recovery and district jumps load collision-critical geometry synchronously and can still pause. The 30 FPS iPhone target is unverified at city scale.
 
 Desktop uses Forward+ (Metal on macOS), SSAO, MSAA and TAA. iOS uses Mobile without desktop-only SSAO/TAA. Imported detail uses distance cutoffs and shared meshes/materials. `--rendering-method gl_compatibility` is a desktop fallback. A frame-rate cap is not a quality preset or a performance guarantee.
 
@@ -96,3 +96,7 @@ Only Command Line Tools were available during development; no signed IPA, TestFl
 ## Verification and next work
 
 See [test details](docs/TESTING.md). Cross-city routing and streaming are tested in addition to the original sightseeing loop. The next priorities are device profiling, smoother asynchronous tile generation, terrain/coastline, grade-separated roads, and building-specific visual assets when licensed sources become available.
+
+## GitHub iOS builds and later App Store upload
+
+See [docs/APP_STORE.md](docs/APP_STORE.md). Every code push runs gameplay/data checks and an unsigned physical-iPhone Xcode build. Manual signed archive/upload modes are prepared but require Apple signing secrets. Public App Store submission is separate and currently parked.

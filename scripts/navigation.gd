@@ -8,6 +8,8 @@ var destination_name := District.TITLE
 var reachable := true
 var graph := AStar3D.new()
 var ids: Dictionary = {}
+var routed_destination := Vector3.INF
+var search_count := 0
 
 func _init() -> void:
 	for key in District.DATA.graph.nodes:
@@ -23,10 +25,34 @@ func _init() -> void:
 			graph.connect_points(a, b, edge[2] == 0)
 
 func route(from: Vector3) -> PackedVector3Array:
+	# Trim the existing directed route while following it; search again after a
+	# deviation or destination change. Only consider nearby progress, not later
+	# crossings of the same road in a long route.
+	if active and destination == routed_destination and points.size() > 1:
+		var travelled := 0.0
+		var closest := INF
+		var segment := -1
+		var projected := Vector3.ZERO
+		for i in range(1, points.size()):
+			var q := Geometry3D.get_closest_point_to_segment(from, points[i - 1], points[i])
+			var distance := from.distance_to(q)
+			if distance < closest:
+				closest = distance
+				segment = i
+				projected = q
+			travelled += points[i - 1].distance_to(points[i])
+			if travelled > 160: break
+		if closest < 8.0:
+			var remaining := PackedVector3Array([projected])
+			remaining.append_array(points.slice(segment))
+			points = remaining
+			return points
 	points.clear()
 	reachable = true
 	if not active:
 		return points
+	routed_destination = destination
+	search_count += 1
 	var start := District.nearest_segment(from)
 	var finish := District.nearest_segment(destination)
 	var sr: Dictionary = start.road

@@ -4,6 +4,9 @@ extends Control
 var car: TouringCar
 var navigation: RoadNavigation
 const RANGE := 190.0
+var cached_cell := Vector2i(99999, 99999)
+var nearby: Dictionary = {}
+var background := panel_style()
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(184, 184)
@@ -15,10 +18,13 @@ func map_point(point: Vector3) -> Vector2:
 	return Vector2(point.x - center.x, point.z - center.z) / (RANGE * 2) * size + size * 0.5
 
 func _draw() -> void:
-	draw_style_box(panel_style(), Rect2(Vector2.ZERO, size))
+	draw_style_box(background, Rect2(Vector2.ZERO, size))
 	if not is_instance_valid(car):
 		return
-	var nearby := District.nearby_features(car.global_position)
+	var cell := Vector2i(floori(car.global_position.x / District.CELL), floori(car.global_position.z / District.CELL))
+	if cell != cached_cell:
+		cached_cell = cell
+		nearby = District.nearby_features(car.global_position)
 	for building in nearby.buildings:
 		var p := District.vector(building.rings[0][0])
 		if p.distance_to(car.global_position) > RANGE * 1.7:

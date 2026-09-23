@@ -13,3 +13,10 @@ data/source/*.csv*
 !data/source/street_trees.csv.gz
 
 !data/source/city_street_trees.csv.gz
+
+# Local Finder/iCloud duplicate; never bundle or commit it.
+data/city 2/
+# Signing material belongs in GitHub secrets / the system keychain.
+*.p12
+*.p8
+*.mobileprovision

@@ -3,8 +3,15 @@ extends Node3D
 
 static var materials: Dictionary = {}
 var batches: Dictionary = {}
+var shared_shaders: Dictionary = {}
 var building_assets := BuildingAssets.new()
 var is_chunk := false
+var incremental := false
+var retired := false
+var build_complete := false
+var slice_started := 0
+var active_chunk: WorldBuilder
+const BUILD_BUDGET_USEC := 2500
 var features: Dictionary = {}
 var loaded_chunks: Dictionary = {}
 var pending_chunks: Array = []
@@ -66,7 +73,8 @@ func solid_box(size: Vector3, at: Vector3, color: Color) -> void:
 	add_child(collider)
 	collider.position = at
 
-func _ready() -> void:
+func prepare_materials() -> void:
+	if asphalt != null: return
 	unit_box.size = Vector3.ONE
 	leaves = SphereMesh.new()
 	leaves.radial_segments = 8
@@ -87,6 +95,9 @@ func _ready() -> void:
 		mat.set_shader_parameter("plaster_normal", load("res://assets/materials/plaster/Plaster004_1K-JPG_NormalGL.jpg"))
 		mat.set_shader_parameter("plaster_roughness", load("res://assets/materials/plaster/Plaster004_1K-JPG_Roughness.jpg"))
 		plaster.append(mat)
+
+func _ready() -> void:
+	prepare_materials()
 	if not is_chunk:
 		build_lighting()
 		var bounds := District.BOUNDS.grow(20)
@@ -113,10 +124,34 @@ func _ready() -> void:
 		add_child(landmark_beacon)
 		landmark_beacon.position = District.DESTINATION + Vector3.UP * 0.05
 		return
+	slice_started = Time.get_ticks_usec()
 	for park in features.parks:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired:
+				queue_free()
+				return
+			slice_started = Time.get_ticks_usec()
 		flat_polygon(park.ring, 0.06, material(Color("5c7050")))
-	for road in features.roads: build_road(road)
-	for building in features.buildings: build_building(building)
+	for road in features.roads:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired:
+				queue_free()
+				return
+			slice_started = Time.get_ticks_usec()
+		build_road(road)
+	for building in features.buildings:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired:
+				queue_free()
+				return
+			slice_started = Time.get_ticks_usec()
+		await build_building(building)
+		if retired:
+			queue_free()
+			return
 	if not wall_faces.is_empty():
 		var collider := StaticBody3D.new()
 		var shape := CollisionShape3D.new()
@@ -128,19 +163,59 @@ func _ready() -> void:
 		add_child(collider)
 		wall_faces.clear()
 	for tree in features.trees:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired:
+				queue_free()
+				return
+			slice_started = Time.get_ticks_usec()
 		build_tree(District.vector(tree.point, 0), tree)
-	build_addresses()
-	build_shop_signs()
-	flush_surfaces()
-	flush_batches()
+	await build_addresses()
+	if retired:
+		queue_free()
+		return
+	await build_shop_signs()
+	if retired:
+		queue_free()
+		return
+	await flush_surfaces()
+	if retired:
+		queue_free()
+		return
+	await flush_batches()
+	if retired:
+		queue_free()
+		return
+	build_complete = true
 
-func load_chunk(key: String) -> void:
+func retire() -> void:
+	# Suspended builders must unwind before freeing their coroutine state.
+	retired = true
+	visible = false
+	for child in get_children():
+		if child is StaticBody3D: child.collision_layer = 0
+	if build_complete: queue_free()
+
+func budget_expired() -> bool:
+	if Time.get_ticks_usec() - slice_started < BUILD_BUDGET_USEC: return false
+	slice_started = Time.get_ticks_usec()
+	return true
+
+func load_chunk(key: String, background: bool = false) -> void:
 	if loaded_chunks.has(key): return
 	var chunk := WorldBuilder.new()
 	chunk.is_chunk = true
+	chunk.incremental = background
 	chunk.features = District.tile(key)
 	chunk.building_assets = building_assets
+	chunk.unit_box = unit_box
+	chunk.leaves = leaves
+	chunk.asphalt = asphalt
+	chunk.pavement = pavement
+	chunk.plaster = plaster
+	chunk.shared_shaders = shared_shaders
 	loaded_chunks[key] = chunk
+	if background: active_chunk = chunk
 	add_child(chunk)
 
 func stream_at(point: Vector3, immediate: bool = false) -> void:
@@ -152,21 +227,32 @@ func stream_at(point: Vector3, immediate: bool = false) -> void:
 		desired_chunks = District.needed_tiles(point, 2)
 		pending_chunks.clear()
 		# Near collision tiles are ready before motion/recovery can enter them.
-		for key in District.needed_tiles(point, 1): load_chunk(key)
+		for key in District.needed_tiles(point, 1):
+			# Complete collision-critical tiles before the car can enter them.
+			if loaded_chunks.has(key) and not loaded_chunks[key].build_complete:
+				loaded_chunks[key].retire()
+				loaded_chunks.erase(key)
+			load_chunk(key)
 		for key in desired_chunks:
 			if not loaded_chunks.has(key): pending_chunks.append(key)
 		for key in loaded_chunks.keys():
 			if not desired_chunks.has(key):
-				loaded_chunks[key].queue_free()
+				loaded_chunks[key].retire()
 				loaded_chunks.erase(key)
 		for key in District.tile_cache.keys():
 			if not desired_chunks.has(key): District.tile_cache.erase(key)
 	if immediate:
-		for key in pending_chunks: load_chunk(key)
+		for key in desired_chunks:
+			if loaded_chunks.has(key) and not loaded_chunks[key].build_complete:
+				loaded_chunks[key].retire()
+				loaded_chunks.erase(key)
+			load_chunk(key)
 		pending_chunks.clear()
 
 func _process(_delta: float) -> void:
-	if not is_chunk and not pending_chunks.is_empty(): load_chunk(pending_chunks.pop_front())
+	if is_chunk or pending_chunks.is_empty(): return
+	if is_instance_valid(active_chunk) and not active_chunk.build_complete: return
+	load_chunk(pending_chunks.pop_front(), true)
 
 func build_lighting() -> void:
 	var environment := WorldEnvironment.new()
@@ -280,6 +366,10 @@ func build_building(building: Dictionary) -> void:
 			ring.append(Vector2(p[0], p[1]))
 		var clockwise := Geometry2D.is_polygon_clockwise(ring)
 		for i in ring.size():
+			if incremental and budget_expired():
+				await get_tree().process_frame
+				if retired: return
+				slice_started = Time.get_ticks_usec()
 			var a := Vector3(ring[i].x, 0.1, ring[i].y)
 			var b := Vector3(ring[(i + 1) % ring.size()].x, 0.1, ring[(i + 1) % ring.size()].y)
 			var length := a.distance_to(b)
@@ -302,7 +392,7 @@ func build_building(building: Dictionary) -> void:
 			if normal.dot(nearest.point - mid) < 0:
 				normal = -normal
 			if nearest.distance < 32:
-				facade(a, b, normal, height, heading, hash(building.id))
+				await facade(a, b, normal, height, heading, hash(building.id))
 	# Preserve courtyard openings rather than covering them with a false solid roof.
 	if not custom_visual and building.rings.size() == 1:
 		flat_polygon(building.rings[0], height + 0.1, material(Color("80796c")))
@@ -319,6 +409,10 @@ func facade(a: Vector3, b: Vector3, normal: Vector3, height: float, heading: flo
 	for edge in [0.12, length - 0.12]:
 		instance_box(Vector3(0.24, height - 0.5, 0.18), a + tangent * edge + Vector3.UP * height * 0.5 + normal * 0.07, heading, stone, true)
 	for j in columns:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired: return
+			slice_started = Time.get_ticks_usec()
 		var center := a.lerp(b, (j + 0.5) / columns) + normal * 0.09
 		var awning_color := Color("4f5b51") if posmod(seed_value, 2) == 0 else Color("776052")
 		instance_box(Vector3(minf(2.6, length / columns - 0.35), 2.6, 0.12), center + Vector3.UP * 1.55, heading, Color("303b3b"), true)
@@ -403,6 +497,10 @@ func build_landmark() -> void:
 func build_addresses() -> void:
 	# Ground-level plaques display supplied address tags only. Missing fields stay missing.
 	for address in features.addresses:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired: return
+			slice_started = Time.get_ticks_usec()
 		if address.street.is_empty():
 			continue
 		var at := District.vector(address.point, 2.5)
@@ -443,6 +541,10 @@ func build_boundary() -> void:
 
 func flush_surfaces() -> void:
 	for st in surfaces.values():
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired: return
+			slice_started = Time.get_ticks_usec()
 		st.generate_normals()
 		st.generate_tangents()
 		var node := MeshInstance3D.new()
@@ -452,6 +554,10 @@ func flush_surfaces() -> void:
 
 func flush_batches() -> void:
 	for batch in batches.values():
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired: return
+			slice_started = Time.get_ticks_usec()
 		var multi := MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D
 		multi.mesh = batch.mesh
@@ -462,14 +568,21 @@ func flush_batches() -> void:
 		node.multimesh = multi
 		node.material_override = material(batch.color)
 		if batch.color == Color("344044") or batch.color == Color("303b3b"):
-			var glass := ShaderMaterial.new()
-			glass.shader = load("res://assets/shaders/glass.gdshader")
-			node.material_override = glass
+			if not shared_shaders.has("glass"):
+				var glass := ShaderMaterial.new()
+				glass.shader = load("res://assets/shaders/glass.gdshader")
+				shared_shaders["glass"] = glass
+			node.material_override = shared_shaders.glass
 		if batch.mesh == leaves:
-			var foliage := ShaderMaterial.new()
-			foliage.shader = load("res://assets/shaders/foliage.gdshader")
-			foliage.set_shader_parameter("leaf_color", batch.color)
-			node.material_override = foliage
+			var key: String = "foliage:" + batch.color.to_html()
+			if not shared_shaders.has(key):
+				var foliage := ShaderMaterial.new()
+				foliage.shader = load("res://assets/shaders/foliage.gdshader")
+				foliage.set_shader_parameter("leaf_color", batch.color)
+				shared_shaders[key] = foliage
+			node.material_override = shared_shaders[key]
+		if batch.detail:
+			node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		node.position = batch.origin
 		node.visibility_range_end = 180 if batch.detail else 420
 		node.visibility_range_end_margin = 20
@@ -492,6 +605,10 @@ func update_route(points: PackedVector3Array) -> void:
 
 func build_shop_signs() -> void:
 	for shop in features.places:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired: return
+			slice_started = Time.get_ticks_usec()
 		if shop.name.begins_with("Unnamed"):
 			continue
 		var at := District.vector(shop.point, 3.4)

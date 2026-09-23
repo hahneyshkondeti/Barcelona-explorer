@@ -1,0 +1,86 @@
+name: iOS build
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**.md']
+  pull_request:
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Build only, signed IPA, or explicit upload to App Store Connect
+        type: choice
+        options: [unsigned, archive, upload]
+        default: unsigned
+permissions:
+  contents: read
+concurrency:
+  group: ios-${{ github.ref }}-${{ inputs.mode || 'unsigned' }}
+  cancel-in-progress: ${{ inputs.mode != 'upload' }}
+jobs:
+  validate:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install verified Godot and iOS templates
+        run: bash tools/ci/install_godot.sh
+      - name: Import and test
+        run: |
+          Godot --headless --editor --import --quit
+          python3 tests/check_city.py
+          for test in handling smoke city building_assets performance; do
+            Godot --headless --script "tests/$test.gd"
+          done
+      - name: Check supported SDK
+        run: |
+          xcodebuild -version
+          python3 -c 'import subprocess; assert int(subprocess.check_output(["xcrun", "--sdk", "iphoneos", "--show-sdk-version"]).decode().split(".")[0]) >= 26'
+      - name: Export and compile for physical iPhone without signing
+        env:
+          BRISA_BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          Godot --headless --script tools/ci/export_ios.gd
+          mkdir -p build/ios
+          Godot --headless --export-release iOS build/ios/Brisa.ipa
+          xcodebuild -project build/ios/Brisa.xcodeproj -scheme Brisa -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
+          python3 tools/ci/check_ios.py build/ios build/DerivedData/Build/Products/Release-iphoneos/Brisa.app
+      - name: Package Xcode project for local signing
+        run: ditto -c -k --keepParent build/ios build/Brisa-Xcode.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Brisa-Xcode-${{ github.run_number }}
+          path: build/Brisa-Xcode.zip
+          retention-days: 7
+  release:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode != 'unsigned' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: macos-26
+    timeout-minutes: 30
+    environment: app-store
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: Brisa-Xcode-${{ github.run_number }}
+          path: build
+      - run: ditto -x -k build/Brisa-Xcode.zip build
+      - name: Sign, archive and optionally upload
+        env:
+          RELEASE_MODE: ${{ inputs.mode }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: python3 tools/ci/release_ios.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Brisa-IPA-${{ github.run_number }}
+          path: build/ipa/*.ipa
+          retention-days: 7
