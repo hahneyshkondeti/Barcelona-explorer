@@ -10,7 +10,7 @@ The JSON contract uses geographic anchors, metres, explicit footprint IDs and so
 2. Convert raw scans/point clouds into a cleaned, textured static mesh using an external asset tool. Crop away roads, trees, cars and neighboring buildings unless those building footprints are intentionally included. Raw LiDAR, point clouds, photographs and remote 3D Tiles services are not direct inputs to this adapter.
 3. Export glTF 2.0 (`.glb` recommended, or `.gltf` plus local dependencies) in metres, Y-up, with a known ground-level pivot. Place it under `assets/buildings/<asset-id>/`. Import it in Godot before running/exporting. Imported `.tscn`/`.scn` static scenes are also accepted. Scene nodes must be static Node3D/MeshInstance3D nodes, with at least one mesh; scripts, lights, cameras, physics and animation nodes are rejected. Wrap or clean the imported scene accordingly.
 4. Prepare a lower-detail mobile scene and assign `mobile_scene` when needed. Decimate geometry, generate mesh LODs with Godot's import settings, simplify materials, and budget textures on the target phone. The adapter supplies a visibility cutoff but does not generate mobile-quality assets or certify frame rate.
-5. Add an entry to the manifest using real IDs from `data/eixample.json`. One asset can replace multiple footprint IDs. One footprint can belong to only one successfully loaded replacement.
+5. Add an entry to the manifest using real IDs from `data/city/manifest.json`. One asset can replace multiple footprint IDs. One footprint can belong to only one successfully loaded replacement.
 
 ## Manifest format
 

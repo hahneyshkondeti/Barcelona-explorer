@@ -1,59 +1,46 @@
-# Real-map verification — 2026-09-23
+# Barcelona city verification — 2026-09-23
 
-Godot 4.5 stable (`876b29033`), macOS on Apple M2 Pro; Forward+ and Mobile renderer paths exercised with Metal 3.2. **29 gameplay/geometry checks, 11 handling checks and 10 map/import/refresh checks passed.** This is desktop validation; no iOS build or device performance benchmark is claimed.
+Godot 4.5 stable (`876b29033`) on an Apple M2 Pro Mac. These checks validate the desktop prototype and renderer paths, not a physical iPhone build, iPhone frame rate or complete geographic survey.
 
-## Gameplay
+## Full-city checks
 
-`tests/smoke.gd` loads the actual imported scene and steps physics. It tests visible controls/minimap, acceleration, braking, reverse, both steering directions, mapped wall collision, camera obstruction, the snapshot boundary, ground stability, pause, keyboard input, simultaneous touch input and release, directed map routing and its alignment with road segments.
+`tests/city.gd` performs 42 checks: all ten districts exist; each district jump lands on a safe connected street; each has a directed route from the original start; tile residency follows the selected neighborhood and releases the previous one; the spatial nearest-road result agrees with exhaustive geometry; and the car physically drives across a streaming-cell boundary without falling. District points come from the municipal inventory, not fabricated landmarks.
 
-The end-to-end test drives the real car from the mapped start along Carrer de Mallorca to the Sagrada Família arrival point using a steering/throttle controller. It does not teleport to complete arrival. It verifies the discovery card, continue exploring, offline street-name search, provenance dates, nonmutating place filtering, selected-place routing, save restoration, settings, safe-road recovery and malformed-save fallback. Test saves are isolated from the player save. Headless audio generation is disabled; audio settings are still tested.
+`tests/check_city.py` performs eight checks across the complete shipped tile set: municipal envelope inclusion, all ten district codes, connected graph and valid edges, valid tile ownership references, payload/count consistency, no duplicated tree IDs, finite footprints, preserved introduction coordinates, and refresh rejection of truncated data or changed coverage. The complete manifest references 5,744 tiles; the renderer loads only nearby ownership tiles.
 
-The controller test validates the first trip, not every intersection, turn restriction or possible collision. Physical iPhone multitouch, audio output and interruptions remain untested. Directions respect one-way tags, but imported turn-restriction relations and live traffic restrictions are not implemented.
+The dataset contains 104,694 building records, 502,007 source road/path segments (126,836 routable), 20,576 places, 136,853 addresses, 930 park polygons, 144,957 municipal street trees and 13,258 deduplicated OSM park-tree records. Place/address counts describe records, not independently verified active businesses.
 
-## Handling refinement
+## Gameplay and future assets
 
-`tests/handling.gd` exercises the controller at 30/60/120 Hz: stationary steering, progressive takeoff, tight low-speed turning, bounded lateral acceleration at cruising speed, recentering, braking distance, the delay before reverse, reverse steering and both-pedal braking. The full scene test additionally checks that a wall impact removes stored speed and still completes the physical drive to the landmark. These are automated behavior checks, not a subjective playtest or a real-vehicle simulation claim.
+The existing 29-check `tests/smoke.gd` passes against the city: acceleration, braking/reverse, both steering directions, mapped wall collisions and impact speed, camera obstruction, ground/boundary behavior, pause, keyboard/multitouch state, directed navigation, the physical Sagrada arrival drive, discovery/continue, place search and source dates, route selection, save/settings reload, safe recovery and malformed-save fallback.
+
+The 11-check `tests/building_assets.gd` passes against the city's footprint index and local tile data. It loads an actual original glTF fixture and checks georeferencing, credits, preserved collision, suppression of procedural visuals, rejection/fallback for missing scenes or provenance, bad transforms, unknown/overlapping IDs, missing mobile variants and invalid schema. The production building asset manifest remains empty.
+
+The unchanged 11 handling checks cover progressive takeoff, stationary/tight/speed-limited steering, recentering, braking distance, reverse delay/direction, both-pedal braking and 30/60/120 Hz step consistency. Original pilot data remains as a regression fixture; its 10 importer/map checks still pass after making optional detailed tree records available to the city builder.
+
+## Render and packaging
+
+`tests/capture.gd` captures the original driving area, landmark/card/place UI, a distant Sant Martí street and the district selector. The desktop renderer is Forward+ using Metal. Mobile renderer captures run on this Mac; they are not iPhone screenshots. The known desktop Metal sampler LOD-bias warning with TAA remains; it is not a failed render.
+
+The iOS preset exports `build/Brisa.pck` successfully, approximately 340 MiB, with the city manifest and tile JSON included and source archives, old pilot runtime files and test fixtures excluded. This is a resource pack, not a signed iOS executable or Xcode device build.
+
+## Reproduction
 
 ```sh
+python3 tests/check_city.py
+python3 tests/check_map.py
+godot --headless --path . --fixed-fps 60 --script tests/smoke.gd
+godot --headless --path . --fixed-fps 60 --script tests/city.gd
+godot --headless --path . --script tests/building_assets.gd
 godot --headless --path . --script tests/handling.gd
 ```
 
-## Future building-asset integration
+The city was built from the downloaded bulk extract, then rebuilt from the included bounded source. `refresh_city.py --check` was exercised. The validated city/source bundle was staged with hashes and promoted using `--apply`; this tested the promotion path with unchanged data. A second network download via the new wrapper was not necessary and was not performed. Staging/promotion checks reject unexpected counts, coverage and changed file hashes. The original small-map refresh pipeline is retained for pilot regression and does not update the active city.
 
-Eleven checks in `tests/building_assets.gd` pass with an actual imported original glTF fixture: placement transforms, source credits, visual replacement without removing collision, missing/invalid assets, unknown or overlapping footprint IDs, mobile fallback and schema rejection. The production manifest is empty. The full 29-check gameplay suite passes with the adapter enabled. No real scan, scan alignment or scan performance is claimed.
+## Practical limitations to verify next
 
-## Municipal tree verification
+The global routing/places index remains in memory. Nearby geometry generation/JSON loading happens on the main thread and may cause startup, transition or district-jump hitches. The optional frame cap does not prove sustained frame rate. No Instruments memory/thermal benchmark or iPhone 11 frame-time measurement has been performed.
 
-Six checks in `tests/check_trees.py` passed: preserved coordinates, distinct IDs/provenance, park-only OSM fallback with municipal deduplication, reproducible source transformation, rejected invalid input and count consistency. The full 29-check scene suite passes with the new tree layer. Desktop captures were refreshed; the older `*-mobile.png` captures document the previous OSM-only tree layer. Tree shapes and heights remain illustrative and no field/photo verification has been performed.
+Terrain/coastline, grade-separated roads and surveyed collision shapes are incomplete. Tunnels and nonzero road layers are excluded; private/pedestrian-only and disconnected roads are not routed. Full road-law compliance, every intersection, every street and every municipal boundary segment have not been playtested. Large imported scans still need alignment checks and mobile optimization.
 
-## Data and refresh
-
-`tests/check_map.py` validates real street names, per-place geographic projection, finite building rings/heights, connected routing nodes/edges, honest partial-address counts, presence of one-way data, projection scale, rejection of a truncated refresh, acceptance of unchanged geometry and reproducibility from the included source extract.
-
-The refresh workflow was exercised end to end: download a staged snapshot, validate it, rebuild from staged source during promotion, apply it, then validate the resulting runtime database. The counts remained unchanged. It is developer-run, not an automatic weekly job or in-app update channel. Network errors preserve the active map. The update script uses system curl with normal TLS verification because this Mac's standalone Python trust store could not verify the remote certificate.
-
-Current data: 1,048 building records; 540 place records (not necessarily unique businesses); 1,667 address records; 292 places with street + number; 2,930 road/path segments, of which 616 are routable. Some records may duplicate the same business or be outdated. OpenStreetMap is a community-maintained snapshot, not survey-certified completeness.
-
-## Render inspection
-
-`tests/capture.gd` produced and the agent inspected `driving.png`, `landmark.png`, `discovery.png`, and `places.png`: real street orientation, detailed façades/materials, minimap, driving controls, arrival text and address/source-date browser. The landmark overview uses an inspection camera; gameplay uses the chase camera. Screenshots are actual Godot renders.
-
-The scene uses generic CC0 scanned asphalt and plaster materials, procedural tiled pavements and façade geometry, illustrative tower geometry, leaf-cutout tree clusters and original tapered car art. The appearance is not photogrammetry. No claim of matching individual real shopfronts is made.
-
-The additional geometry regression checks that a 45-degree façade instance retains its intended width/depth and orthogonal axes. This catches the former world-axis scaling/shear bug. Desktop rendering enables SSAO and TAA; Mobile omits these and uses a hard sun to avoid noisy soft shadows without temporal filtering. `driving-mobile.png` is the Mobile renderer running on the Mac, **not an iPhone screenshot**. Metal emits a sampler LOD-bias support warning with desktop TAA; captures complete successfully. Mobile startup is free of renderer errors.
-
-## Offline packaging
-
-The iOS preset successfully produced `build/Brisa.pck`, including the runtime JSON, shaders and material textures. This is a Godot resource pack, not an iOS executable, signed IPA or Xcode device build.
-
-## Remaining physical-device checks
-
-- Full Xcode + matching Godot iOS export templates + signing, then run on iPhone 11/iOS 16 or later.
-- Landscape safe areas, physical multitouch, text readability and button reach.
-- Manual complete drive and routes to several shops; buildings/corners and all perimeter edges.
-- Background while holding pedals, resume without stuck controls, terminate/relaunch and check saves.
-- Airplane Mode cold launch and complete sightseeing loop.
-- Instruments/Godot profiling over 10–15 minutes: startup time, memory, thermals, battery and 33.3 ms frame budget. Evaluate the optional 60 FPS cap separately.
-- Check real-device sound and interruptions.
-
-The denser scene is more demanding than the original grid. The iPhone 11 / 30 FPS baseline remains an unverified target.
+Physical-device acceptance still requires full Xcode, Godot iOS templates and signing, then safe-area/touch tests, app interruptions, airplane-mode cold launch, save recovery, long drives across tile boundaries, repeated district jumps, sound, memory pressure and thermal profiling. The iPhone 11/iOS 16/30 FPS baseline remains an unverified target.

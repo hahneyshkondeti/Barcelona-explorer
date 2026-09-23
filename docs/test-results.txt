@@ -31,23 +31,53 @@ PASS: Recovery returns invalid position to a mapped road
 PASS: Malformed save falls back to correct map spawn
 RESULT: 29 checks, 0 failures
 
+
 Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
 
-PASS: Steering at rest cannot rotate the car
-PASS: Throttle ramps smoothly from rest
-PASS: Slow-speed steering allows tight city turns
-PASS: Full steering at speed stays within lateral acceleration budget
-PASS: Releasing steering settles back to straight driving
-PASS: Full braking stops from cruising speed within 16 metres
-PASS: Holding brake briefly after stopping does not reverse
-PASS: Continued brake hold engages bounded reverse
-PASS: Reverse steering turns in the opposite direction
-PASS: Both pedals stop the car without changing direction
-PASS: Handling remains consistent across 30/60/120 Hz steps
-RESULT: 11 handling checks, 0 failures
+PASS: All ten Barcelona districts are selectable
+PASS: Safe street spawn: Ciutat Vella
+PASS: Cross-city route: Ciutat Vella
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Eixample
+PASS: Cross-city route: Eixample
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Sants - Montjuïc
+PASS: Cross-city route: Sants - Montjuïc
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Les Corts
+PASS: Cross-city route: Les Corts
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Sarrià - Sant Gervasi
+PASS: Cross-city route: Sarrià - Sant Gervasi
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Gràcia
+PASS: Cross-city route: Gràcia
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Horta - Guinardó
+PASS: Cross-city route: Horta - Guinardó
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Nou Barris
+PASS: Cross-city route: Nou Barris
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Sant Andreu
+PASS: Cross-city route: Sant Andreu
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Safe street spawn: Sant Martí
+PASS: Cross-city route: Sant Martí
+PASS: Tile residency follows district, without retaining the city
+PASS: Spatial road lookup agrees with exhaustive search
+PASS: Physical driving crosses a streaming boundary without falling
+RESULT: 42 city checks, 0 failures
 
-Municipal tree checks: python3 tests/check_trees.py
-Ran 6 tests: OK
 
 Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
 
@@ -63,3 +93,17 @@ PASS: Overlapping replacements are rejected
 PASS: Missing mobile variant falls back rather than loading desktop geometry
 PASS: Unknown manifest version preserves fallback
 RESULT: 11 asset integration checks, 0 failures
+
+
+........
+----------------------------------------------------------------------
+Ran 8 tests in 3.974s
+
+OK
+
+
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.519s
+
+OK

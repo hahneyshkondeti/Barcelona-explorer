@@ -13,7 +13,7 @@ func run() -> void:
 	var parent := Node3D.new()
 	root.add_child(parent)
 	var adapter := BuildingAssets.new()
-	var building: Dictionary = District.DATA.buildings[0]
+	var building: Dictionary = District.nearby_features(District.START).buildings[0]
 	var entry := {"id":"test","scene":"res://assets/buildings/_test_only/triangle.gltf","building_ids":[building.id],"anchor_lonlat":District.DATA.origin_lonlat,"elevation_m":2,"yaw_degrees":45,"scale":2,"visibility_m":200,"source":{"url":"local original test fixture","license":"Original project test geometry","license_url":"local test fixture","attribution":"Brisa test triangle","capture_date":"not applicable"}}
 	adapter.install(parent, {"schema":1,"assets":[entry]}, District.DATA.buildings, false)
 	check(adapter.replaced.has(building.id) and parent.get_child_count() == 1, "Imported glTF replaces the selected footprint")

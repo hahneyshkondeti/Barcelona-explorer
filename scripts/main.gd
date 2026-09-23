@@ -27,6 +27,7 @@ func _ready() -> void:
 	car.controls = controls
 	add_child(car)
 	car.recover(save.safe_position, save.heading)
+	world.stream_at(car.global_position, true)
 	camera = ChaseCamera.new()
 	camera.target = car
 	add_child(camera)
@@ -46,6 +47,7 @@ func _ready() -> void:
 	hud.navigation = navigation
 	add_child(hud)
 	hud.place_requested.connect(route_to_place)
+	hud.area_requested.connect(explore_area)
 	hud.pause_requested.connect(toggle_pause)
 	hud.recover_requested.connect(recover)
 	hud.camera_requested.connect(camera.reset)
@@ -56,6 +58,7 @@ func _ready() -> void:
 	update_route()
 
 func _process(delta: float) -> void:
+	world.stream_at(car.global_position)
 	hud_timer += delta
 	if hud_timer >= 0.1:
 		hud.refresh(landmarks.discovered, save.muted, save.fps)
@@ -64,7 +67,7 @@ func _process(delta: float) -> void:
 		return
 	route_timer += delta
 	save_timer += delta
-	if route_timer > 0.5:
+	if route_timer > 2.0:
 		update_route()
 		route_timer = 0
 	if save_timer > 3:
@@ -103,6 +106,7 @@ func toggle_pause() -> void:
 
 func recover() -> void:
 	car.recover(save.safe_position, save.heading)
+	world.stream_at(car.global_position, true)
 	camera.reset()
 	hud.pause_overlay.hide()
 	hud.card_overlay.hide()
@@ -164,3 +168,19 @@ func route_to_place(place: Dictionary) -> void:
 	set_paused(false)
 	hud.pause_overlay.hide()
 	update_route()
+
+func explore_area(index: int) -> void:
+	if index < 0 or index >= District.AREAS.size(): return
+	var area: Dictionary = District.AREAS[index]
+	var target := BuildingAssets.anchor_position(area.lonlat[0], area.lonlat[1], 0.55)
+	target = District.nearest_road(target)
+	car.recover(target, District.heading_at(target))
+	world.stream_at(car.global_position, true)
+	camera.reset()
+	navigation.active = false
+	update_route()
+	hud.pause_overlay.hide()
+	hud.card_overlay.hide()
+	hud.places_overlay.hide()
+	set_paused(false)
+	persist()

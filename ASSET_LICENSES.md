@@ -2,9 +2,9 @@
 
 | Asset/data | Source | License/status |
 | --- | --- | --- |
-| Roads, footprints, tagged heights/levels, addresses, place records, parks, tree points | Bounded OpenStreetMap snapshot, 2026-09-23 | © OpenStreetMap contributors, ODbL 1.0; see `data/LICENSE.md` |
+| Roads, footprints, tagged heights/levels, addresses, place records, parks, tree points | Barcelona bulk OSM extract via BBBike + municipal boundary, retrieved 2026-09-23 | © OpenStreetMap contributors, ODbL 1.0; see `data/LICENSE.md` |
 | Municipal street-tree coordinates, species, inventory IDs and planting dates | https://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari; downloaded 2026-09-23 | Ajuntament de Barcelona / Open Data BCN, CC BY 4.0; bounded source included |
-| Adapted runtime database | `data/eixample.json`, reproducible with `tools/import_map.py` | ODbL 1.0; source extract and transformation supplied |
+| Adapted runtime database | `data/city/`, reproduced by `tools/build_city.py`; original pilot retained for regression | ODbL 1.0; source extract and transformation supplied |
 | Plaster004 color, OpenGL normal, roughness, 1K JPG | https://ambientcg.com/view?id=Plaster004 | CC0 1.0; https://docs.ambientcg.com/license/ |
 | Asphalt030 color, OpenGL normal, roughness, 1K JPG | https://ambientcg.com/view?id=Asphalt030 | CC0 1.0; generic 2.2 m scanned asphalt surface |
 | Façade details, windows, balconies, estimated storefront appearance, car, tower interpretation, trees, interface, road shaders | Original procedural game assets | Original project material; appearance does not establish real-building fidelity |

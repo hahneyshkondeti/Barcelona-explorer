@@ -49,7 +49,7 @@ def clip_segment(a,b):
     if t0>t1:return None
     return ([a[0]+t0*dx,a[1]+t0*dy],[a[0]+t1*dx,a[1]+t1*dy],t0,t1)
 
-def build(source, fetched_at=None):
+def build(source, fetched_at=None, detailed_trees=False):
     raw=gzip.open(source,'rb').read() if str(source).endswith('.gz') else pathlib.Path(source).read_bytes()
     root=ET.fromstring(raw)
     if root.tag!='osm': raise ValueError('Expected an OSM XML map, not an error page')
@@ -63,6 +63,7 @@ def build(source, fetched_at=None):
         else: record['members']=[dict(v.attrib) for v in e.findall('member')]; relations.append(record)
         records.append(record)
     data={'schema':2,'district_id':'sagrada_osm_v2','origin_lonlat':list(ORIGIN),'bbox_lonlat':list(BBOX),'bounds':[project(BBOX[0],BBOX[3]),project(BBOX[2],BBOX[1])], 'roads':[], 'buildings':[], 'places':[], 'parks':[], 'trees':[], 'addresses':[]}
+    if detailed_trees: data["tree_records"]=[]
     used_members=set()
     for rel in relations:
         if not rel['tags'].get('building'): continue
@@ -119,7 +120,9 @@ def build(source, fetched_at=None):
             if points: ll=[sum(p[i] for p in points)/len(points) for i in range(2)]
         if ll is None or not inside(*ll):continue
         common={'id':record['kind']+'/'+record['id'],'point':project(*ll),'lonlat':ll,'timestamp':record['timestamp'],'version':record['version']}
-        if t.get('natural')=='tree':data['trees'].append(common['point'])
+        if t.get('natural')=='tree':
+            data['trees'].append(common['point'])
+            if detailed_trees: data['tree_records'].append(dict(common,species=t.get('species',''),source='OpenStreetMap',form='broadleaf'))
         if t.get('addr:housenumber'):
             data['addresses'].append(dict(common,street=t.get('addr:street',''),number=t['addr:housenumber'],postcode=t.get('addr:postcode','')))
         if t.get('shop') or t.get('amenity') in ('restaurant','cafe','bar','pharmacy','bank'):

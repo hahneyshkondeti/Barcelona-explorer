@@ -36,6 +36,15 @@ func capture() -> void:
 	await create_timer(0.5).timeout
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("res://docs/places%s.png" % suffix)
+	game.explore_area(9)
+	game.camera.set_physics_process(true)
+	game.camera.reset()
+	await create_timer(2).timeout
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png("res://docs/city-sant-marti%s.png" % suffix)
+	game.toggle_pause()
+	await RenderingServer.frame_post_draw
+	root.get_texture().get_image().save_png("res://docs/city-districts%s.png" % suffix)
 	game.queue_free()
 	await process_frame
 	WorldBuilder.materials.clear()

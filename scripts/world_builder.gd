@@ -4,6 +4,13 @@ extends Node3D
 static var materials: Dictionary = {}
 var batches: Dictionary = {}
 var building_assets := BuildingAssets.new()
+var is_chunk := false
+var features: Dictionary = {}
+var loaded_chunks: Dictionary = {}
+var pending_chunks: Array = []
+var stream_center := Vector2i(99999,99999)
+var stream_position := Vector3.ZERO
+var desired_chunks: Dictionary = {}
 var surfaces: Dictionary = {}
 var route_root: Node3D
 var landmark_beacon: MeshInstance3D
@@ -80,20 +87,36 @@ func _ready() -> void:
 		mat.set_shader_parameter("plaster_normal", load("res://assets/materials/plaster/Plaster004_1K-JPG_NormalGL.jpg"))
 		mat.set_shader_parameter("plaster_roughness", load("res://assets/materials/plaster/Plaster004_1K-JPG_Roughness.jpg"))
 		plaster.append(mat)
-	build_lighting()
-	var bounds := District.BOUNDS.grow(20)
-	var center := bounds.get_center()
-	solid_box(Vector3(bounds.size.x, 1, bounds.size.y), Vector3(center.x, -0.5, center.y), Color("92918a"))
-	for park in District.DATA.parks:
+	if not is_chunk:
+		build_lighting()
+		var bounds := District.BOUNDS.grow(20)
+		var center := bounds.get_center()
+		solid_box(Vector3(bounds.size.x, 1, bounds.size.y), Vector3(center.x, -0.5, center.y), Color("92918a"))
+		var manifest = JSON.parse_string(FileAccess.get_file_as_string("res://data/building_assets.json"))
+		building_assets.install(self, manifest, District.DATA.buildings, RenderingServer.get_current_rendering_method() == "mobile")
+		for issue in building_assets.issues: push_warning(issue)
+		var replace_landmark := false
+		for building in District.DATA.buildings:
+			if building.landmark and building_assets.replaced.has(building.id): replace_landmark = true
+		if not replace_landmark: build_landmark()
+		build_boundary()
+		flush_surfaces()
+		flush_batches()
+		route_root = Node3D.new()
+		add_child(route_root)
+		var torus := TorusMesh.new()
+		torus.inner_radius = 3.4
+		torus.outer_radius = 3.7
+		landmark_beacon = MeshInstance3D.new()
+		landmark_beacon.mesh = torus
+		landmark_beacon.material_override = material(Color("e7bd65"))
+		add_child(landmark_beacon)
+		landmark_beacon.position = District.DESTINATION + Vector3.UP * 0.05
+		return
+	for park in features.parks:
 		flat_polygon(park.ring, 0.06, material(Color("5c7050")))
-	for road in District.DATA.roads:
-		build_road(road)
-	var manifest = JSON.parse_string(FileAccess.get_file_as_string("res://data/building_assets.json"))
-	building_assets.install(self, manifest, District.DATA.buildings, RenderingServer.get_current_rendering_method() == "mobile")
-	for issue in building_assets.issues:
-		push_warning(issue)
-	for building in District.DATA.buildings:
-		build_building(building)
+	for road in features.roads: build_road(road)
+	for building in features.buildings: build_building(building)
 	if not wall_faces.is_empty():
 		var collider := StaticBody3D.new()
 		var shape := CollisionShape3D.new()
@@ -104,29 +127,46 @@ func _ready() -> void:
 		collider.add_child(shape)
 		add_child(collider)
 		wall_faces.clear()
-	for tree in District.TREE_DATA.trees:
+	for tree in features.trees:
 		build_tree(District.vector(tree.point, 0), tree)
-	var replace_landmark := false
-	for building in District.DATA.buildings:
-		if building.landmark and building_assets.replaced.has(building.id):
-			replace_landmark = true
-	if not replace_landmark:
-		build_landmark()
 	build_addresses()
 	build_shop_signs()
-	build_boundary()
 	flush_surfaces()
 	flush_batches()
-	route_root = Node3D.new()
-	add_child(route_root)
-	var torus := TorusMesh.new()
-	torus.inner_radius = 3.4
-	torus.outer_radius = 3.7
-	landmark_beacon = MeshInstance3D.new()
-	landmark_beacon.mesh = torus
-	landmark_beacon.material_override = material(Color("e7bd65"))
-	add_child(landmark_beacon)
-	landmark_beacon.position = District.DESTINATION + Vector3.UP * 0.05
+
+func load_chunk(key: String) -> void:
+	if loaded_chunks.has(key): return
+	var chunk := WorldBuilder.new()
+	chunk.is_chunk = true
+	chunk.features = District.tile(key)
+	chunk.building_assets = building_assets
+	loaded_chunks[key] = chunk
+	add_child(chunk)
+
+func stream_at(point: Vector3, immediate: bool = false) -> void:
+	if not point.is_finite() or not District.in_bounds(point, 20): return
+	stream_position = point
+	var center := Vector2i(floori(point.x/District.CELL),floori(point.z/District.CELL))
+	if center != stream_center or immediate:
+		stream_center = center
+		desired_chunks = District.needed_tiles(point, 2)
+		pending_chunks.clear()
+		# Near collision tiles are ready before motion/recovery can enter them.
+		for key in District.needed_tiles(point, 1): load_chunk(key)
+		for key in desired_chunks:
+			if not loaded_chunks.has(key): pending_chunks.append(key)
+		for key in loaded_chunks.keys():
+			if not desired_chunks.has(key):
+				loaded_chunks[key].queue_free()
+				loaded_chunks.erase(key)
+		for key in District.tile_cache.keys():
+			if not desired_chunks.has(key): District.tile_cache.erase(key)
+	if immediate:
+		for key in pending_chunks: load_chunk(key)
+		pending_chunks.clear()
+
+func _process(_delta: float) -> void:
+	if not is_chunk and not pending_chunks.is_empty(): load_chunk(pending_chunks.pop_front())
 
 func build_lighting() -> void:
 	var environment := WorldEnvironment.new()
@@ -362,7 +402,7 @@ func build_landmark() -> void:
 
 func build_addresses() -> void:
 	# Ground-level plaques display supplied address tags only. Missing fields stay missing.
-	for address in District.DATA.addresses:
+	for address in features.addresses:
 		if address.street.is_empty():
 			continue
 		var at := District.vector(address.point, 2.5)
@@ -377,7 +417,7 @@ func build_addresses() -> void:
 		label.no_depth_test = false
 		add_child(label)
 		label.position = at
-	for road in District.ROAD_SEGMENTS:
+	for road in features.roads:
 		var a := District.vector(road.a, 0)
 		var b := District.vector(road.b, 0)
 		if a.distance_to(b) < 45:
@@ -442,6 +482,7 @@ func update_route(points: PackedVector3Array) -> void:
 	for i in range(1, points.size()):
 		var a := points[i - 1]
 		var b := points[i]
+		if Geometry2D.get_closest_point_to_segment(Vector2(stream_position.x,stream_position.z),Vector2(a.x,a.z),Vector2(b.x,b.z)).distance_to(Vector2(stream_position.x,stream_position.z)) > 450: continue
 		var length := a.distance_to(b)
 		if length < 0.1:
 			continue
@@ -450,7 +491,7 @@ func update_route(points: PackedVector3Array) -> void:
 		line.look_at(Vector3(b.x, 0.12, b.z), Vector3.UP)
 
 func build_shop_signs() -> void:
-	for shop in District.DATA.places:
+	for shop in features.places:
 		if shop.name.begins_with("Unnamed"):
 			continue
 		var at := District.vector(shop.point, 3.4)

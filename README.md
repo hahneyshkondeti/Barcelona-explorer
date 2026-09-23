@@ -1,121 +1,98 @@
-# Brisa — Eixample streets
+# Brisa — Barcelona city explorer
 
-An offline Godot 4.5 driving prototype using **real OpenStreetMap roads, building footprints, place records and address tags** around Sagrada Família. The earlier fictional grid has been replaced.
+An offline Godot 4.5 driving prototype with map coverage across **all ten Barcelona districts**, using OpenStreetMap roads, footprints, addresses and places, plus the municipal street-tree inventory. Sagrada Família remains the introductory sightseeing destination.
 
-![Mapped Carrer de Mallorca](docs/driving.png)
+![Driving in Barcelona](docs/driving.png)
 
-## What is accurate, and what is not
+## Coverage and accuracy
 
-The current bounded pilot covers **about 0.72 km² around Sagrada Família**, not all of Eixample. Source coordinates and street names are retained, projected into metres with east = +X and north = −Z. The road graph respects imported one-way tags and excludes pedestrian-only/private roads from routing. Road surfaces also display mapped paths.
+The playable envelope contains Barcelona's complete municipal boundary (OSM relation 347950) and neighboring fringe inside its bounding rectangle: longitude 2.0524977–2.2283555, latitude 41.3170354–41.4679135. It is approximately 14.7 × 16.8 km in the local projection; this rectangle is larger than the municipality itself. The municipal boundary is included as data, not claimed to match the rectangular perimeter barrier.
 
-The snapshot contains 1,048 building records, 540 shops/cafés/restaurants and other selected places, 1,667 address records, 1,021 original OSM tree points and seven parks. **292 places have both a street and house number recorded.** Unknown address fields remain unknown. The 2,930 rendered road/path segments include 616 routable segments; they are not 2,930 distinct streets. 800 building heights are based on OSM height or floor-count tags; floor counts are converted using an estimated floor height.
+The bulk snapshot contains **104,694 building records, 20,576 place records, 136,853 addresses and 930 park polygons**. There are 502,007 road/path segments, including 126,836 segments in the connected surface-road routing graph. These are segments and source records, not counts of distinct streets or verified active businesses. 9,594 places have both street and house number recorded. Geometry and provenance come from the included dated source, retrieved 2026-09-23.
 
-This is **not a photorealistic digital twin or a live city feed**. Detailed façades, balconies, storefront appearance, missing heights, lane widths/markings, kerbs and street furniture are generated estimates. Sagrada Família occupies its mapped location/footprint but its upper structure is still an illustrative model. Terrain is flat. Shop names and addresses are source records, not independently verified current tenants. Some record edits are years old; a fresh download is not a fresh survey. Turn-restriction relations, traffic laws/signals, real pavement elevations, complex roofs and surveyed building interiors are not implemented.
+This is geographic expansion, **not a photorealistic or survey-complete digital twin**:
 
-The visual upgrade adds scanned CC0 asphalt and plaster PBR materials, tiled flower-motif pavements, cornices, pilasters, shutters, balcony rails, leaf-cutout canopies, a tapered metallic car body and a lower chase camera. Rotated façade pieces preserve their local dimensions, fixing distorted windows along diagonal streets. It improves the old block style but does not match Google Maps photogrammetry or scanned street-level façades.
+- Façades, roof details, shop appearance, missing heights, road widths, pavement edges and markings remain estimates. The basilica model remains illustrative.
+- Terrain is flat, including the hills. Bridges, tunnels and nonzero road layers are omitted by the current surface-road importer. Private/pedestrian-only roads and disconnected components are excluded from driving navigation. Turn restrictions and traffic signals are not simulated.
+- The outer rectangle includes neighboring municipalities and some water/port extent; there is no accurately modeled coastline, water surface or terrain mesh yet.
+- OSM records can be old, missing or duplicated. A download date is not a field-survey date. No Google imagery is used.
 
-Desktop uses Forward+ (Metal on macOS), ambient occlusion, four shadow cascades, 4× MSAA and temporal antialiasing. iOS uses the Mobile renderer without desktop-only ambient occlusion or TAA. These are distinct quality profiles; desktop screenshots are not evidence of iPhone fidelity or frame rate. The 30/60 FPS selector changes the cap, not detail quality. A compatibility fallback can be launched with `--rendering-method gl_compatibility` if the desktop GPU lacks RenderingDevice support.
+## Run and explore
 
-## Run locally
+Install [Godot 4.5 stable](https://godotengine.org/download/archive/4.5-stable/), import `project.godot`, and press **F5**. Initial startup now parses a city-wide routing/places index and builds nearby geometry; allow more startup time than the original district prototype.
 
-1. Install the standard [Godot 4.5 stable](https://godotengine.org/download/archive/4.5-stable/) editor.
-2. Import `project.godot` and press **F5**. Initial procedural geometry creation takes longer than the old small grid.
-3. Follow the gold route to Sagrada Família and stop near the arrival ring. Choose **Places & addresses** to search records and route to the closest mapped road near a shop.
-
-Temporary development engine (not bundled or guaranteed to survive reboot):
+Development engine on this Mac (temporary installation):
 
 ```sh
 /tmp/barcelona-godot/Godot.app/Contents/MacOS/Godot --path /Users/hahneyshkondeti/Documents/ChatGPT/Explorer
 ```
 
-| Input | Action |
+| Control | Action |
 | --- | --- |
 | W / Up / DRIVE | Accelerate |
-| S / Down / Space / BRAKE | Brake; hold after stopping to reverse |
+| S / Down / Space / BRAKE | Brake; hold 0.35 seconds after stopping for reverse |
 | A / D or Left / Right | Steer |
-| C / Camera | Reset chase camera |
-| R / pause menu recovery | Recover to last safe mapped road |
+| C / Camera | Reset camera |
+| R | Recover to last safe road |
 | P / Escape / Pause | Pause/resume |
-| Places & addresses | Search place/name/street/house number; inspect source dates; route nearby |
+| Pause → district selector → Start in district | Move to a safe mapped road in any of the ten districts |
+| Places & addresses | Search city-wide records and route to a nearby mapped road |
 
-Handling uses progressive throttle, tighter low-speed turns, speed-sensitive steering with a lateral-acceleration limit, smoother recentering, and subtle body lean. Brake stops forward motion; keep holding for 0.35 seconds at rest to engage reverse (capped at 18 km/h). Holding both pedals stops the car. Wall impacts remove stored forward speed.
+District spawn anchors are selected from municipal tree records near each district's average inventory location, then projected to a connected road. They are convenient starting points, not district centroids or sightseeing claims. Place search displays up to 300 matches; refine the query to find a specific record. The minimap shows the local streets around the car.
 
-The north-up minimap uses real geometry and follows the car. Multi-touch driving, pause, audio, 30/60 FPS caps and local saves remain. The previous fictional map's save is invalidated by the new district ID rather than restoring its coordinates into an unrelated map.
+Progressive acceleration, speed-sensitive steering, reverse delay, collision response, pause, sound controls, 30/60 FPS caps and local saves remain. Saves from the real-map Sagrada pilot are accepted when their positions are still safe; the older fictional-grid saves are not migrated.
 
-## Future building scans
+## City loading
 
-A replacement adapter is ready for local imported GLB/glTF or static Godot scenes. The empty `data/building_assets.json` manifest can assign assets to real building IDs with geographic placement, an optional mobile variant, and source/license credits. Invalid or missing assets retain procedural buildings; successful replacements retain map collision. See [the integration contract and workflow](docs/BUILDING_ASSETS.md). No scan source is currently required or included.
+`data/city/manifest.json` holds the city-wide connected road graph, places, footprint identifiers and tile index. Geometry, addresses, parks and trees live in 192 m spatial tiles. The loader keeps a nearby 5×5 cell neighborhood plus ownership dependencies, so a building spanning tile edges is loaded once rather than cut or duplicated. Immediate neighboring collision tiles are loaded before movement enters them; farther tiles are added one per frame. Old tiles and cached payloads are released as the car travels. District jumps load their neighborhood before resuming driving.
 
-## Tree placement
+The global routing/places index remains resident. Geometry generation and JSON loading are still on the main thread, so startup, tile crossings and district jumps can hitch. This is bounded local geometry loading, not a completed iPhone memory/frame-time optimization. The 30 FPS iPhone target is unverified at city scale.
 
-Street trunks now use **2,154 records from Barcelona City Council’s street-tree inventory**, preserving their WGS84 coordinates without random placement or snapping to approximate road edges. The game also retains 225 OSM trees inside mapped parks, suppressing four park points within three metres of municipal trees. The old OSM street-tree layer is no longer rendered alongside the municipal layer.
+Desktop uses Forward+ (Metal on macOS), SSAO, MSAA and TAA. iOS uses Mobile without desktop-only SSAO/TAA. Imported detail uses distance cutoffs and shared meshes/materials. `--rendering-method gl_compatibility` is a desktop fallback. A frame-rate cap is not a quality preset or a performance guarantee.
 
-`data/trees.json` retains inventory IDs, species, addresses and available planting dates. Palms use a separate illustrative form. Heights, canopy sizes and seasonal appearance remain estimates; the snapshot is not a field survey or a guarantee of current tree condition. Road widths and sidewalk edges are still estimated, so apparent pavement conflicts must be corrected using surveyed street geometry rather than moving recorded trees.
+## Tree sources and future scans
 
-Source: [Ajuntament de Barcelona / Open Data BCN](https://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari), CC BY 4.0. The bounded source CSV and attribution are included.
+Street trunks use 144,957 municipal records within the city envelope, preserving coordinates and source IDs. Mapped OSM park trees are used as fallback where no municipal tree is within three metres. Heights, crowns and seasonal appearance remain illustrative. Trees are not moved to fit estimated road widths. Source counts and retrieval dates are recorded in the manifest.
 
-## Refresh roughly weekly
+The empty `data/building_assets.json` manifest is ready for future local GLB/glTF or static Godot building scenes, with geographic placement, mobile variants and attribution. Missing assets retain procedural buildings; replacements retain footprint collision. See [building import instructions](docs/BUILDING_ASSETS.md).
 
-Run from the repository using Python 3 and system `curl`; there are no Python package dependencies or API keys.
+## Refresh city data roughly weekly
+
+Python **3.11+**, system `curl`, and sufficient free disk space are required. No API key or Python package dependency is needed. Bulk downloads and the source conversion are substantial; allow several minutes and several GB of temporary memory/disk space.
 
 ```sh
-python3 tools/refresh_map.py --check
-python3 tools/refresh_map.py --download
-python3 tests/check_map.py --candidate data/.refresh/eixample.json
-python3 tools/refresh_map.py --apply
-python3 tools/refresh_trees.py --download
-python3 tests/check_trees.py
+python3 tools/refresh_city.py --check
+python3 tools/refresh_city.py --download
+python3 tests/check_city.py --city data/.refresh/city/city
+python3 tools/refresh_city.py --apply
 ```
 
-Tree refresh is separate: it downloads the official street inventory, validates columns, finite coordinates, unique IDs and coverage, clips it to the pilot, and replaces the offline tree layer. A count change over 30% is rejected for review. Run it after map refresh so park fallback reflects the updated map. `python3 tools/refresh_trees.py` rebuilds from the included bounded CSV without downloading.
+Download stages the published BBBike Barcelona extract, the OSM municipal boundary and Open Data BCN street trees, then builds and checks tiles. Apply checks file hashes, count changes and coverage before replacing the runtime folder; the previous runtime is retained under `data/.refresh/previous-city`. A materially changed boundary or count needs developer review. Failed staging leaves the installed map alone.
 
-`--check` is offline and reports whether the snapshot is at least seven days old. `--download` makes one bounded OSM API request and stages the result. It does not alter the working map. `--apply` rebuilds from the staged source, verifies consistency, rejects large unexpected coverage/count changes, retains the previous JSON, and atomically replaces the runtime JSON. If a step fails, keep the current snapshot and inspect the reported failure. Reopen the desktop game after an update.
+This is a developer-run refresh, not a scheduled job or an iPhone OTA update. Restart the desktop game after promotion; rebuild/reinstall the phone app with the new offline data. The original `refresh_map.py`, `refresh_trees.py`, `data/eixample.json` and `data/trees.json` remain for pilot regression/reproducibility and **do not update the active city**.
 
-This is a **developer-run refresh pipeline**, not a scheduled job or automatic download on the iPhone. To update an installed iPhone in this version, rebuild/reinstall the app with the new packaged snapshot. An in-app data-pack update channel needs a separate distribution mechanism and is not implemented. Data remains fully offline between updates. Weekly refreshes may return unchanged or incomplete shop information.
+To rebuild from the included bounded source without downloading:
 
-Source data and transformation are included: `data/source/eixample.osm.gz`, `data/eixample.json`, `tools/import_map.py`. Preserve [OSM attribution and ODbL terms](data/LICENSE.md) when distributing. No Google imagery is downloaded or used.
+```sh
+python3 tools/build_city.py --trees data/source/city_street_trees.csv.gz --retrieved-at 2026-09-23T07:26:55.113735+00:00
+python3 tests/check_city.py
+```
+
+See [data attribution](data/LICENSE.md) and [asset licenses](ASSET_LICENSES.md). Source XML/CSV and transformations are included. The city bundle is hundreds of MB before export compression.
 
 ## Physical iPhone build
 
-The chosen product baseline is **iPhone 11 / A13, iOS 16.0 or later**, landscape, 30 FPS target. A 60 FPS cap is selectable. This remains a target to revalidate after the real-map/detail upgrade, not a measured performance guarantee. Older phones may install but are outside the intended support baseline.
+The product target remains **iPhone 11 / A13, iOS 16+, landscape, 30 FPS**, with an optional 60 FPS cap. It has not been performance-validated at city scale.
 
-1. Install **full Xcode** on a Mac and finish its first-launch setup, including the iOS platform. Command Line Tools alone cannot build this app. In Xcode → Settings → Locations select the full Xcode command-line tools.
-2. Install **Godot 4.5 stable** and its matching export templates using Editor → Manage Export Templates. Keep editor and template versions aligned.
-3. In Godot, open Project → Export → **iOS**. The checked-in preset sets the bundle ID `com.hahneyshkondeti.brisa`, arm64, iPhone device family, minimum iOS 16, and project-only export. Change the bundle ID if your signing setup needs a different one.
-4. Enter **your actual Apple Team ID** in the iOS preset. It is intentionally blank in this repository. Do not commit private credentials or provisioning profiles.
-5. Export the project into `build/ios/` (create this directory if needed). Open the generated `.xcodeproj` in Xcode. If Godot flags missing icons, assign your original app icons in the preset; the prototype uses the engine's default icon fallback until branded icons are supplied.
-6. In Xcode, choose the app target → Signing & Capabilities, select your team, and enable automatic signing. Verify the deployment target is 16.0, landscape orientations are enabled and the device family is iPhone. Check that Xcode offers both landscape orientations if desired.
-7. Connect and trust your iPhone. Enable Developer Mode on the phone if requested. Choose it as the run destination and press Run. Personal-team signing can be used where supported by your account; distribution/TestFlight requires Apple's applicable membership/signing setup.
-8. After installation, enable Airplane Mode and verify launch, driving, landmark discovery, background/resume and relaunch-save restoration. Profile the baseline hardware before calling it supported.
+1. Install full Xcode, complete first-launch setup and install its iOS platform. Select Xcode's command-line tools in Settings → Locations.
+2. Install Godot 4.5 and matching iOS export templates.
+3. Open Project → Export → iOS. The preset targets arm64 iPhone, minimum iOS 16, bundle ID `com.hahneyshkondeti.brisa`, and Xcode project export.
+4. Enter your actual Apple Team ID and use a bundle ID your signing account can provision. Do not commit signing credentials.
+5. Export, open the generated Xcode project, choose the signing team and connected iPhone, enable Developer Mode if required, then build/run.
+6. Verify airplane-mode launch, district jumps, a continuous drive across tiles, safe areas, physical touch input, app backgrounding and memory/thermal behavior.
 
-Official instructions: [Godot 4.5 iOS export](https://docs.godotengine.org/en/4.5/tutorials/export/exporting_for_ios.html). Godot generates the Xcode project at export time; there is no hand-maintained Xcode project in this repo.
+Only Command Line Tools were available during development; no signed IPA, TestFlight release or physical iPhone test is claimed. A successful Godot PCK export is a resource bundle, not an iOS executable.
 
-**Current environment limitation:** full Xcode, the iOS SDK, matching iOS export templates and Apple signing are not configured here. No physical device build, simulator run, signing validation or iPhone performance test has been performed.
+## Verification and next work
 
-## Components and performance
-
-- `scripts/district.gd`: loads the dated snapshot, metric coordinates, nearest-road recovery and map bounds.
-- `scripts/world_builder.gd`: builds footprint walls/collision, roads, materials, signage, trees and illustrative upper landmark geometry.
-- `scripts/navigation.gd`: directed A* graph routing with source-segment endpoints; same-segment routes obey one-way tags.
-- `scripts/hud.gd`, `scripts/minimap.gd`: landscape controls, real-map minimap and offline place/address browser.
-- `scripts/car.gd`, `scripts/chase_camera.gd`, `scripts/drive_input.gd`: arcade driving, obstruction-aware camera and input.
-- `scripts/save_store.gd`, `scripts/landmarks.gd`, `scripts/engine_audio.gd`: saves, discovery and synthesized engine sound.
-- `tools/import_map.py`, `tools/refresh_map.py`: reproducible ingestion and validated snapshot updates.
-
-Materials are shared; wall surfaces and instanced details are grouped into 100 m cells. Façade details disappear beyond 180 m and trees/trim beyond 420 m. One sun casts shadows over the nearest 110 m. Mesh walls provide footprint-aligned collision, with simplified flat terrain and perimeter barriers. No real-time traffic, streaming city chunks or full-district memory budget is implemented. The new dataset is materially larger; physical iPhone profiling is still required.
-
-## Verify
-
-```sh
-python3 tests/check_map.py
-GODOT=/tmp/barcelona-godot/Godot.app/Contents/MacOS/Godot
-"$GODOT" --headless --path . --editor --import --quit
-"$GODOT" --headless --path . --fixed-fps 60 --script tests/smoke.gd
-"$GODOT" --path . --script tests/capture.gd
-```
-
-See [verification notes](docs/TESTING.md) and [asset provenance](ASSET_LICENSES.md). Tests use separate saves. The smoke suite now physically drives from the start to the landmark instead of teleporting for its end-to-end arrival check.
-
-## Next toward a real city experience
-
-Profile/tune the pilot on the baseline iPhone first. Source licensed street-level façade photographs or commissioned photogrammetry for a small verified corridor, match storefronts to dated surveys, and replace the illustrative basilica with an accurate licensed model. Expand the map in streamed chunks across Eixample, add authoritative street/address joins and terrain elevations, and build an optional signed data-pack update channel. These are the remaining steps toward the requested photographic city fidelity; map records alone cannot supply it.
+See [test details](docs/TESTING.md). Cross-city routing and streaming are tested in addition to the original sightseeing loop. The next priorities are device profiling, smoother asynchronous tile generation, terrain/coastline, grade-separated roads, and building-specific visual assets when licensed sources become available.

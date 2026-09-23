@@ -22,3 +22,16 @@ Source: https://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari
 Downloaded 2026-09-23. This is a retrieval date, not a survey date.
 
 Changes: geographic clipping, coordinate projection, field selection, and combination with separately identified OSM park-tree records. `trees.json` is distributed under ODbL 1.0 with the OSM-derived layer; preserve the additional municipal attribution and CC BY notice. The original bounded municipal CSV retains its CC BY 4.0 license. No municipal endorsement is implied. `tools/refresh_trees.py` reproduces the transformation.
+
+## Barcelona-wide runtime
+
+`city/manifest.json` and `city/tiles/*.json` supersede the pilot at runtime. They are adapted OSM/municipal data distributed under ODbL 1.0 with the additional municipal CC BY 4.0 attribution retained. The underlying municipal extract remains CC BY 4.0.
+
+- OSM bulk source: https://download.bbbike.org/osm/bbbike/Barcelona/Barcelona.osm.gz (BBBike distributes OSM data; © OpenStreetMap contributors).
+- Municipal boundary: https://api.openstreetmap.org/api/0.6/relation/347950/full
+- Street-tree source remains the Open Data BCN URL above.
+- Retrieval: 2026-09-23. Retrieval is not a record verification date.
+- Included bounded source: `source/barcelona.osm.gz`, `source/barcelona-boundary.osm`, `source/city_street_trees.csv.gz`.
+- Transformation: `tools/build_city.py`, using `tools/import_map.py`; clipping to the municipal bounding envelope, complete-way fringe retention, metric projection, source-graph filtering, tree deduplication and spatial tiling. The runtime includes neighboring fringe; it is not clipped exactly to the municipal polygon. Source park-tree IDs and municipal tree IDs are kept distinct.
+
+`city/areas.json` contains convenient district starting anchors derived from the municipal tree inventory. They are not official district centers. The smaller pilot files remain as historical reproducible regression fixtures, not the active runtime map.

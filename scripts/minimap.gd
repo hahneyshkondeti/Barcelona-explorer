@@ -18,7 +18,8 @@ func _draw() -> void:
 	draw_style_box(panel_style(), Rect2(Vector2.ZERO, size))
 	if not is_instance_valid(car):
 		return
-	for building in District.DATA.buildings:
+	var nearby := District.nearby_features(car.global_position)
+	for building in nearby.buildings:
 		var p := District.vector(building.rings[0][0])
 		if p.distance_to(car.global_position) > RANGE * 1.7:
 			continue
@@ -27,7 +28,7 @@ func _draw() -> void:
 			ring.append(map_point(District.vector(coordinate)))
 		if ring.size() > 2:
 			draw_colored_polygon(ring, Color("50635f"))
-	for road in District.DATA.roads:
+	for road in nearby.roads:
 		var a := map_point(District.vector(road.a))
 		var b := map_point(District.vector(road.b))
 		if a.distance_to(size * 0.5) < size.x or b.distance_to(size * 0.5) < size.x:

@@ -13,7 +13,7 @@ func load_journey() -> void:
 	if not FileAccess.file_exists(path):
 		return
 	var data = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not data is Dictionary or data.get("version") != 1 or data.get("district") != District.ID:
+	if not data is Dictionary or data.get("version") != 1 or data.get("district") not in [District.ID, "sagrada_osm_v2"]:
 		return
 	var p = data.get("position", [])
 	if p is Array and p.size() == 3 and (p[0] is float or p[0] is int) and (p[1] is float or p[1] is int) and (p[2] is float or p[2] is int):

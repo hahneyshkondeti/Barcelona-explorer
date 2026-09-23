@@ -11,3 +11,5 @@ data/.refresh/
 data/source/*.csv*
 
 !data/source/street_trees.csv.gz
+
+!data/source/city_street_trees.csv.gz

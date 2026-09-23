@@ -8,6 +8,7 @@ signal destination_requested
 signal sound_requested
 signal fps_requested
 signal place_requested(place: Dictionary)
+signal area_requested(index: int)
 signal continue_requested
 
 var controls: DriveInput
@@ -48,7 +49,7 @@ func _ready() -> void:
 	root.theme = theme
 	var title := label("B R I S A", 30, Color("fff7df"))
 	place(title, Vector2(30, 22), Vector2(300, 42))
-	var subtitle := label("BARCELONA  /  SAGRADA FAMÍLIA AREA", 12, Color("ffdfac"))
+	var subtitle := label("BARCELONA  /  CITY EXPLORER", 12, Color("ffdfac"))
 	place(subtitle, Vector2(32, 64), Vector2(440, 28))
 	var approximation := label("Mapped streets & footprints · façades estimated", 13, Color("ffffff"))
 	place(approximation, Vector2(32, 92), Vector2(440, 24))
@@ -61,7 +62,7 @@ func _ready() -> void:
 	map.car = car
 	map.navigation = navigation
 	place(map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
-	var north := label("N ↑    DISTRICT MAP", 11)
+	var north := label("N ↑    LOCAL CITY MAP", 11)
 	place(north, Vector2(-201, 275), Vector2(184, 24), Vector2(1, 0))
 	var places_button := button("Places & addresses", open_places)
 	place(places_button, Vector2(314, 131), Vector2(230, 48))
@@ -220,6 +221,13 @@ func build_pause() -> void:
 	column.add_child(label("PAUSED  /  BARCELONA POSTCARD", 13, Color("e8c281")))
 	column.add_child(button("Continue exploring", pause_requested.emit))
 	column.add_child(button("Reset car to a safe road", recover_requested.emit))
+	var areas := HBoxContainer.new()
+	var picker := OptionButton.new()
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for area in District.AREAS: picker.add_item(area.name)
+	areas.add_child(picker)
+	areas.add_child(button("Start in district", func(): area_requested.emit(picker.selected)))
+	column.add_child(areas)
 	sound_button = button("Sound: on", sound_requested.emit)
 	column.add_child(sound_button)
 	fps_button = button("Frame cap: 30 FPS", fps_requested.emit)
@@ -323,6 +331,9 @@ func filter_places() -> void:
 		if query.is_empty() or query in text.to_lower():
 			filtered_places.append(p)
 			places_list.add_item(text)
+			if filtered_places.size() >= 300:
+				places_info.text = "Showing the first 300 matches. Type more of a name or address to narrow the city-wide search."
+				break
 
 func select_place(index: int) -> void:
 	selected_place = filtered_places[index]
