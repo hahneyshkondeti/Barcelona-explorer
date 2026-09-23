@@ -1,0 +1,29 @@
+# Sources and licenses
+
+| Asset/data | Source | License/status |
+| --- | --- | --- |
+| Roads, footprints, tagged heights/levels, addresses, place records, parks, tree points | Bounded OpenStreetMap snapshot, 2026-09-23 | © OpenStreetMap contributors, ODbL 1.0; see `data/LICENSE.md` |
+| Adapted runtime database | `data/eixample.json`, reproducible with `tools/import_map.py` | ODbL 1.0; source extract and transformation supplied |
+| Plaster004 color, OpenGL normal, roughness, 1K JPG | https://ambientcg.com/view?id=Plaster004 | CC0 1.0; https://docs.ambientcg.com/license/ |
+| Façade details, windows, balconies, estimated storefront appearance, car, tower interpretation, trees, interface, road shaders | Original procedural game assets | Original project material; appearance does not establish real-building fidelity |
+| Engine sound | Original synthesis | No sampled commercial audio |
+| Default font and Godot runtime | Godot 4.5 | MIT and bundled third-party font/component notices; shown in Credits & licenses |
+| Landmark facts | Official Basilica history and columns articles | Facts summarized in original wording; no images or models taken |
+
+The CC0 material files were downloaded unchanged; the shader tints and scales them. They are a generic plaster surface, not photographs of Barcelona façades. In-game credits identify ambientCG and the license.
+
+OSM is visibly attributed in the driving interface and credits. The database includes original OSM IDs, record edit dates, available survey/check dates, snapshot date and source hash. Download dates are not presented as business verification dates. Unknown addresses are left blank and described as missing.
+
+The municipal address table was investigated but is not incorporated: its street-code/name join was unavailable. No claim of municipal address verification is made. No Google map imagery, Street View capture, GTA asset or proprietary building mesh is used.
+
+References:
+
+- https://www.openstreetmap.org/copyright
+- https://opendatacommons.org/licenses/odbl/1-0/
+- https://ambientcg.com/view?id=Plaster004
+- https://docs.ambientcg.com/license/
+- https://sagradafamilia.org/en/history-of-the-temple
+- https://blog.sagradafamilia.org/en/columns-sagrada-familia-geometry-mechanics-materials-stone-forest/
+- https://godotengine.org/license/
+
+The working name Brisa has not undergone brand clearance. Retain Godot and third-party license notices in distributed binaries. Distribute the OSM adapted database/source with the required ODbL terms; these terms do not automatically apply to unrelated original game code/art.

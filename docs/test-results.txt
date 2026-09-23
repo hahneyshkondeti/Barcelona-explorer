@@ -1,0 +1,30 @@
+Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
+
+PASS: Touch controls and mapped minimap fit inside viewport
+PASS: Acceleration advances along a real road
+PASS: Braking brings forward motion to a stop
+PASS: Brake held at rest engages reverse
+PASS: Right steering changes heading correctly
+PASS: Left steering changes heading correctly
+PASS: Imported building wall has a collision surface
+PASS: Driving into a mapped façade is stopped by collision
+PASS: Chase camera shortens against mapped façade
+PASS: Snapshot boundary prevents escape
+PASS: Ground and chase camera remain stable
+PASS: Pause freezes driving
+PASS: Keyboard W accelerates
+PASS: Two-finger steering and throttle coexist
+PASS: Release clears touch input
+PASS: Directed mapped-road route reaches landmark
+PASS: Navigation follows imported road segments rather than an invented grid
+PASS: Complete physical drive from start reaches landmark and opens card
+PASS: Continue exploring resumes the loop
+PASS: Offline places browser searches real street names while paused
+PASS: Place details distinguish OSM edit date and survey date
+PASS: Filtering places does not mutate the source record
+PASS: Selected shop routes to a mapped road
+PASS: Save reload restores real-map safe position and discovery
+PASS: Sound and frame-cap settings persist
+PASS: Recovery returns invalid position to a mapped road
+PASS: Malformed save falls back to correct map spawn
+RESULT: 27 checks, 0 failures

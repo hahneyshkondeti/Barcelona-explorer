@@ -1,0 +1,11 @@
+.godot/
+build/*
+!build/.gitkeep
+.DS_Store
+*.ipa
+*.xcarchive
+export_credentials.cfg
+
+__pycache__/
+data/.refresh/
+data/source/*.csv*
