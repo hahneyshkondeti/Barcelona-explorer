@@ -8,6 +8,7 @@ var route_root: Node3D
 var landmark_beacon: MeshInstance3D
 var wall_faces := PackedVector3Array()
 var unit_box := BoxMesh.new()
+var pavement: ShaderMaterial
 var asphalt: ShaderMaterial
 var plaster: Array[ShaderMaterial] = []
 var leaves: SphereMesh
@@ -66,6 +67,10 @@ func _ready() -> void:
 	leaves.height = 1
 	asphalt = ShaderMaterial.new()
 	asphalt.shader = load("res://assets/shaders/asphalt.gdshader")
+	pavement = ShaderMaterial.new()
+	pavement.shader = load("res://assets/shaders/pavement.gdshader")
+	for channel in ["Color", "NormalGL", "Roughness"]:
+		asphalt.set_shader_parameter(channel.to_lower(), load("res://assets/materials/asphalt/Asphalt030_1K-JPG_%s.jpg" % channel))
 	for color in [Color("a89982"), Color("c2b497"), Color("b4aa99"), Color("b49a87"), Color("c8c1ac"), Color("9e998e")]:
 		var mat := ShaderMaterial.new()
 		mat.shader = load("res://assets/shaders/masonry.gdshader")
@@ -124,10 +129,15 @@ func build_lighting() -> void:
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.background_mode = Environment.BG_SKY
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	env.ambient_light_color = Color("bac6d3")
-	env.ambient_light_energy = 0.38
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.ambient_light_energy = 0.65
+	if RenderingServer.get_current_rendering_method() == "forward_plus":
+		env.ssao_enabled = true
+		env.ssao_radius = 1.8
+		env.ssao_intensity = 1.6
+		env.ssao_power = 1.2
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.fog_enabled = true
 	env.fog_light_color = Color("b7c3cd")
 	env.fog_density = 0.00035
@@ -136,11 +146,12 @@ func build_lighting() -> void:
 	add_child(environment)
 	var sun := DirectionalLight3D.new()
 	sun.light_color = Color("fff1d8")
-	sun.light_energy = 0.65
+	sun.light_energy = 1.2
+	sun.light_angular_distance = 0.25 if RenderingServer.get_current_rendering_method() == "forward_plus" else 0.0
 	sun.rotation_degrees = Vector3(-44, -115, 0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 110
-	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	add_child(sun)
 
 func chunk_key(at: Vector3) -> String:
@@ -174,13 +185,18 @@ func build_road(road: Dictionary) -> void:
 	var a := District.vector(road.a, 0)
 	var b := District.vector(road.b, 0)
 	if road.drivable:
-		strip(a, b, road.width + 7.0, 0.065, material(Color("9a9990")))
+		strip(a, b, road.width + 7.0, 0.065, pavement)
 		strip(a, b, road.width, 0.09, asphalt)
 		var length := a.distance_to(b)
 		var direction := (b - a).normalized()
 		var side := direction.cross(Vector3.UP)
+		var inset := minf(8.0, length * 0.3)
 		for offset in [-1, 1]:
-			strip(a + side * (road.width / 2 - 0.25) * offset, b + side * (road.width / 2 - 0.25) * offset, 0.12, 0.105, material(Color("c3c1b3")))
+			var curb_a: Vector3 = a + direction * inset + side * (road.width / 2 + 0.15) * offset
+			var curb_b: Vector3 = b - direction * inset + side * (road.width / 2 + 0.15) * offset
+			if length > 20:
+				strip(curb_a, curb_b, 0.3, 0.115, pavement)
+			strip(a + direction * inset + side * (road.width / 2 - 0.25) * offset, b - direction * inset + side * (road.width / 2 - 0.25) * offset, 0.12, 0.105, material(Color("c3c1b3")))
 		# Visual markings estimated; geometry and driving graph retain source coordinates.
 		if road.width >= 10:
 			for d in range(3, int(length) - 4, 9):
@@ -190,7 +206,7 @@ func build_road(road: Dictionary) -> void:
 			instance_box(Vector3(0.12, 7, 0.12), pole + Vector3.UP * 3.5, 0, Color("444b4a"), false)
 			instance_box(Vector3(0.7, 0.16, 0.4), pole + Vector3.UP * 7, 0, Color("c0bab0"), false)
 	else:
-		strip(a, b, road.width, 0.07, material(Color("a49f92")))
+		strip(a, b, road.width, 0.07, pavement)
 
 func flat_polygon(coords: Array, y: float, mat: Material) -> void:
 	var polygon := PackedVector2Array()
@@ -241,6 +257,13 @@ func facade(a: Vector3, b: Vector3, normal: Vector3, height: float, heading: flo
 	var length := a.distance_to(b)
 	var columns := maxi(1, floori(length / 3.5))
 	var floors := maxi(1, floori((height - 4) / 3.2))
+	var tangent := (b - a).normalized()
+	var mid := (a + b) * 0.5
+	var stone := Color("b9b09b")
+	for level in [3.3, height - 0.65, height - 0.25]:
+		instance_box(Vector3(length, 0.18, 0.48), mid + Vector3.UP * level + normal * 0.12, heading, stone, true)
+	for edge in [0.12, length - 0.12]:
+		instance_box(Vector3(0.24, height - 0.5, 0.18), a + tangent * edge + Vector3.UP * height * 0.5 + normal * 0.07, heading, stone, true)
 	for j in columns:
 		var center := a.lerp(b, (j + 0.5) / columns) + normal * 0.09
 		var awning_color := Color("4f5b51") if posmod(seed_value, 2) == 0 else Color("776052")
@@ -253,16 +276,24 @@ func facade(a: Vector3, b: Vector3, normal: Vector3, height: float, heading: flo
 			instance_box(Vector3(1.48, 2.25, 0.15), p, heading, Color("d0c5af"), true)
 			instance_box(Vector3(1.17, 1.93, 0.18), p + normal * 0.09, heading, Color("344044"), true)
 			instance_box(Vector3(0.06, 1.94, 0.22), p + normal * 0.12, heading, Color("706d5f"), true)
+			instance_box(Vector3(1.65, 0.12, 0.36), p + Vector3.UP * 1.15 + normal * 0.12, heading, stone, true)
+			instance_box(Vector3(1.4, 0.12, 0.3), p - Vector3.UP * 1.05 + normal * 0.12, heading, stone, true)
+			instance_box(Vector3(1.18, 0.05, 0.23), p + normal * 0.13, heading, Color("706d5f"), true)
+			if posmod(seed_value + j, 3) == 0:
+				for side in [-1, 1]:
+					var shutter: Vector3 = p + tangent * side * 0.92 + normal * 0.1
+					instance_box(Vector3(0.43, 1.96, 0.1), shutter, heading, Color("526054"), true)
+					for slat in 8:
+						instance_box(Vector3(0.4, 0.035, 0.14), shutter + Vector3.UP * (slat * 0.23 - 0.8), heading, Color("737666"), true)
 			if floor_index < 4:
 				var balcony := p - Vector3.UP * 1.14 + normal * 0.35
 				instance_box(Vector3(1.9, 0.12, 0.8), balcony, heading, Color("a99e89"), true)
 				instance_box(Vector3(1.85, 0.055, 0.055), balcony + Vector3.UP * 0.8 + normal * 0.4, heading, Color("343c3a"), true)
-				var tangent := (b - a).normalized()
 				for rail in [-0.8, -0.4, 0.0, 0.4, 0.8]:
 					instance_box(Vector3(0.035, 0.8, 0.035), balcony + tangent * rail + Vector3.UP * 0.4 + normal * 0.4, heading, Color("343c3a"), true)
 
 func instance_box(size: Vector3, at: Vector3, heading: float, color: Color, detail: bool) -> void:
-	instance(unit_box, Transform3D(Basis(Vector3.UP, heading).scaled(size), at), color, detail)
+	instance(unit_box, Transform3D(Basis(Vector3.UP, heading).scaled_local(size), at), color, detail)
 
 func instance(mesh: Mesh, transform: Transform3D, color: Color, detail: bool) -> void:
 	var key := chunk_key(transform.origin) + ":" + color.to_html() + ":" + str(mesh.get_instance_id()) + ":" + str(detail)
@@ -274,9 +305,14 @@ func instance(mesh: Mesh, transform: Transform3D, color: Color, detail: bool) ->
 
 func build_tree(at: Vector3) -> void:
 	instance_box(Vector3(0.35, 5.5, 0.35), at + Vector3.UP * 2.75, 0.35, Color("5e5849"), false)
-	for i in 3:
-		var offset := Vector3(sin(i * 2.1) * 1.1, 5.6 + i * 0.45, cos(i * 2.1) * 1.1)
-		instance(leaves, Transform3D(Basis.IDENTITY.scaled(Vector3(3.5, 4, 3.5)), at + offset), Color("526c47"), false)
+	var variation := absf(sin(at.x * 17.3 + at.z * 8.1))
+	for i in 19:
+		var angle := i * 2.39996 + variation * 6.28
+		var radius := sqrt(float(i) / 19.0) * 2.4
+		var offset := Vector3(sin(angle) * radius, 5.9 + sin(i * 1.7) * 0.7 + (1.0 - radius / 3.0), cos(angle) * radius)
+		var size := Vector3(1.5, 1.7, 1.5) * (0.85 + variation * 0.35)
+		var color: Color = [Color("536345"), Color("687450"), Color("465c3d")][i % 3]
+		instance(leaves, Transform3D(Basis.IDENTITY.scaled(size), at + offset), color, false)
 
 func build_landmark() -> void:
 	# Original illustrative towers above the actual footprint. No scanned geometry claimed.
@@ -367,6 +403,11 @@ func flush_batches() -> void:
 			var glass := ShaderMaterial.new()
 			glass.shader = load("res://assets/shaders/glass.gdshader")
 			node.material_override = glass
+		if batch.mesh == leaves:
+			var foliage := ShaderMaterial.new()
+			foliage.shader = load("res://assets/shaders/foliage.gdshader")
+			foliage.set_shader_parameter("leaf_color", batch.color)
+			node.material_override = foliage
 		node.position = batch.origin
 		node.visibility_range_end = 180 if batch.detail else 420
 		node.visibility_range_end_margin = 20

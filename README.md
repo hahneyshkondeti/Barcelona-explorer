@@ -12,7 +12,9 @@ The snapshot contains 1,048 building records, 540 shops/cafés/restaurants and o
 
 This is **not a photorealistic digital twin or a live city feed**. Detailed façades, balconies, storefront appearance, missing heights, lane widths/markings, kerbs and street furniture are generated estimates. Sagrada Família occupies its mapped location/footprint but its upper structure is still an illustrative model. Terrain is flat. Shop names and addresses are source records, not independently verified current tenants. Some record edits are years old; a fresh download is not a fresh survey. Turn-restriction relations, traffic laws/signals, real pavement elevations, complex roofs and surveyed building interiors are not implemented.
 
-The visual upgrade adds plaster PBR textures, glass reflections, façade trims/balconies, sourced shop-name labels, mapped tree placement, asphalt grain, sun shadows and distance-limited detail. It improves the old block style but does not match Google Maps photogrammetry or scanned street-level façades.
+The visual upgrade adds scanned CC0 asphalt and plaster PBR materials, tiled flower-motif pavements, cornices, pilasters, shutters, balcony rails, leaf-cutout canopies, a tapered metallic car body and a lower chase camera. Rotated façade pieces preserve their local dimensions, fixing distorted windows along diagonal streets. It improves the old block style but does not match Google Maps photogrammetry or scanned street-level façades.
+
+Desktop uses Forward+ (Metal on macOS), ambient occlusion, four shadow cascades, 4× MSAA and temporal antialiasing. iOS uses the Mobile renderer without desktop-only ambient occlusion or TAA. These are distinct quality profiles; desktop screenshots are not evidence of iPhone fidelity or frame rate. The 30/60 FPS selector changes the cap, not detail quality. A compatibility fallback can be launched with `--rendering-method gl_compatibility` if the desktop GPU lacks RenderingDevice support.
 
 ## Run locally
 

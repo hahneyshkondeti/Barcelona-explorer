@@ -1,6 +1,6 @@
 # Real-map verification — 2026-09-23
 
-Godot 4.5 stable (`876b29033`), macOS on Apple M2 Pro; Compatibility renderer (OpenGL 4.1 Metal). **27 gameplay checks and 10 map/import/refresh checks passed.** This is desktop validation; no iOS build or device performance benchmark is claimed.
+Godot 4.5 stable (`876b29033`), macOS on Apple M2 Pro; Forward+ and Mobile renderer paths exercised with Metal 3.2. **28 gameplay/geometry checks and 10 map/import/refresh checks passed.** This is desktop validation; no iOS build or device performance benchmark is claimed.
 
 ## Gameplay
 
@@ -22,7 +22,9 @@ Current data: 1,048 building records; 540 place records (not necessarily unique 
 
 `tests/capture.gd` produced and the agent inspected `driving.png`, `landmark.png`, `discovery.png`, and `places.png`: real street orientation, detailed façades/materials, minimap, driving controls, arrival text and address/source-date browser. The landmark overview uses an inspection camera; gameplay uses the chase camera. Screenshots are actual Godot renders.
 
-The scene uses generic CC0 plaster material, procedural façade geometry, illustrative tower geometry, simple trees and original car art. The appearance is not photogrammetry. No claim of matching individual real shopfronts is made.
+The scene uses generic CC0 scanned asphalt and plaster materials, procedural tiled pavements and façade geometry, illustrative tower geometry, leaf-cutout tree clusters and original tapered car art. The appearance is not photogrammetry. No claim of matching individual real shopfronts is made.
+
+The additional geometry regression checks that a 45-degree façade instance retains its intended width/depth and orthogonal axes. This catches the former world-axis scaling/shear bug. Desktop rendering enables SSAO and TAA; Mobile omits these and uses a hard sun to avoid noisy soft shadows without temporal filtering. `driving-mobile.png` is the Mobile renderer running on the Mac, **not an iPhone screenshot**. Metal emits a sampler LOD-bias support warning with desktop TAA; captures complete successfully. Mobile startup is free of renderer errors.
 
 ## Offline packaging
 

@@ -1,5 +1,6 @@
 Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
 
+PASS: Diagonal facade geometry retains local dimensions without shear
 PASS: Touch controls and mapped minimap fit inside viewport
 PASS: Acceleration advances along a real road
 PASS: Braking brings forward motion to a stop
@@ -27,4 +28,4 @@ PASS: Save reload restores real-map safe position and discovery
 PASS: Sound and frame-cap settings persist
 PASS: Recovery returns invalid position to a mapped road
 PASS: Malformed save falls back to correct map spawn
-RESULT: 27 checks, 0 failures
+RESULT: 28 checks, 0 failures

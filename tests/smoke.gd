@@ -20,6 +20,12 @@ func frames(count: int) -> void:
 		await physics_frame
 
 func run() -> void:
+	var builder := WorldBuilder.new()
+	builder.unit_box.size = Vector3.ONE
+	builder.instance_box(Vector3(4, 2, 0.15), Vector3.ZERO, PI / 4, Color.WHITE, true)
+	var transform: Transform3D = builder.batches.values()[0].transforms[0]
+	check(is_equal_approx(transform.basis.x.length(), 4.0) and is_equal_approx(transform.basis.z.length(), 0.15) and absf(transform.basis.x.dot(transform.basis.z)) < 0.0001, "Diagonal facade geometry retains local dimensions without shear")
+	builder.free()
 	game = load("res://scenes/main.tscn").instantiate()
 	game.save.path = "user://smoke_map_journey.json"
 	if FileAccess.file_exists(game.save.path):

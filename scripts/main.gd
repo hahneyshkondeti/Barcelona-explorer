@@ -15,6 +15,8 @@ var is_paused := false
 var hud_timer := 0.0
 
 func _ready() -> void:
+	if RenderingServer.get_current_rendering_method() == "forward_plus":
+		get_viewport().use_taa = true
 	save.load_journey()
 	Engine.max_fps = save.fps
 	world = WorldBuilder.new()
