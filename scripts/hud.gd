@@ -9,6 +9,7 @@ signal sound_requested
 signal fps_requested
 signal place_requested(place: Dictionary)
 signal area_requested(index: int)
+signal start_requested(point: Vector3)
 signal continue_requested
 
 var controls: DriveInput
@@ -36,6 +37,14 @@ var filtered_places: Array = []
 var selected_place: Dictionary = {}
 var route_place_button: Button
 var street_label: Label
+var start_place_button: Button
+var address_lookup := AddressSearch.new()
+var search_timer: Timer
+var map_overlay: Control
+var city_map: CityMap
+var map_info: Label
+var map_start_button: Button
+var map_target := Vector3.INF
 
 func _ready() -> void:
 	root = Control.new()
@@ -62,8 +71,12 @@ func _ready() -> void:
 	map.car = car
 	map.navigation = navigation
 	place(map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
-	var north := label("N ↑    LOCAL CITY MAP", 11)
+	var north := label("N ↑    TAP MAP TO EXPAND", 11)
 	place(north, Vector2(-201, 275), Vector2(184, 24), Vector2(1, 0))
+	var expand_map := button("", open_map)
+	place(expand_map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
+	for state in ["normal", "hover", "pressed"]:
+		expand_map.add_theme_stylebox_override(state, StyleBoxEmpty.new())
 	var places_button := button("Places & addresses", open_places)
 	place(places_button, Vector2(314, 131), Vector2(230, 48))
 	street_label = label("", 16)
@@ -93,6 +106,7 @@ func _ready() -> void:
 	build_card()
 	build_credits()
 	build_places()
+	build_city_map()
 
 func apply_safe_area() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -292,7 +306,16 @@ func build_places() -> void:
 	place_search = LineEdit.new()
 	place_search.placeholder_text = "Search shop, café, street or house number"
 	place_search.custom_minimum_size.y = 44
-	place_search.text_changed.connect(func(_text: String): filter_places())
+	search_timer = Timer.new()
+	search_timer.one_shot = true
+	search_timer.wait_time = 0.25
+	add_child(search_timer)
+	search_timer.timeout.connect(filter_places)
+	place_search.text_changed.connect(func(_text: String):
+		route_place_button.disabled = true
+		start_place_button.disabled = true
+		search_timer.start())
+	place_search.text_submitted.connect(func(_text: String): filter_places())
 	column.add_child(place_search)
 	places_list = ItemList.new()
 	places_list.custom_minimum_size = Vector2(850, 180)
@@ -308,6 +331,9 @@ func build_places() -> void:
 			places_overlay.hide()
 			place_requested.emit(selected_place))
 	column.add_child(route_place_button)
+	start_place_button = button("Start at this address / place", func():
+		if not selected_place.is_empty(): start_requested.emit(District.vector(selected_place.point)))
+	column.add_child(start_place_button)
 	column.add_child(button("Back to driving", func():
 		places_overlay.hide()
 		pause_requested.emit()))
@@ -325,15 +351,16 @@ func filter_places() -> void:
 	selected_place = {}
 	route_place_button.disabled = true
 	places_info.text = "Select a record. Missing addresses are never inferred. OSM edit dates are not business verification dates."
-	var query := place_search.text.strip_edges().to_lower()
-	for p in District.DATA.places:
-		var text := "%s  ·  %s %s" % [p.name, p.street, p.number]
-		if query.is_empty() or query in text.to_lower():
-			filtered_places.append(p)
-			places_list.add_item(text)
-			if filtered_places.size() >= 300:
-				places_info.text = "Showing the first 300 matches. Type more of a name or address to narrow the city-wide search."
-				break
+	start_place_button.disabled = true
+	search_timer.stop()
+	filtered_places = address_lookup.search(place_search.text)
+	for record in filtered_places:
+		var text := "%s  ·  %s %s" % [record.name, record.street, record.number]
+		if record.category.begins_with("Recorded address"): text = record.name + "  ·  " + record.category
+		if record.get("suggested", false): text = "Suggested: " + text
+		places_list.add_item(text)
+	if filtered_places.is_empty(): places_info.text = "No recorded match. Try the street name without a number, or choose a starting point on the city map."
+	elif filtered_places.size() >= 300: places_info.text = "Showing the first 300 matches. Add a street name or house number to narrow the search."
 
 func select_place(index: int) -> void:
 	selected_place = filtered_places[index]
@@ -341,3 +368,53 @@ func select_place(index: int) -> void:
 	var address := "%s %s" % [p.street, p.number] if not p.street.is_empty() and not p.number.is_empty() else "Full street address not recorded"
 	places_info.text = "%s · %s\n%s\nOSM %s · edited %s\nSurvey/check date: %s · Storefront appearance is illustrative" % [p.name, p.category, address, p.id, p.timestamp.left(10), p.check_date if not p.check_date.is_empty() else "not recorded"]
 	route_place_button.disabled = false
+	start_place_button.disabled = false
+	places_info.text += "\nStart here places your car on the nearest drivable road. Address ranges retain the source location."
+
+func build_city_map() -> void:
+	map_overlay = overlay()
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	map_overlay.add_child(column)
+	var actions := HBoxContainer.new()
+	column.add_child(actions)
+	actions.add_child(label("BARCELONA  /  CHOOSE A START", 23))
+	actions.add_child(button("−", func(): city_map.change_zoom(1 / 1.5)))
+	actions.add_child(button("+", func(): city_map.change_zoom(1.5)))
+	actions.add_child(button("Whole city", func(): city_map.show_city()))
+	actions.add_child(button("My car", func(): city_map.show_car()))
+	actions.add_child(button("Close", close_map))
+	city_map = CityMap.new()
+	city_map.car = car
+	city_map.navigation = navigation
+	city_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	city_map.custom_minimum_size = Vector2(0, 250)
+	column.add_child(city_map)
+	city_map.point_selected.connect(func(point: Vector3):
+		map_target = point
+		var nearest := District.nearest_segment(point)
+		map_info.text = "%s · start on the road, %d m from selected point" % [nearest.road.name, roundi(nearest.distance)]
+		map_start_button.disabled = false)
+	map_info = label("Tap a point, then Start here. Drag to pan; use + / − or the mouse wheel to zoom.", 16)
+	map_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(map_info)
+	map_start_button = button("Start here", func():
+		if map_target.is_finite(): start_requested.emit(map_target))
+	map_start_button.disabled = true
+	column.add_child(map_start_button)
+	column.add_child(label("© OpenStreetMap contributors · Offline snapshot · White: car  /  Gold ring: starting road", 12))
+
+func open_map() -> void:
+	if not car.paused: pause_requested.emit()
+	pause_overlay.hide()
+	places_overlay.hide()
+	map_target = Vector3.INF
+	map_start_button.disabled = true
+	map_info.text = "Tap a point, then Start here. Drag to pan; use + / − or the mouse wheel to zoom."
+	map_overlay.show()
+	city_map.selected = Vector3.INF
+	city_map.show_city()
+
+func close_map() -> void:
+	map_overlay.hide()
+	if car.paused: pause_requested.emit()

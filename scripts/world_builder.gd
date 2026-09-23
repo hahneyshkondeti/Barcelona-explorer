@@ -515,21 +515,40 @@ func build_addresses() -> void:
 		label.no_depth_test = false
 		add_child(label)
 		label.position = at
+	# Source ways often consist of many short segments. Label all supplied names,
+	# spacing repeats locally instead of filtering out short streets altogether.
+	var named_positions: Dictionary = {}
 	for road in features.roads:
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired: return
+			slice_started = Time.get_ticks_usec()
+		var street_name := str(road.get("name", "")).strip_edges()
+		if street_name.is_empty() or street_name == "Unnamed mapped way":
+			continue
 		var a := District.vector(road.a, 0)
 		var b := District.vector(road.b, 0)
-		if a.distance_to(b) < 45:
-			continue
-		var sign := Label3D.new()
-		sign.text = road.name
-		sign.font_size = 32
-		sign.pixel_size = 0.025
-		sign.modulate = Color("dedbd0")
-		sign.outline_modulate = Color("252e30")
-		sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		sign.visibility_range_end = 55
-		add_child(sign)
-		sign.position = (a + b) / 2 + Vector3.UP * 4
+		var count := maxi(1, ceili(a.distance_to(b) / 70.0))
+		if not named_positions.has(street_name): named_positions[street_name] = []
+		for index in count:
+			var at := a.lerp(b, (index + 0.5) / count)
+			var crowded := false
+			for previous: Vector3 in named_positions[street_name]:
+				if previous.distance_squared_to(at) < 45.0 * 45.0:
+					crowded = true
+					break
+			if crowded: continue
+			named_positions[street_name].append(at)
+			var sign := Label3D.new()
+			sign.text = street_name
+			sign.font_size = 32
+			sign.pixel_size = 0.025
+			sign.modulate = Color("dedbd0")
+			sign.outline_modulate = Color("252e30")
+			sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			sign.visibility_range_end = 55
+			add_child(sign)
+			sign.position = at + Vector3.UP * 4
 
 func build_boundary() -> void:
 	var rect := District.BOUNDS

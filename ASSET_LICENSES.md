@@ -34,3 +34,5 @@ References:
 The working name Brisa has not undergone brand clearance. Retain Godot and third-party license notices in distributed binaries. Distribute the OSM adapted database/source with the required ODbL terms; these terms do not automatically apply to unrelated original game code/art.
 
 - `assets/icon.svg`: original vector street-grid/car artwork created for this project; no third-party imagery.
+
+- `data/city/overview.svg` and `address_index.json`: generated from this project's OpenStreetMap-derived city snapshot; © OpenStreetMap contributors, ODbL 1.0. The overview is an original vector rendering of road coordinates. No Google map tiles or imagery are used.

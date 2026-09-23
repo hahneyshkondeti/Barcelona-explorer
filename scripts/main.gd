@@ -48,6 +48,7 @@ func _ready() -> void:
 	add_child(hud)
 	hud.place_requested.connect(route_to_place)
 	hud.area_requested.connect(explore_area)
+	hud.start_requested.connect(start_at)
 	hud.pause_requested.connect(toggle_pause)
 	hud.recover_requested.connect(recover)
 	hud.camera_requested.connect(camera.reset)
@@ -103,6 +104,7 @@ func toggle_pause() -> void:
 	hud.pause_overlay.visible = is_paused
 	if not is_paused:
 		hud.places_overlay.hide()
+		hud.map_overlay.hide()
 
 func recover() -> void:
 	car.recover(save.safe_position, save.heading)
@@ -110,6 +112,8 @@ func recover() -> void:
 	camera.reset()
 	hud.pause_overlay.hide()
 	hud.card_overlay.hide()
+	hud.places_overlay.hide()
+	hud.map_overlay.hide()
 	set_paused(false)
 	update_route()
 
@@ -173,7 +177,12 @@ func explore_area(index: int) -> void:
 	if index < 0 or index >= District.AREAS.size(): return
 	var area: Dictionary = District.AREAS[index]
 	var target := BuildingAssets.anchor_position(area.lonlat[0], area.lonlat[1], 0.55)
-	target = District.nearest_road(target)
+	start_at(target)
+
+func start_at(point: Vector3) -> void:
+	if not District.in_bounds(point, -3): return
+	var target := District.nearest_road(point)
+	if not District.is_safe(target): return
 	car.recover(target, District.heading_at(target))
 	world.stream_at(car.global_position, true)
 	camera.reset()
@@ -182,5 +191,6 @@ func explore_area(index: int) -> void:
 	hud.pause_overlay.hide()
 	hud.card_overlay.hide()
 	hud.places_overlay.hide()
+	hud.map_overlay.hide()
 	set_paused(false)
 	persist()

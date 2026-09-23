@@ -31,7 +31,7 @@ class CityChecks(unittest.TestCase):
             self.assertEqual(len(owners),len(set(owners)))
             for owner in owners:self.assertIn(owner,M['tiles'])
     def test_all_tile_payloads(self):
-        counts=collections.Counter();building_ids=set();tree_ids=set()
+        counts=collections.Counter();building_ids=set();tree_ids=set();address_streets=collections.defaultdict(set)
         for key,path in M['tiles'].items():
             tile=json.loads((args.city/'tiles'/path.rsplit('/',1)[1]).read_text())
             for kind,records in tile.items(): counts[kind]+=len(records)
@@ -39,13 +39,23 @@ class CityChecks(unittest.TestCase):
                 building_ids.add(b['id']);self.assertGreaterEqual(len(b['rings'][0]),3)
                 for ring in b['rings']:
                     self.assertTrue(all(math.isfinite(v) for p in ring for v in p))
+            for address in tile['addresses']:
+                if address['street']: address_streets[address['street']].add(key)
             for t in tile['trees']:
                 self.assertNotIn(t['id'],tree_ids);tree_ids.add(t['id'])
+        index=json.loads((args.city/'address_index.json').read_text())
+        self.assertEqual({name:set(keys) for name,keys in index.items()},dict(address_streets))
         for kind in ('buildings','places','addresses','parks'):
             self.assertEqual(counts[kind],M['metadata']['counts'][kind])
         self.assertEqual(building_ids,{b['id'] for b in M['buildings']})
         self.assertEqual(counts['trees'],M['tree_metadata']['municipal_street_trees']+M['tree_metadata']['osm_park_trees'])
         self.assertGreaterEqual(counts['roads'],M['metadata']['counts']['roads'])
+    def test_offline_overview(self):
+        import xml.etree.ElementTree as ET
+        root=ET.parse(args.city/'overview.svg').getroot()
+        lo,hi=M['bounds']
+        self.assertEqual(list(map(float,root.attrib['viewBox'].split())),[lo[0],lo[1],hi[0]-lo[0],hi[1]-lo[1]])
+        self.assertEqual(len(root.findall('.//{http://www.w3.org/2000/svg}path')),len(M['roads']))
     def test_refresh_rejects_truncated_city(self):
         new=dict(M,metadata=dict(M['metadata'],counts=dict(M['metadata']['counts'],roads=0)))
         self.assertTrue(flags(M,new))

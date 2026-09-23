@@ -80,6 +80,8 @@ def pack(data,tree_data,rings,out):
     manifest['metadata']['bulk_source']='https://download.bbbike.org/osm/bbbike/Barcelona/Barcelona.osm.gz'
     manifest['metadata']['boundary_relation']='347950'
     dump(out/'manifest.json',manifest)
+    from build_navigation_assets import build as build_navigation
+    build_navigation(out)
     print('Packed',len(tiles),'tiles;',data['metadata']['counts'],flush=True)
 
 if __name__=='__main__':

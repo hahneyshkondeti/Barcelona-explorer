@@ -100,3 +100,13 @@ See [test details](docs/TESTING.md). Cross-city routing and streaming are tested
 ## GitHub iOS builds and later App Store upload
 
 See [docs/APP_STORE.md](docs/APP_STORE.md). Every code push runs gameplay/data checks and an unsigned physical-iPhone Xcode build. Manual signed archive/upload modes are prepared but require Apple signing secrets. Public App Store submission is separate and currently parked.
+
+## Choose where to begin
+
+Tap the minimap on the right to open the full-city map. Drag to pan, use + / − (or the mouse wheel) to zoom, tap a point and press **Start here**. **My car** zooms to the current position; **Whole city** restores the overview. Detailed street names appear when zoomed in. Driving pauses while the map is open.
+
+In **Places & addresses**, search an offline street address, select a record, then choose **Start at this address / place** or follow a driving route there. Search includes standalone address records, ignores accents and common street prefixes, and labels spelling suggestions. For example, `Carrer Gretel Ammann Marinez 12` finds the source record `Carrer de Gretel Ammann Martínez 16-12`; this is a recorded range, not a surveyed individual door. Missing numbers are not invented.
+
+Both launch actions position the car on the nearest mapped drivable road, reset its heading/camera and save the new safe position. The map shows the offset from a tapped point before launch. Floating street labels now include short named streets and repeat along longer streets, with nearby duplicates suppressed. Unnamed source roads are not assigned invented names.
+
+`tools/build_city.py` regenerates the address index and overview during each city refresh. To regenerate them from an existing tile set: `python3 tools/build_navigation_assets.py`. All map content remains offline and retains OpenStreetMap attribution.
