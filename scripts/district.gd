@@ -18,6 +18,8 @@ static var CELL := 192.0
 static var AREAS: Array = []
 static var INFRASTRUCTURE: Dictionary = {}
 static var TRANSIT: Array = []
+static var PUBLIC_SPACES: Dictionary = {}
+static var space_tiles: Dictionary = {}
 
 static func _static_init() -> void:
 	DATA = JSON.parse_string(FileAccess.get_file_as_string("res://data/city/manifest.json"))
@@ -29,6 +31,24 @@ static func _static_init() -> void:
 	for key in INFRASTRUCTURE.cells:
 		if not DATA.tile_dependencies.has(key): DATA.tile_dependencies[key] = []
 		if key not in DATA.tile_dependencies[key]: DATA.tile_dependencies[key].append(key)
+	PUBLIC_SPACES = JSON.parse_string(FileAccess.get_file_as_string("res://data/city/public_spaces.json"))
+	for site in PUBLIC_SPACES.sites:
+		site["features"] = []
+		for feature in PUBLIC_SPACES.features:
+			if feature.site == site.site: site.features.append(feature)
+		var owner := tile_key(Vector2i(floori(site.point[0] / CELL), floori(site.point[1] / CELL)))
+		if not space_tiles.has(owner): space_tiles[owner] = []
+		space_tiles[owner].append(site)
+		var lo := Vector2(INF, INF)
+		var hi := Vector2(-INF, -INF)
+		for p in site.rings[0]:
+			lo = lo.min(Vector2(p[0], p[1]))
+			hi = hi.max(Vector2(p[0], p[1]))
+		for x in range(floori(lo.x / CELL), floori(hi.x / CELL) + 1):
+			for z in range(floori(lo.y / CELL), floori(hi.y / CELL) + 1):
+				var key := tile_key(Vector2i(x, z))
+				if not DATA.tile_dependencies.has(key): DATA.tile_dependencies[key] = []
+				if owner not in DATA.tile_dependencies[key]: DATA.tile_dependencies[key].append(owner)
 	TREE_DATA = {"metadata": DATA.tree_metadata, "trees": []}
 	START = vector(DATA.start)
 	START_HEADING = float(DATA.start_heading)
@@ -109,6 +129,7 @@ static func tile(key: String) -> Dictionary:
 			tile_cache[key] = JSON.parse_string(FileAccess.get_file_as_string(DATA.tiles[key]))
 		else:
 			tile_cache[key] = {"roads":[], "buildings":[], "trees":[], "parks":[], "addresses":[], "places":[]}
+		tile_cache[key]["public_spaces"] = space_tiles.get(key, [])
 		tile_cache[key]["infrastructure"] = INFRASTRUCTURE.cells.get(key, [])
 	return tile_cache[key]
 

@@ -121,6 +121,18 @@ The offline city now includes **461 mapped metro entrances**, **174 metro statio
 - Search **Metro Sagrada Família**, **Bus stop**, or a stop name under **Places and addresses**, then route or start on the nearest drivable road. Nearby transit appears on the minimap. On the enlarged map, zoom in for M metro markers and further for B bus stops.
 - Station centers are map/search markers only: no invented surface entrance or underground interior is created there.
 - Stop, yield, speed and no-entry signs have distinct simplified graphics. Unsupported sign codes use a neutral plaque displaying the source code. Traffic lights have static, unlit lenses; traffic phases and enforcement are not simulated.
-- Original coordinates are preserved. Control nodes mapped on the roadway are offset to an estimated roadside for rendering, with this approximation recorded separately. Sign orientation, pole dimensions and shelters are illustrative. Furniture is streamed and batched, has distance-limited labels, and has no additional collision bodies.
+- Original coordinates are preserved. Control nodes mapped on the roadway are offset to an estimated roadside for rendering, with this approximation recorded separately. Bus-stop poles and shelter footprints are checked against nearby rendered roads and building outlines; unsafe shelters are omitted, and unresolved stops retain their map/search records without 3D furniture. Sign orientation, pole dimensions and shelters are illustrative. Furniture is streamed and batched, has distance-limited labels, and has no additional collision bodies.
 
 Rebuild these records with `python3 tools/build_infrastructure.py`. The full-city refresh pipeline also rebuilds them automatically from its new dated source snapshot. No runtime service or API key is needed.
+
+## Corrected transit and authored central squares
+
+Metro entrance labels now lead with the associated **station name**, followed by a separate **Exit** label. An exit street is no longer presented as a station name. Where OSM has no station association, the sign says “Metro entrance”; names are not guessed from proximity.
+
+The current snapshot renders 2,001 bus stops at their mapped coordinates and offsets 1,640 to a nearby clear footprint (at most 12 metres). 131 unresolved stops are map/search-only; 108 tagged shelters are omitted when their estimated footprint would overlap the road or a building. These are corrections to the game's estimated street geometry, not claims that the real stop moved.
+
+**Plaça de Catalunya** now has its mapped pedestrian outline, planting beds, twin-fountain footprints, other basins, the mapped compass-rose area with an original paving pattern, and mapped benches. **Plaça d’Espanya** has the central island, fountain basin and a dedicated model interpreting Jujol’s triangular monument and documented 33-metre height. The old generic building extrusion at that fountain is replaced. Basin walls and the island edge have collision boundaries. The separate Montjuïc Magic Fountain is not part of this change.
+
+Search either square in Places and addresses (Spanish spelling also works), then use the existing route/start action. The enlarged map displays the squares and basin outlines when zoomed in. Source geometry is from the dated OSM snapshot; fountain sculpture, above-ground proportions, materials, paving decoration, benches and water displays remain simplified interpretations, not scans or current operating conditions. Surrounding buildings remain the existing procedural models.
+
+`python3 tools/build_public_spaces.py` rebuilds the plaza geometry. Full-city refresh rebuilds it too and rejects a snapshot that loses either the twin-fountain footprints or Espanya’s fountain. Water shading is animated without per-frame CPU updates; geometry is batched and loaded with the surrounding tiles.

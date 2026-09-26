@@ -79,3 +79,12 @@ The exploration suite now passes 24 checks, including heading-up and north-up tr
 `python3 tests/check_infrastructure.py` checks transit tag semantics, source-coordinate preservation, stop-area names, polygon/pole deduplication, envelope filtering, and estimated roadside offsets. `tests/check_city.py` validates every shipped infrastructure record and its cell ownership. `Godot --headless --script tests/infrastructure.gd` checks runtime tile attachment, transit search, geometry reuse, bounded labels, and the absence of fabricated entrances at underground station centers. CI runs these alongside the existing driving/exploration suites.
 
 Current local checks: 10 city data checks, 2 importer fixture tests, 14 infrastructure checks, 24 exploration checks, 10 streaming/performance checks, and 42 full-city checks pass (102 total). These are functional checks, not a physical-iPhone FPS measurement.
+
+### Square geometry and transit corrections (2026-09-27)
+
+- Four importer/placement fixture tests cover crossing roads, narrow sidewalks, suppressed unsafe shelters, completely blocked footprints, preserved source coordinates, and station-name versus exit-name semantics.
+- Eleven city data checks include the required Espanya and twin Catalunya fountain IDs and plaza geometry.
+- Eight public-space checks exercise square search ranking, tile ownership, drivable starting points and physics ray hits on both fountain rims. Run `Godot --script tests/public_spaces.gd -- --capture` for actual renderer captures in `/tmp/brisa-square-catalunya.png` and `/tmp/brisa-square-espanya.png`.
+- The 24 exploration, 14 transit and 10 streaming/performance checks also pass locally: **71 checks total**. Both squares were visually reviewed using Metal on the local Mac. Physical iPhone performance remains unmeasured.
+
+The square surfaces and basins follow dated OSM outlines. The vertical monument, sculpture, compass-rose decoration and water effect are approximate. Bus furniture checks account for all locally rendered drivable road pieces, not only roads connected to the navigation graph. Unresolved stops remain searchable but do not render an obstructing pole.

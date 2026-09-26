@@ -142,7 +142,13 @@ func _ready() -> void:
 				return
 			slice_started = Time.get_ticks_usec()
 		build_road(road)
+	for site in features.get("public_spaces", []):
+		await PublicSpaces.build(self, site)
+		if retired:
+			queue_free()
+			return
 	for building in features.buildings:
+		if building.id in District.PUBLIC_SPACES.replaced_buildings: continue
 		if incremental and budget_expired():
 			await get_tree().process_frame
 			if retired:

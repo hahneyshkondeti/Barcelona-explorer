@@ -33,6 +33,7 @@ static func label(world: WorldBuilder, text: String, at: Vector3, heading: float
 
 static func build(world: WorldBuilder, record: Dictionary) -> void:
 	var kind: String = record.kind
+	if not record.get("render_visible", true): return
 	if kind == "metro_station": return # Underground center is not a surface entrance.
 	var at := District.vector(record.render_point, 0.13)
 	var heading: float = record.heading
@@ -45,11 +46,12 @@ static func build(world: WorldBuilder, record: Dictionary) -> void:
 		var metro := kind == "metro_entrance"
 		world.instance_box(Vector3(0.85, 0.85, 0.1), board, heading, Color("bd302c") if metro else Color("24617b"), true)
 		label(world, "M" if metro else "BUS", board + front, heading, 0.014 if metro else 0.009)
-		var title: String = record.name if not str(record.name).is_empty() else record.station_name
+		var title: String = record.get("display_name", record.name)
+		if metro and not str(record.get("entrance_name", "")).is_empty(): title += "\nExit: " + str(record.entrance_name)
 		if title.is_empty(): title = "Metro entrance" if metro else "Bus stop"
 		if not str(record.ref).is_empty(): title += " · " + str(record.ref)
 		label(world, title, at + Vector3.UP * 3.65, heading, 0.012)
-		if not metro and record.tags.get("shelter", "") == "yes":
+		if not metro and record.get("render_shelter", false):
 			var back := basis * Vector3(0, 0, -1.2)
 			for side in [-1, 1]:
 				world.instance_box(Vector3(0.08, 2.4, 0.08), at + back + basis * Vector3(side * 1.25, 1.2, 0), heading, steel, true)

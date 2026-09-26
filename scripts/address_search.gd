@@ -41,6 +41,10 @@ func search(query: String, limit: int = 300) -> Array:
 		if token.is_valid_int(): number = token
 		else: tokens.append(token)
 	var results: Array = []
+	for site in District.PUBLIC_SPACES.sites:
+		var aliases := "Plaza Catalunya Cataluña" if site.site == "catalunya" else "Plaza Espana España"
+		if words_match(tokens, normalize(site.name + " " + aliases)) and number.is_empty():
+			results.append({"id":site.id, "name":site.name, "category":"Square and fountains", "point":site.point, "street":"", "number":"", "timestamp":site.get("timestamp", "unknown"), "check_date":""})
 	if not tokens.is_empty():
 		# Exact street matches first, then tolerant spelling suggestions.
 		for fuzzy in [false, true]:
@@ -62,7 +66,8 @@ func search(query: String, limit: int = 300) -> Array:
 						if results.size() >= limit: return results
 	for record in District.TRANSIT:
 		var category := "Bus stop" if record.kind == "bus_stop" else ("Metro entrance" if record.kind == "metro_entrance" else "Metro station")
-		var title: String = record.name if not str(record.name).is_empty() else record.station_name
+		var title: String = record.get("display_name", record.name)
+		if record.kind == "metro_entrance" and not str(record.get("entrance_name", "")).is_empty(): title += " · Exit: " + str(record.entrance_name)
 		if title.is_empty(): title = category
 		var text := normalize("%s %s %s %s" % [category, title, record.ref, record.station_name])
 		if words_match(tokens, text) and (number.is_empty() or number == str(record.ref)):

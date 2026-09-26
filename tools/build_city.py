@@ -121,6 +121,8 @@ if __name__=='__main__':
     pack(data,trees,rings,args.output)
     from build_infrastructure import build as build_infrastructure
     build_infrastructure(args.source,args.output)
+    from build_public_spaces import build as build_public_spaces
+    build_public_spaces(args.source,args.output)
     groups=collections.defaultdict(list)
     for row in selected:
         if row['codi_districte']:

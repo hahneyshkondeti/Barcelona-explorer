@@ -2,6 +2,7 @@
 """Extract dated OSM transit and street furniture; never invent missing locations."""
 import argparse, collections, gzip, json, math, pathlib, xml.etree.ElementTree as ET
 from import_map import ROOT, project
+from furniture_placement import place_stop, closest as closest_point
 
 
 def classify(tags):
@@ -45,7 +46,7 @@ def build(source, city):
             ways.append((dict(e.attrib), tags, kind, refs)); wanted.update(refs)
         elif e.tag == 'relation' and tags.get('public_transport') == 'stop_area':
             for member in e.findall('member'):
-                areas[member.get('type') + '/' + member.get('ref')] = tags.get('name', '')
+                areas.setdefault(member.get('type') + '/' + member.get('ref'), set()).add(tags.get('name', ''))
     coords = {}
     if wanted:
         for e in elements(source):
@@ -63,9 +64,24 @@ def build(source, city):
         a,b=road['a'],road['b']
         for x in range(math.floor(min(a[0],b[0])/cell_size),math.floor(max(a[0],b[0])/cell_size)+1):
             for z in range(math.floor(min(a[1],b[1])/cell_size),math.floor(max(a[1],b[1])/cell_size)+1): roads[x,z].append(road)
+    tile_cache = collections.OrderedDict()
+    def local_features(x,z):
+        result=[]; local_roads=[]; owners=set()
+        for dx in (-1,0,1):
+            for dz in (-1,0,1): owners.update(manifest.get('tile_dependencies',{}).get(f'{x+dx}:{z+dz}',[]))
+        for owner in owners:
+            if owner not in tile_cache:
+                path=city/'tiles'/manifest['tiles'][owner].rsplit('/',1)[-1]
+                payload=json.loads(path.read_text())
+                tile_cache[owner]=([b['rings'] for b in payload['buildings']],[r for r in payload['roads'] if r['drivable']])
+                if len(tile_cache)>64: tile_cache.popitem(last=False)
+            result.extend(tile_cache[owner][0]); local_roads.extend(tile_cache[owner][1])
+        return result,local_roads
     cells = collections.defaultdict(list); counts = collections.Counter()
     for r in records.values():
-        r['station_name'] = areas.get(r['id'], '')
+        r['station_name'] = ' / '.join(sorted(n for n in areas.get(r['id'], set()) if n))
+        r['display_name'] = (r['station_name'] or 'Metro entrance') if r['kind']=='metro_entrance' else r['name']
+        r['entrance_name'] = r['name'] if r['kind']=='metro_entrance' and r['name'] != r['station_name'] else ''
         p = r['point']; x,z = [math.floor(v/cell_size) for v in p]
         closest=None; best=50.0
         for dx in (-1,0,1):
@@ -98,6 +114,13 @@ def build(source, city):
             bearing=float(direction)
             if 0<=bearing<360: r['heading']=math.radians(180-bearing);r['orientation']='mapped_bearing'
         except ValueError: pass
+        if r['kind']=='bus_stop':
+            nearby={road.get('id',str(road)):road for dx in (-1,0,1) for dz in (-1,0,1) for road in roads[x+dx,z+dz]}
+            buildings, local_roads=local_features(x,z)
+            nearby=list(nearby.values())+local_roads
+            nearby=[road for road in nearby if math.dist(p, closest_point(p,road['a'],road['b']))<45]
+            buildings=[rings for rings in buildings if min(q[0] for q in rings[0])-15<=p[0]<=max(q[0] for q in rings[0])+15 and min(q[1] for q in rings[0])-15<=p[1]<=max(q[1] for q in rings[0])+15]
+            r.update(place_stop(p,nearby,buildings,r['tags'].get('shelter')=='yes'))
         cells[f'{x}:{z}'].append(r); counts[r['kind']]+=1
     result={'metadata':{'source':'OpenStreetMap','license':'ODbL-1.0','attribution':'© OpenStreetMap contributors',
             'retrieved_at':manifest['metadata']['retrieved_at'],'counts':dict(counts),

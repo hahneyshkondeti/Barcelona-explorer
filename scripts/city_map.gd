@@ -108,6 +108,17 @@ func _draw() -> void:
 			var at := BuildingAssets.anchor_position(area.lonlat[0], area.lonlat[1], 0)
 			draw_string(ThemeDB.fallback_font, map_point(at), area.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("fff3d4"))
 	if zoom >= 5:
+		for site in District.PUBLIC_SPACES.sites:
+			var outline := PackedVector2Array()
+			for point in site.rings[0]: outline.append(map_point(District.vector(point)))
+			draw_colored_polygon(outline, Color("657b71"))
+			for feature in site.features:
+				if feature.kind not in ["water", "fountain"]: continue
+				var basin := PackedVector2Array()
+				for point in feature.rings[0]: basin.append(map_point(District.vector(point)))
+				draw_colored_polygon(basin, Color("5bbed0"))
+			var at := map_point(District.vector(site.point))
+			if Rect2(Vector2.ZERO, size).has_point(at): draw_string(ThemeDB.fallback_font, at, site.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("fff3d4"))
 		for record in District.TRANSIT:
 			if record.kind == "bus_stop" and zoom < 12: continue
 			if record.kind == "metro_entrance" and zoom < 20: continue

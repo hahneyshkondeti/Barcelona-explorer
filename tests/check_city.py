@@ -71,11 +71,23 @@ class CityChecks(unittest.TestCase):
                 x,z=r['point'];self.assertTrue(lo[0]<=x<=hi[0] and lo[1]<=z<=hi[1])
                 self.assertEqual(cell,f'{math.floor(x/M["cell_size"])}:{math.floor(z/M["cell_size"])}')
                 self.assertTrue(all(math.isfinite(v) for v in r['render_point']))
-                if r['kind'] in ('metro_entrance','bus_stop','metro_station'): self.assertEqual(r['point'],r['render_point'])
+                if r['kind'] in ('metro_entrance','metro_station'): self.assertEqual(r['point'],r['render_point'])
         self.assertEqual(dict(counts),data['metadata']['counts'])
         self.assertEqual(data['metadata']['retrieved_at'],M['metadata']['retrieved_at'])
         self.assertGreater(counts['metro_entrance'],300);self.assertGreater(counts['bus_stop'],2000)
         self.assertEqual(data['metadata']['license'],'ODbL-1.0')
+
+    def test_public_space_sources(self):
+        data=json.loads((args.city/'public_spaces.json').read_text())
+        self.assertEqual({s['site'] for s in data['sites']},{'catalunya','espanya'})
+        features=data['features']
+        self.assertEqual(sum(f['id']=='relation/21286243' for f in features),2)
+        self.assertEqual(sum(f['id']=='way/126832508' for f in features),1)
+        self.assertIn('way/126832508',data['replaced_buildings'])
+        for f in features:
+            self.assertTrue(all(len(ring)>=3 for ring in f['rings']))
+            self.assertTrue(all(math.isfinite(v) for ring in f['rings'] for p in ring for v in p))
+        self.assertEqual(data['metadata']['retrieved_at'],M['metadata']['retrieved_at'])
 
     def test_preserved_intro_location(self):
         pilot=json.loads((ROOT/'data/eixample.json').read_text())

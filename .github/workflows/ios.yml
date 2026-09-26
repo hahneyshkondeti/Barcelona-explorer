@@ -32,7 +32,7 @@ jobs:
           Godot --headless --editor --import --quit
           python3 tests/check_city.py
           python3 tests/check_infrastructure.py
-          for test in handling smoke city building_assets performance exploration infrastructure; do
+          for test in handling smoke city building_assets performance exploration infrastructure public_spaces; do
             Godot --headless --script "tests/$test.gd"
           done
   validate:
