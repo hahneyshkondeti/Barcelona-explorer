@@ -59,4 +59,4 @@ Original game code and original assets: © 2026 Hahneysh Kondeti. Third-party da
 
 ## City Explorer app icon
 
-`assets/city-explorer-icon.png`: generated with OpenAI's built-in image-generation tool for this project, 2026-09-28. Red car with a black Sagrada Família silhouette; an illustrative game icon, not a surveyed architectural model. Final prompt is recorded in `docs/MAC_APP.md`.
+`assets/city-explorer-icon.png`: user-supplied artwork, selected 2026-09-28 from `ChatGPT Image 28 Sept 2026, 01_18_00.png`. Used unchanged at the user's request. No separate third-party license was supplied; depicted trademarks retain their owners' rights. Replaces the earlier generated icon.

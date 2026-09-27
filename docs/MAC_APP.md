@@ -24,6 +24,4 @@ This packages the current game. Real building scans and weekly downloadable asse
 
 ## Icon
 
-`assets/city-explorer-icon.png` is generated using the built-in image-generation tool. Final edit prompt:
-
-> Edit this into a clean GRAPHIC APP ICON. Keep the red car foreground concept but simplify to an original unbranded red sports car with no badge or logos. Make Sagrada Família behind it a pure solid BLACK SILHOUETTE with recognizable spires, no photographic brown stone detail. Remove trees, mountains, pavement scenery. Flat warm ivory background. Bold clean shapes, restrained shaded red car, almost vector illustration, crisp recognizable at small Dock size. Square centered composition with 10% padding. No text. This is an app icon, not a photograph.
+`assets/city-explorer-icon.png` is the exact user-supplied image `ChatGPT Image 28 Sept 2026, 01_18_00.png`, selected on 2026-09-28. The artwork is unchanged; Godot generates the required macOS icon sizes during export. It replaces the previous generated icon.
