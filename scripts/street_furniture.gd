@@ -28,7 +28,7 @@ static func label(world: WorldBuilder, text: String, at: Vector3, heading: float
 	sign.visibility_range_end = 65
 	sign.no_depth_test = false
 	world.add_child(sign)
-	sign.position = at
+	sign.position = world.elevated(at)
 	sign.rotation.y = heading
 
 static func build(world: WorldBuilder, record: Dictionary) -> void:

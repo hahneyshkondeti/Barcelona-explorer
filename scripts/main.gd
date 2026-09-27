@@ -76,7 +76,11 @@ func _process(delta: float) -> void:
 	if save_timer > 3:
 		persist()
 		save_timer = 0
-	if not car.global_position.is_finite() or car.position.y < -4 or not District.in_bounds(car.position, 5):
+	if not car.global_position.is_finite() or not District.in_bounds(car.position, 5):
+		recover()
+		return
+	var ground_height := TerrainData.height(car.position.x, car.position.z)
+	if car.position.y < ground_height - 4 or ground_height < -0.5:
 		recover()
 
 func _unhandled_input(event: InputEvent) -> void:

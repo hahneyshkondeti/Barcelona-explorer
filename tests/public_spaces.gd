@@ -16,7 +16,7 @@ func run() -> void:
 	var world := WorldBuilder.new()
 	root.add_child(world)
 	for site in District.PUBLIC_SPACES.sites:
-		var position := District.vector(site.point)
+		var position := District.ground(site.point)
 		world.stream_at(position, true)
 		var copies := 0
 		for chunk in world.loaded_chunks.values():
@@ -32,6 +32,7 @@ func run() -> void:
 		var a := District.vector(fountain.rings[0][0], 0.6)
 		var b := District.vector(fountain.rings[0][1], 0.6)
 		var mid := (a+b)*0.5
+		mid.y += TerrainData.height(fountain.point[0], fountain.point[1])
 		var normal := (b-a).normalized().cross(Vector3.UP)
 		var ray := PhysicsRayQueryParameters3D.create(mid+normal*1.5, mid-normal*1.5)
 		check(not world.get_world_3d().direct_space_state.intersect_ray(ray).is_empty(), "Fountain basin rim blocks cars: " + site.name)

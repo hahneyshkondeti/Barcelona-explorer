@@ -87,7 +87,7 @@ func _ready() -> void:
 	place(places_button, Vector2(314, 131), Vector2(230, 48))
 	street_label = label("", 16)
 	place(street_label, Vector2(34, 248), Vector2(650, 28))
-	var attribution := label("© OpenStreetMap contributors · ODbL | Trees: Open Data BCN · CC BY 4.0", 12)
+	var attribution := label("© OSM · ODbL | Terrain: ICGC · Trees: Open Data BCN · CC BY 4.0", 12)
 	place(attribution, Vector2(32, -184), Vector2(700, 24), Vector2(0, 1))
 	var destination := button("◎  Sagrada Família", destination_requested.emit)
 	place(destination, Vector2(32, 131), Vector2(270, 48))
@@ -278,6 +278,7 @@ func refresh(discovered: bool, muted: bool, fps: int) -> void:
 	sound_button.text = "Sound: off" if muted else "Sound: on"
 	fps_button.text = "Frame cap: %d FPS" % fps
 	street_label.text = District.nearest_segment(car.global_position).road.name
+	if TerrainData.is_estimated(car.global_position): street_label.text += " · approximate coastal elevation"
 	if navigation.active:
 		route_label.text = "%s · %d m by road" % [navigation.destination_name, roundi(navigation.distance_remaining())]
 		if not navigation.reachable:
@@ -299,7 +300,7 @@ func build_credits() -> void:
 	text.offset_right = -20
 	text.offset_bottom = -60
 	text.add_theme_font_size_override("normal_font_size", 16)
-	text.text = "BRISA — BARCELONA BY CAR\nOriginal procedural appearance, interface and synthesized audio.\nPlaster004 / Asphalt030 materials: ambientCG.com · CC0 1.0.\nStreet-tree inventory: Ajuntament de Barcelona / Open Data BCN · CC BY 4.0.\nhttps://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari\nTree coordinates retained; appearance estimated.\nMap geometry and park-tree records © OpenStreetMap contributors, ODbL 1.0.\nhttps://www.openstreetmap.org/copyright\nData snapshot: " + str(District.DATA.metadata.retrieved_at) + "\nSource and adapted database are distributed in data/.\nBuilding façades and untagged dimensions are estimated.\nLandmark facts: sagradafamilia.org/en/history-of-the-temple\n\nGODOT ENGINE\n" + Engine.get_license_text() + "\n\nTHIRD-PARTY COMPONENTS\n" + JSON.stringify(Engine.get_copyright_info(), "  ") + "\n\nLICENSE TEXTS\n" + JSON.stringify(Engine.get_license_info(), "  ")
+	text.text = "BRISA — BARCELONA BY CAR\nOriginal procedural appearance, interface and synthesized audio.\nPlaster004 / Asphalt030 materials: ambientCG.com · CC0 1.0.\nStreet-tree inventory: Ajuntament de Barcelona / Open Data BCN · CC BY 4.0.\nhttps://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari\nTree coordinates retained; appearance estimated.\nMap geometry and park-tree records © OpenStreetMap contributors, ODbL 1.0.\nhttps://www.openstreetmap.org/copyright\nData snapshot: " + str(District.DATA.metadata.retrieved_at) + "\nSource and adapted database are distributed in data/.\nTerrain: ICGC MET5, CC BY 4.0; resampled from 5 m to 6 m.\nhttps://www.icgc.cat\nBare-earth grades; bridge decks and tunnels not reconstructed.\nCoastline: OpenStreetMap; sea and terrain colors illustrative.\nBuilding façades and untagged dimensions are estimated.\nLandmark facts: sagradafamilia.org/en/history-of-the-temple\n\nGODOT ENGINE\n" + Engine.get_license_text() + "\n\nTHIRD-PARTY COMPONENTS\n" + JSON.stringify(Engine.get_copyright_info(), "  ") + "\n\nLICENSE TEXTS\n" + JSON.stringify(Engine.get_license_info(), "  ")
 	if not BuildingAssets.active_credits.is_empty():
 		text.text += "\n\nIMPORTED BUILDING ASSETS\n" + "\n\n".join(BuildingAssets.active_credits)
 	credits.add_child(text)

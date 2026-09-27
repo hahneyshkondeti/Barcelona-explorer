@@ -20,3 +20,5 @@ data/city 2/
 *.p12
 *.p8
 *.mobileprovision
+
+.venv-terrain/

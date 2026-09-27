@@ -27,6 +27,10 @@ func run() -> void:
 	builder.build_building(building)
 	check(not builder.wall_faces.is_empty() and builder.surfaces.is_empty() and builder.batches.is_empty(), "Replacement keeps footprint collision and suppresses procedural visual geometry")
 	builder.free()
+	var grounded := entry.duplicate(true)
+	grounded.elevation_reference = "terrain"
+	adapter.install(parent, {"schema":1,"assets":[grounded]}, District.DATA.buildings, false)
+	check(parent.get_child_count() == 1 and absf(parent.get_child(0).position.y - TerrainData.height(0,0) - 2) < 0.01, "Optional terrain-relative import uses measured local elevation")
 	var missing := entry.duplicate(true)
 	missing.scene = "res://assets/buildings/missing.glb"
 	adapter.install(parent, {"schema":1,"assets":[missing]}, District.DATA.buildings, false)

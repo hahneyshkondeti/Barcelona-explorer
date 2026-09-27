@@ -19,6 +19,9 @@ func load_journey() -> void:
 	var p = data.get("position", [])
 	if p is Array and p.size() == 3 and (p[0] is float or p[0] is int) and (p[1] is float or p[1] is int) and (p[2] is float or p[2] is int):
 		var candidate := Vector3(p[0], p[1], p[2])
+		# Migrate flat-world saves once, preserving longitude/latitude and discoveries.
+		if not data.get("terrain_aligned", false) and candidate.is_finite() and candidate.y > -0.5 and candidate.y < 3:
+			candidate.y = TerrainData.height(candidate.x, candidate.z) + 0.55
 		if District.is_safe(candidate):
 			safe_position = candidate
 	var h = data.get("heading", 0)
@@ -35,7 +38,7 @@ func write_journey() -> bool:
 	if file == null:
 		last_error = "Could not save this journey."
 		return false
-	file.store_string(JSON.stringify({"version": 1, "district": District.ID, "position": [safe_position.x, safe_position.y, safe_position.z], "heading": heading, "discovered": discovered, "muted": muted, "fps": fps, "north_locked": north_locked}))
+	file.store_string(JSON.stringify({"version": 1, "terrain_aligned": true, "district": District.ID, "position": [safe_position.x, safe_position.y, safe_position.z], "heading": heading, "discovered": discovered, "muted": muted, "fps": fps, "north_locked": north_locked}))
 	file.close()
 	var result := DirAccess.rename_absolute(path + ".tmp", path)
 	last_error = "" if result == OK else "Could not save this journey."

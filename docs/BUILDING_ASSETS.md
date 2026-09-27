@@ -63,3 +63,5 @@ godot --headless --path . --fixed-fps 60 --script tests/smoke.gd
 The test fixture is an original glTF triangle under `assets/buildings/_test_only/`, not a real building or scan. Tests cover actual glTF loading, transforms, attribution, collision preservation, absence of duplicate procedural geometry, missing assets, bad metadata, unknown IDs, overlap, mobile fallback and schema rejection. Real source assets will still need visual alignment, license review and device profiling.
 
 Godot format reference: https://docs.godotengine.org/en/4.5/tutorials/assets_pipeline/importing_3d_scenes/available_formats.html
+
+Terrain placement: optional `elevation_reference: "terrain"` treats `elevation_m` as an offset above the local MET5 terrain. Omission retains existing absolute orthometric elevation semantics. Imported building geometry is kept rigid.

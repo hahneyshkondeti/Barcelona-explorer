@@ -88,3 +88,9 @@ Current local checks: 10 city data checks, 2 importer fixture tests, 14 infrastr
 - The 24 exploration, 14 transit and 10 streaming/performance checks also pass locally: **71 checks total**. Both squares were visually reviewed using Metal on the local Mac. Physical iPhone performance remains unmeasured.
 
 The square surfaces and basins follow dated OSM outlines. The vertical monument, sculpture, compass-rose decoration and water effect are approximate. Bus furniture checks account for all locally rendered drivable road pieces, not only roads connected to the navigation graph. Unresolved stops remain searchable but do not render an obstructing pole.
+
+## Terrain regression checks
+
+`python3 tests/check_terrain.py` validates payload lengths, hashes, retained source files, explicit coastal-estimate mask and iOS export inclusion. `Godot --headless --script tests/terrain.gd` checks mountain elevations, sea floor, terrain collision interpolation, bounded patch replacement, flat-save migration, elevated-save round trips, road triangle interiors, physical uphill/downhill driving and braking. Existing smoke/city/public-space tests now use terrain-relative elevations.
+
+`Godot --script tests/terrain_visual.gd` captures Collserola, the coast and Montjuïc to `/tmp/brisa-terrain-*.png` for manual visual inspection. These are desktop rendered checks, not physical-iPhone performance measurements.

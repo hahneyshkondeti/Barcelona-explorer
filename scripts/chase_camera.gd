@@ -7,7 +7,7 @@ var snapped := false
 func _ready() -> void:
 	fov = 60
 	near = 0.15
-	far = 520
+	far = 16000
 	current = true
 
 func _physics_process(delta: float) -> void:

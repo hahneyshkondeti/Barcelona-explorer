@@ -13,8 +13,8 @@ The bulk snapshot contains **104,694 building records, 20,576 place records, 136
 This is geographic expansion, **not a photorealistic or survey-complete digital twin**:
 
 - Façades, roof details, shop appearance, missing heights, road widths, pavement edges and markings remain estimates. The basilica model remains illustrative.
-- Terrain is flat, including the hills. Bridges, tunnels and nonzero road layers are omitted by the current surface-road importer. Private/pedestrian-only roads and disconnected components are excluded from driving navigation. Turn restrictions and traffic signals are not simulated.
-- The outer rectangle includes neighboring municipalities and some water/port extent; there is no accurately modeled coastline, water surface or terrain mesh yet.
+- Terrain uses the official ICGC MET5 elevation model (5 m source, 6 m runtime grid), including Collserola, Montjuïc and road slopes. Bridges, tunnels and nonzero road layers are omitted by the current surface-road importer. Private/pedestrian-only roads and disconnected components are excluded from driving navigation. Turn restrictions and traffic signals are not simulated.
+- The outer rectangle includes neighboring municipalities and water/port extent. The sea follows an OSM coastline extract; a distant terrain mesh keeps the hills visible. Bare-earth elevation does not guarantee surveyed road/deck accuracy. See [terrain sources and rebuild instructions](docs/TERRAIN.md).
 - OSM records can be old, missing or duplicated. A download date is not a field-survey date. No Google imagery is used.
 
 ## Run and explore
@@ -95,7 +95,7 @@ Only Command Line Tools are installed locally. GitHub has now compiled an unsign
 
 ## Verification and next work
 
-See [test details](docs/TESTING.md). Cross-city routing and streaming are tested in addition to the original sightseeing loop. The next priorities are device profiling, smoother asynchronous tile generation, terrain/coastline, grade-separated roads, and building-specific visual assets when licensed sources become available.
+See [test details](docs/TESTING.md). Cross-city routing and streaming are tested in addition to the original sightseeing loop. The next priorities are device profiling, smoother asynchronous tile generation, grade-separated roads, and building-specific visual assets when licensed sources become available.
 
 ## GitHub iOS builds and later App Store upload
 

@@ -50,10 +50,10 @@ static func _static_init() -> void:
 				if not DATA.tile_dependencies.has(key): DATA.tile_dependencies[key] = []
 				if owner not in DATA.tile_dependencies[key]: DATA.tile_dependencies[key].append(owner)
 	TREE_DATA = {"metadata": DATA.tree_metadata, "trees": []}
-	START = vector(DATA.start)
+	START = ground(DATA.start)
 	START_HEADING = float(DATA.start_heading)
-	DESTINATION = vector(DATA.destination)
-	LANDMARK_CENTER = vector(DATA.landmark_center, 0)
+	DESTINATION = ground(DATA.destination)
+	LANDMARK_CENTER = ground(DATA.landmark_center, 0)
 	var lo := Vector2(DATA.bounds[0][0], DATA.bounds[0][1])
 	var hi := Vector2(DATA.bounds[1][0], DATA.bounds[1][1])
 	BOUNDS = Rect2(lo, hi - lo)
@@ -70,6 +70,9 @@ static func _static_init() -> void:
 
 static func vector(point: Array, y: float = 0.55) -> Vector3:
 	return Vector3(point[0], y, point[1])
+
+static func ground(point: Array, y: float = 0.55) -> Vector3:
+	return TerrainData.ground(vector(point, y))
 
 static func nearest_segment(point: Vector3) -> Dictionary:
 	var best := {}
@@ -88,7 +91,7 @@ static func nearest_segment(point: Vector3) -> Dictionary:
 					var d := p.distance_squared_to(q)
 					if d < distance:
 						distance = d
-						best = {"road":road,"point":Vector3(q.x,0.55,q.y),"distance":sqrt(d)}
+						best = {"road":road,"point":Vector3(q.x,TerrainData.height(q.x,q.y) + 0.55,q.y),"distance":sqrt(d)}
 		var edge := minf(minf(p.x-(cell.x-radius)*CELL,(cell.x+radius+1)*CELL-p.x), minf(p.y-(cell.y-radius)*CELL,(cell.y+radius+1)*CELL-p.y))
 		if distance < edge*edge: break
 	return best
@@ -109,7 +112,7 @@ static func in_bounds(point: Vector3, margin: float = 0) -> bool:
 	return point.is_finite() and BOUNDS.grow(margin).has_point(Vector2(point.x, point.z))
 
 static func is_safe(point: Vector3) -> bool:
-	return in_bounds(point, -3) and point.y > -0.5 and point.y < 3 and nearest_segment(point).distance < 4.0
+	return in_bounds(point, -3) and absf(point.y - TerrainData.height(point.x, point.z)) < 3 and TerrainData.height(point.x, point.z) > -0.5 and nearest_segment(point).distance < 4.0
 
 static func tile_key(cell: Vector2i) -> String:
 	return "%d:%d" % [cell.x, cell.y]

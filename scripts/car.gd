@@ -11,6 +11,7 @@ var reverse_hold := 0.0
 var yaw_rate := 0.0
 var steering_angle := 0.0
 var body: Node3D
+var hull: CollisionShape3D
 var front_wheels: Array[Node3D] = []
 const MAX_SPEED := 23.0
 const REVERSE_SPEED := 5.0
@@ -19,11 +20,15 @@ const MAX_LATERAL_ACCEL := 6.5
 const REVERSE_DELAY := 0.35
 
 func _ready() -> void:
+	floor_snap_length = 1.5
+	floor_max_angle = deg_to_rad(40)
+	floor_constant_speed = true
 	collision_layer = 2
 	collision_mask = 1
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.85, 1.1, 3.7)
+	hull = shape
 	shape.shape = box
 	shape.position.y = 0.45
 	add_child(shape)
@@ -95,8 +100,15 @@ func _physics_process(delta: float) -> void:
 		wheel.rotation.y = -steering_angle
 	var acceleration := (speed - previous_speed) / maxf(delta, 0.001)
 	var visual_blend := 1.0 - exp(-7.0 * delta)
-	body.rotation.z = lerpf(body.rotation.z, clampf(yaw_rate * speed * 0.012, -0.065, 0.065), visual_blend)
-	body.rotation.x = lerpf(body.rotation.x, clampf(acceleration * 0.003, -0.04, 0.025), visual_blend)
+	var front := global_position - global_basis.z * 1.3
+	var rear := global_position + global_basis.z * 1.3
+	var left := global_position - global_basis.x * 0.9
+	var right_point := global_position + global_basis.x * 0.9
+	var pitch := atan2(TerrainData.height(front.x, front.z) - TerrainData.height(rear.x, rear.z), 2.6)
+	var roll := atan2(TerrainData.height(right_point.x, right_point.z) - TerrainData.height(left.x, left.z), 1.8)
+	body.rotation.z = lerpf(body.rotation.z, roll + clampf(yaw_rate * speed * 0.012, -0.065, 0.065), visual_blend)
+	body.rotation.x = lerpf(body.rotation.x, pitch + clampf(acceleration * 0.003, -0.04, 0.025), visual_blend)
+	hull.rotation = Vector3(pitch, 0, roll)
 
 func update_handling(delta: float) -> void:
 	var gas := clampf(controls.throttle, 0, 1)
@@ -149,6 +161,8 @@ func recover(point: Vector3, heading: float = 0) -> void:
 	yaw_rate = 0
 	if body != null:
 		body.rotation = Vector3.ZERO
+	if hull != null:
+		hull.rotation = Vector3.ZERO
 	for wheel in front_wheels:
 		wheel.rotation.y = 0
 

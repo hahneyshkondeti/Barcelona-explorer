@@ -70,7 +70,7 @@ func run() -> void:
 	check(not hit.is_empty(), "Imported building wall has a collision surface")
 	if not hit.is_empty():
 		car.position = hit.position + hit.normal * 5
-		car.position.y = 0.55
+		car.position.y = TerrainData.height(car.position.x, car.position.z) + 0.55
 		car.rotation.y = atan2(hit.normal.x, hit.normal.z)
 		game.controls.throttle = 1
 		var contact := false
@@ -83,7 +83,7 @@ func run() -> void:
 		car.speed = 0
 		car.velocity = Vector3.ZERO
 		car.position = hit.position + hit.normal * 2
-		car.position.y = 0.55
+		car.position.y = TerrainData.height(car.position.x, car.position.z) + 0.55
 		car.rotation.y = atan2(-hit.normal.x, -hit.normal.z)
 		game.camera.reset()
 		check((game.camera.position - hit.position).dot(hit.normal) > 0 and game.camera.position.distance_to(car.position) < 9, "Chase camera shortens against mapped façade")

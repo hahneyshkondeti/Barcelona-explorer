@@ -15,7 +15,7 @@ func _init() -> void:
 	for key in District.DATA.graph.nodes:
 		var id := ids.size()
 		ids[key] = id
-		graph.add_point(id, District.vector(District.DATA.graph.nodes[key]))
+		graph.add_point(id, District.ground(District.DATA.graph.nodes[key]))
 	for edge in District.DATA.graph.edges:
 		var a: int = ids[edge[0]]
 		var b: int = ids[edge[1]]

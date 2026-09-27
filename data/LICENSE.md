@@ -35,3 +35,7 @@ Changes: geographic clipping, coordinate projection, field selection, and combin
 - Transformation: `tools/build_city.py`, using `tools/import_map.py`; clipping to the municipal bounding envelope, complete-way fringe retention, metric projection, source-graph filtering, tree deduplication and spatial tiling. The runtime includes neighboring fringe; it is not clipped exactly to the municipal polygon. Source park-tree IDs and municipal tree IDs are kept distinct.
 
 `city/areas.json` contains convenient district starting anchors derived from the municipal tree inventory. They are not official district centers. The smaller pilot files remain as historical reproducible regression fixtures, not the active runtime map.
+
+## Terrain and coast
+
+Terrain source: Institut Cartogràfic i Geològic de Catalunya (ICGC), MET5, CC BY 4.0. Product: https://www.icgc.cat/en/Geoinformation-and-Maps/Data-and-products/Bessons-digitals-Elevacions/5x5-m-Terrain-elevation-model . License: https://creativecommons.org/licenses/by/4.0/ . Source retrieved 2026-09-27; reprojection and 6 m resampling are adaptations. See `data/terrain/metadata.json` and `docs/TERRAIN.md`. Coast geometry and source extract © OpenStreetMap contributors, ODbL 1.0. Sea waves and terrain shaders are original code; seabed depth and land colors are illustrative.

@@ -47,7 +47,7 @@ static func wall(world: WorldBuilder, ring: Array, height: float, width: float, 
 		if collision:
 			var high_a := a + Vector3.UP * maxf(height, 1.0)
 			var high_b := b + Vector3.UP * maxf(height, 1.0)
-			world.wall_faces.append_array(PackedVector3Array([a, high_a, high_b, a, high_b, b]))
+			world.collision_quad(PackedVector3Array([a, high_a, high_b, a, high_b, b]))
 
 static func inside(point: Vector3, ring: Array) -> bool:
 	var polygon := PackedVector2Array()
@@ -55,6 +55,7 @@ static func inside(point: Vector3, ring: Array) -> bool:
 	return Geometry2D.is_point_in_polygon(Vector2(point.x, point.z), polygon)
 
 static func fountain(world: WorldBuilder, feature: Dictionary) -> void:
+	world.base_elevation = TerrainData.height(feature.point[0], feature.point[1])
 	var ring: Array = feature.rings[0]
 	world.flat_polygon(ring, 0.28, water)
 	wall(world, ring, 0.65, 0.4, true)
@@ -166,7 +167,9 @@ static func build(world: WorldBuilder, site: Dictionary) -> void:
 	for feature in site.features:
 		await yield_budget(world)
 		if world.retired: return
-		if feature.kind in ["water", "fountain"]: fountain(world, feature)
+		if feature.kind in ["water", "fountain"]:
+			fountain(world, feature)
+			world.base_elevation = NAN
 		elif feature.kind == "mosaic": mosaic(world, feature)
 		elif feature.kind == "bench":
 			var at := District.vector(feature.point, 0)

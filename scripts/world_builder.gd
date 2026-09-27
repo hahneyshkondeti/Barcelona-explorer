@@ -3,6 +3,7 @@ extends Node3D
 
 static var materials: Dictionary = {}
 var batches: Dictionary = {}
+var road_joins: Dictionary = {}
 var shared_shaders: Dictionary = {}
 var building_assets := BuildingAssets.new()
 var is_chunk := false
@@ -19,6 +20,8 @@ var stream_center := Vector2i(99999,99999)
 var stream_position := Vector3.ZERO
 var desired_chunks: Dictionary = {}
 var surfaces: Dictionary = {}
+var terrain: TerrainWorld
+var base_elevation := NAN
 var route_root: Node3D
 var landmark_beacon: MeshInstance3D
 var wall_faces := PackedVector3Array()
@@ -101,9 +104,8 @@ func _ready() -> void:
 	prepare_materials()
 	if not is_chunk:
 		build_lighting()
-		var bounds := District.BOUNDS.grow(20)
-		var center := bounds.get_center()
-		solid_box(Vector3(bounds.size.x, 1, bounds.size.y), Vector3(center.x, -0.5, center.y), Color("92918a"))
+		terrain = TerrainWorld.new()
+		add_child(terrain)
 		var manifest = JSON.parse_string(FileAccess.get_file_as_string("res://data/building_assets.json"))
 		building_assets.install(self, manifest, District.DATA.buildings, RenderingServer.get_current_rendering_method() == "mobile")
 		for issue in building_assets.issues: push_warning(issue)
@@ -111,7 +113,7 @@ func _ready() -> void:
 		for building in District.DATA.buildings:
 			if building.landmark and building_assets.replaced.has(building.id): replace_landmark = true
 		if not replace_landmark: build_landmark()
-		build_boundary()
+		# Out-of-bounds recovery replaces the old flat perimeter walls.
 		flush_surfaces()
 		flush_batches()
 		route_root = Node3D.new()
@@ -126,14 +128,7 @@ func _ready() -> void:
 		landmark_beacon.position = District.DESTINATION + Vector3.UP * 0.05
 		return
 	slice_started = Time.get_ticks_usec()
-	for park in features.parks:
-		if incremental and budget_expired():
-			await get_tree().process_frame
-			if retired:
-				queue_free()
-				return
-			slice_started = Time.get_ticks_usec()
-		flat_polygon(park.ring, 0.06, material(Color("5c7050")))
+	# Park color is baked into the terrain grid; no floating overlay meshes.
 	for road in features.roads:
 		if incremental and budget_expired():
 			await get_tree().process_frame
@@ -176,7 +171,9 @@ func _ready() -> void:
 				queue_free()
 				return
 			slice_started = Time.get_ticks_usec()
+		base_elevation = TerrainData.height(tree.point[0], tree.point[1])
 		build_tree(District.vector(tree.point, 0), tree)
+		base_elevation = NAN
 	for record in features.get("infrastructure", []):
 		if incremental and budget_expired():
 			await get_tree().process_frame
@@ -184,7 +181,10 @@ func _ready() -> void:
 				queue_free()
 				return
 			slice_started = Time.get_ticks_usec()
+		var p: Array = record.get("render_point", record.point)
+		base_elevation = TerrainData.height(p[0], p[1])
 		StreetFurniture.build(self, record)
+		base_elevation = NAN
 	await build_addresses()
 	if retired:
 		queue_free()
@@ -201,6 +201,7 @@ func _ready() -> void:
 	if retired:
 		queue_free()
 		return
+	road_joins.clear()
 	build_complete = true
 
 func retire() -> void:
@@ -236,6 +237,7 @@ func load_chunk(key: String, background: bool = false) -> void:
 func stream_at(point: Vector3, immediate: bool = false) -> void:
 	if not point.is_finite() or not District.in_bounds(point, 20): return
 	stream_position = point
+	if terrain != null: terrain.stream_at(point)
 	var center := Vector2i(floori(point.x/District.CELL),floori(point.z/District.CELL))
 	if center != stream_center or immediate:
 		stream_center = center
@@ -334,7 +336,7 @@ func build_lighting() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.fog_enabled = true
 	env.fog_light_color = Color("b7c3cd")
-	env.fog_density = 0.00035
+	env.fog_density = 0.00008
 	env.fog_sky_affect = 0.2
 	environment.environment = env
 	add_child(environment)
@@ -360,12 +362,19 @@ func surface(at: Vector3, mat: Material) -> SurfaceTool:
 		surfaces[key] = st
 	return surfaces[key]
 
+func elevated(p: Vector3) -> Vector3:
+	p.y += TerrainData.height(p.x, p.z) if is_nan(base_elevation) else base_elevation
+	return p
+
+func collision_quad(points: PackedVector3Array) -> void:
+	for p in points: wall_faces.append(elevated(p))
+
 func quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, width: float, height: float) -> void:
 	var vertices := [a, b, c, a, c, d]
 	var uvs := [Vector2(0, 0), Vector2(width, 0), Vector2(width, height), Vector2(0, 0), Vector2(width, height), Vector2(0, height)]
 	for i in 6:
 		st.set_uv(uvs[i])
-		st.add_vertex(vertices[i])
+		st.add_vertex(elevated(vertices[i]))
 
 func strip(a: Vector3, b: Vector3, width: float, y: float, mat: Material) -> void:
 	if a.distance_to(b) < 0.1:
@@ -373,7 +382,32 @@ func strip(a: Vector3, b: Vector3, width: float, y: float, mat: Material) -> voi
 	a.y = y
 	b.y = y
 	var side := (b - a).normalized().cross(Vector3.UP) * width / 2
-	quad(surface((a + b) / 2, mat), a - side, b - side, b + side, a + side, a.distance_to(b), width)
+	var polygon := PackedVector2Array()
+	for p in [a - side, b - side, b + side, a + side]: polygon.append(Vector2(p.x, p.z))
+	drape_polygon(surface((a + b) / 2, mat), polygon, y)
+
+func drape_polygon(st: SurfaceTool, polygon: PackedVector2Array, y: float) -> void:
+	# Clip to the *same* grid triangles as the collision terrain. Merely sampling
+	# the ends of a road quad cuts through convex slopes between its vertices.
+	var lo := polygon[0]
+	var hi := polygon[0]
+	for p in polygon:
+		lo = lo.min(p)
+		hi = hi.max(p)
+	var step := TerrainData.spacing
+	for x in range(floori(lo.x / step), floori(hi.x / step) + 1):
+		for z in range(floori(lo.y / step), floori(hi.y / step) + 1):
+			var a := Vector2(x, z) * step
+			var b := a + Vector2(step, 0)
+			var c := a + Vector2(0, step)
+			var d := a + Vector2(step, step)
+			for cell in [PackedVector2Array([a,b,d]), PackedVector2Array([a,d,c])]:
+				for clipped in Geometry2D.intersect_polygons(polygon, cell):
+					var indices := Geometry2D.triangulate_polygon(clipped)
+					for index in indices:
+						var p: Vector2 = clipped[index]
+						st.set_uv(p)
+						st.add_vertex(elevated(Vector3(p.x, y, p.y)))
 
 func build_road(road: Dictionary) -> void:
 	var a := District.vector(road.a, 0)
@@ -381,6 +415,10 @@ func build_road(road: Dictionary) -> void:
 	if road.drivable:
 		strip(a, b, road.width + 7.0, 0.065, pavement)
 		strip(a, b, road.width, 0.09, asphalt)
+		# Round joins cover butt-end wedges without moving the mapped centerline.
+		for endpoint in [a, b]:
+			road_join(endpoint, road.width * 0.5 + 3.5, 0.065, pavement)
+			road_join(endpoint, road.width * 0.5, 0.09, asphalt)
 		var length := a.distance_to(b)
 		var direction := (b - a).normalized()
 		var side := direction.cross(Vector3.UP)
@@ -402,20 +440,49 @@ func build_road(road: Dictionary) -> void:
 	else:
 		strip(a, b, road.width, 0.07, pavement)
 
+func road_join(at: Vector3, radius: float, y: float, mat: Material) -> void:
+	var key := "%s:%s:%s:%s" % [at.x, at.z, radius, y]
+	if road_joins.has(key): return
+	road_joins[key] = true
+	var ring: Array = []
+	for i in 12:
+		var angle := i * TAU / 12
+		ring.append([at.x + cos(angle) * radius, at.z + sin(angle) * radius])
+	var polygon := PackedVector2Array()
+	for p in ring: polygon.append(Vector2(p[0], p[1]))
+	drape_polygon(surface(at, mat), polygon, y)
+
 func flat_polygon(coords: Array, y: float, mat: Material) -> void:
 	var polygon := PackedVector2Array()
 	for p in coords:
 		polygon.append(Vector2(p[0], p[1]))
-	var indices := Geometry2D.triangulate_polygon(polygon)
-	if indices.is_empty():
-		return
 	var st := surface(Vector3(polygon[0].x, 0, polygon[0].y), mat)
+	if is_nan(base_elevation):
+		drape_polygon(st, polygon, y)
+		return
+	var indices := Geometry2D.triangulate_polygon(polygon)
 	for i in indices:
 		st.set_uv(polygon[i])
-		st.add_vertex(Vector3(polygon[i].x, y, polygon[i].y))
+		st.add_vertex(elevated(Vector3(polygon[i].x, y, polygon[i].y)))
 
 func build_building(building: Dictionary) -> void:
 	var custom_visual := building_assets.replaced.has(building.id)
+	# Keep each building rigid and level; extend its base to the low side of a slope.
+	base_elevation = -INF
+	var low := INF
+	for p in building.rings[0]:
+		var h := TerrainData.height(p[0], p[1])
+		base_elevation = maxf(base_elevation, h)
+		low = minf(low, h)
+	if base_elevation - low > 0.25:
+		for i in building.rings[0].size():
+			var a := District.vector(building.rings[0][i], low - base_elevation - 0.1)
+			var b := District.vector(building.rings[0][(i + 1) % building.rings[0].size()], low - base_elevation - 0.1)
+			var c := Vector3(b.x, 0.1, b.z)
+			var d := Vector3(a.x, 0.1, a.z)
+			if not custom_visual:
+				quad(surface(a, material(Color("827d71"))), a, b, c, d, a.distance_to(b), base_elevation - low)
+			collision_quad(PackedVector3Array([a,b,c,a,c,d]))
 	var height: float = building.height
 	var mat: ShaderMaterial = plaster[abs(hash(building.id)) % plaster.size()]
 	for ring_data in building.rings:
@@ -436,7 +503,7 @@ func build_building(building: Dictionary) -> void:
 			var up := Vector3.UP * height
 			if not custom_visual:
 				quad(surface(a, mat), a, b, b + up, a + up, length, height)
-			wall_faces.append_array(PackedVector3Array([a, b, b + up, a, b + up, a + up]))
+			collision_quad(PackedVector3Array([a, b, b + up, a, b + up, a + up]))
 			if custom_visual:
 				continue
 			var heading := atan2(-(b - a).z, (b - a).x)
@@ -454,6 +521,8 @@ func build_building(building: Dictionary) -> void:
 	# Preserve courtyard openings rather than covering them with a false solid roof.
 	if not custom_visual and building.rings.size() == 1:
 		flat_polygon(building.rings[0], height + 0.1, material(Color("80796c")))
+
+	base_elevation = NAN
 
 func facade(a: Vector3, b: Vector3, normal: Vector3, height: float, heading: float, seed_value: int) -> void:
 	var length := a.distance_to(b)
@@ -502,6 +571,7 @@ func instance_box(size: Vector3, at: Vector3, heading: float, color: Color, deta
 	instance(unit_box, Transform3D(Basis(Vector3.UP, heading).scaled_local(size), at), color, detail)
 
 func instance(mesh: Mesh, transform: Transform3D, color: Color, detail: bool) -> void:
+	transform.origin = elevated(transform.origin)
 	var key := chunk_key(transform.origin) + ":" + color.to_html() + ":" + str(mesh.get_instance_id()) + ":" + str(detail)
 	if not batches.has(key):
 		var origin := Vector3(floor(transform.origin.x / CHUNK) * CHUNK, 0, floor(transform.origin.z / CHUNK) * CHUNK)
@@ -583,7 +653,7 @@ func build_addresses() -> void:
 		label.visibility_range_end = 25
 		label.no_depth_test = false
 		add_child(label)
-		label.position = at
+		label.position = elevated(at)
 	# Source ways often consist of many short segments. Label all supplied names,
 	# spacing repeats locally instead of filtering out short streets altogether.
 	var named_positions: Dictionary = {}
@@ -618,17 +688,9 @@ func build_addresses() -> void:
 			sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 			sign.visibility_range_end = 55
 			add_child(sign)
-			sign.position = at + Vector3.UP * 4
+			sign.position = elevated(at + Vector3.UP * 4)
 			sign.visible = false
 			street_signs.append(sign)
-
-func build_boundary() -> void:
-	var rect := District.BOUNDS
-	var c := rect.get_center()
-	for x in [rect.position.x, rect.end.x]:
-		solid_box(Vector3(0.6, 1, rect.size.y), Vector3(x, 0.5, c.y), Color("706e63"))
-	for z in [rect.position.y, rect.end.y]:
-		solid_box(Vector3(rect.size.x, 1, 0.6), Vector3(c.x, 0.5, z), Color("706e63"))
 
 func flush_surfaces() -> void:
 	for st in surfaces.values():
@@ -636,6 +698,8 @@ func flush_surfaces() -> void:
 			await get_tree().process_frame
 			if retired: return
 			slice_started = Time.get_ticks_usec()
+		var arrays: Array = st.commit_to_arrays()
+		if arrays.is_empty() or arrays[Mesh.ARRAY_VERTEX] == null or arrays[Mesh.ARRAY_VERTEX].is_empty(): continue
 		st.generate_normals()
 		st.generate_tangents()
 		var node := MeshInstance3D.new()
@@ -681,18 +745,27 @@ func flush_batches() -> void:
 	batches.clear()
 
 func update_route(points: PackedVector3Array) -> void:
-	for child in route_root.get_children():
-		child.queue_free()
+	for child in route_root.get_children(): child.queue_free()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_material(material(Color("d3ae6b")))
+	var count := 0
 	for i in range(1, points.size()):
-		var a := points[i - 1]
-		var b := points[i]
+		var a := Vector3(points[i - 1].x, 0.18, points[i - 1].z)
+		var b := Vector3(points[i].x, 0.18, points[i].z)
 		if Geometry2D.get_closest_point_to_segment(Vector2(stream_position.x,stream_position.z),Vector2(a.x,a.z),Vector2(b.x,b.z)).distance_to(Vector2(stream_position.x,stream_position.z)) > 450: continue
-		var length := a.distance_to(b)
-		if length < 0.1:
-			continue
-		var line := box(route_root, Vector3(0.18, 0.015, length), (a + b) / 2, Color("d3ae6b"))
-		line.position.y = 0.12
-		line.look_at(Vector3(b.x, 0.12, b.z), Vector3.UP)
+		var steps := maxi(1, ceili(a.distance_to(b) / 2.0))
+		var side := (b - a).normalized().cross(Vector3.UP) * 0.12
+		for j in steps:
+			var p := a.lerp(b, float(j) / steps)
+			var q := a.lerp(b, float(j + 1) / steps)
+			drape_polygon(st, PackedVector2Array([Vector2(p.x - side.x, p.z - side.z),Vector2(q.x - side.x, q.z - side.z),Vector2(q.x + side.x, q.z + side.z),Vector2(p.x + side.x, p.z + side.z)]), 0.18)
+			count += 1
+	if count > 0:
+		st.generate_normals()
+		var line := MeshInstance3D.new()
+		line.mesh = st.commit()
+		route_root.add_child(line)
 
 func build_shop_signs() -> void:
 	for shop in features.places:
@@ -706,7 +779,7 @@ func build_shop_signs() -> void:
 		var road := District.nearest_segment(at)
 		if road.distance > 30:
 			continue
-		var facing: Vector3 = (road.point - Vector3(at.x, 0.55, at.z)).normalized()
+		var facing := Vector3(road.point.x - at.x, 0, road.point.z - at.z).normalized()
 		if facing.length() < 0.1:
 			continue
 		var sign := Label3D.new()
@@ -718,5 +791,5 @@ func build_shop_signs() -> void:
 		sign.outline_size = 8
 		sign.visibility_range_end = 40
 		add_child(sign)
-		sign.position = at + facing * 0.25
+		sign.position = elevated(at + facing * 0.25)
 		sign.look_at(sign.position + facing, Vector3.UP)

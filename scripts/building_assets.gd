@@ -50,6 +50,8 @@ func install(parent: Node3D, manifest: Variant, buildings: Array, mobile: bool) 
 		var placement := Node3D.new()
 		placement.name = str(entry.id).validate_node_name()
 		placement.position = anchor_position(entry.anchor_lonlat[0], entry.anchor_lonlat[1], entry.elevation_m)
+		if entry.get("elevation_reference", "absolute") == "terrain":
+			placement.position = TerrainData.ground(placement.position)
 		placement.rotation.y = deg_to_rad(entry.yaw_degrees)
 		placement.scale = Vector3.ONE * float(entry.scale)
 		placement.add_child(model)
@@ -67,6 +69,8 @@ func validate(entry: Variant, known: Dictionary) -> String:
 	for key in ["id", "scene"]:
 		if not entry.get(key) is String or entry[key].strip_edges().is_empty():
 			return "Missing building " + key
+	if entry.get("elevation_reference", "absolute") not in ["absolute", "terrain"]:
+		return "Invalid elevation reference"
 	var paths := [entry.scene]
 	if entry.has("mobile_scene"):
 		paths.append(entry.mobile_scene)
