@@ -31,7 +31,7 @@ References:
 - https://blog.sagradafamilia.org/en/columns-sagrada-familia-geometry-mechanics-materials-stone-forest/
 - https://godotengine.org/license/
 
-The working name Brisa has not undergone brand clearance. Retain Godot and third-party license notices in distributed binaries. Distribute the OSM adapted database/source with the required ODbL terms; these terms do not automatically apply to unrelated original game code/art.
+The name City Explorer has not undergone brand clearance. Retain Godot and third-party license notices in distributed binaries. Distribute the OSM adapted database/source with the required ODbL terms; these terms do not automatically apply to unrelated original game code/art.
 
 - `assets/icon.svg`: original vector street-grid/car artwork created for this project; no third-party imagery.
 
@@ -50,3 +50,5 @@ The procedural geometry in `scripts/public_spaces.gd` and water shader are origi
 ## Terrain and coast
 
 Terrain source: Institut Cartogràfic i Geològic de Catalunya (ICGC), MET5, CC BY 4.0. Product: https://www.icgc.cat/en/Geoinformation-and-Maps/Data-and-products/Bessons-digitals-Elevacions/5x5-m-Terrain-elevation-model . License: https://creativecommons.org/licenses/by/4.0/ . Source retrieved 2026-09-27; reprojection and 6 m resampling are adaptations. See `data/terrain/metadata.json` and `docs/TERRAIN.md`. Coast geometry and source extract © OpenStreetMap contributors, ODbL 1.0. Sea waves and terrain shaders are original code; seabed depth and land colors are illustrative.
+
+Original game code and original assets: © 2026 Hahneysh Kondeti. Third-party data/assets retain the licenses and attribution listed above. Solar positioning implements published NOAA mathematical equations: https://gml.noaa.gov/grad/solcalc/solareqns.PDF .

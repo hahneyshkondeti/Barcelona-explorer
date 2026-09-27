@@ -11,9 +11,12 @@ var north_locked := false
 var last_error := ""
 
 func load_journey() -> void:
-	if not FileAccess.file_exists(path):
-		return
-	var data = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var source := path
+	if not FileAccess.file_exists(source) and path == "user://journey.json":
+		# Desktop user-data folders follow the app name. Preserve the former journey.
+		source = OS.get_user_data_dir().get_base_dir().path_join("Brisa — Barcelona/journey.json")
+	if not FileAccess.file_exists(source): return
+	var data = JSON.parse_string(FileAccess.get_file_as_string(source))
 	if not data is Dictionary or data.get("version") != 1 or data.get("district") not in [District.ID, "sagrada_osm_v2"]:
 		return
 	var p = data.get("position", [])

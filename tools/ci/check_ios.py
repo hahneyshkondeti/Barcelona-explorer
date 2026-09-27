@@ -7,11 +7,12 @@ import sys
 
 project, app = map(Path, sys.argv[1:])
 info = plistlib.loads((app / "Info.plist").read_bytes())
+assert info.get("CFBundleDisplayName", info.get("CFBundleName")) == "City Explorer"
 assert info["CFBundleIdentifier"] == "com.hahneyshkondeti.brisa"
 assert info["UIDeviceFamily"] == [1], "Expected iPhone-only target"
 assert float(info["MinimumOSVersion"]) >= 16
 assert all("Landscape" in item for item in info["UISupportedInterfaceOrientations"])
-assert (app / "Brisa.pck").stat().st_size > 100_000_000
+assert (app / "CityExplorer.pck").stat().st_size > 100_000_000
 privacy_files = list(app.rglob("PrivacyInfo.xcprivacy"))
 assert privacy_files, "Missing privacy manifest"
 for path in privacy_files:

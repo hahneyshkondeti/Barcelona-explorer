@@ -39,6 +39,7 @@ func _initialize() -> void:
 	check(car.yaw_rate > 0.4 and car.steering_angle > 0.3, "Slow-speed steering allows tight city turns")
 	simulate(car, 10)
 	check(absf(car.speed * car.yaw_rate) <= TouringCar.MAX_LATERAL_ACCEL + 0.1, "Full steering at speed stays within lateral acceleration budget")
+	check(is_equal_approx(car.speed * 3.6, 150), "Full throttle reaches the 150 km/h cap")
 	car.controls.steering = 0
 	simulate(car, 0.6)
 	check(absf(car.yaw_rate) < 0.025, "Releasing steering settles back to straight driving")
@@ -49,7 +50,7 @@ func _initialize() -> void:
 	while car.speed > 0 and ticks < 180:
 		distance += simulate(car, 1.0 / 60)
 		ticks += 1
-	check(car.speed == 0 and distance < 16, "Full braking stops from cruising speed within 16 metres")
+	check(car.speed == 0 and distance < 52, "Full braking stops from 150 km/h within 52 metres")
 	simulate(car, 0.2)
 	check(car.speed == 0, "Holding brake briefly after stopping does not reverse")
 	simulate(car, 1.5)

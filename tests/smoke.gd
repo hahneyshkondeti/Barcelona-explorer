@@ -73,11 +73,12 @@ func run() -> void:
 		car.position.y = TerrainData.height(car.position.x, car.position.z) + 0.55
 		car.rotation.y = atan2(hit.normal.x, hit.normal.z)
 		game.controls.throttle = 1
+		car.speed = TouringCar.MAX_SPEED
 		var contact := false
 		for i in 120:
 			await physics_frame
 			contact = contact or car.collided
-		check(contact and (car.position - hit.position).dot(hit.normal) > 0, "Driving into a mapped façade is stopped by collision")
+		check(contact and (car.position - hit.position).dot(hit.normal) > 0, "Collision stops a 150 km/h approach to a mapped façade")
 		check(absf(car.speed) < 1.5, "Wall impact removes stored forward speed")
 		game.controls.throttle = 0
 		car.speed = 0

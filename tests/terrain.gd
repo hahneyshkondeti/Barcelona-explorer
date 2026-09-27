@@ -96,7 +96,7 @@ func run() -> void:
 			check(absf(car.position.y - TerrainData.height(car.position.x, car.position.z)) < 1.5, "Car stays on the sloped collision surface")
 			controls.throttle = 0
 			controls.brake = 1
-			for i in 45: await physics_frame
+			for i in ceili(absf(car.speed) / 18.0 * 60) + 3: await physics_frame
 			check(absf(car.speed) < 1, "Braking stops the car on a grade")
 			controls.brake = 0
 		car.free()

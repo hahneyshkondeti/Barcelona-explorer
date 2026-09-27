@@ -12,8 +12,9 @@ var yaw_rate := 0.0
 var steering_angle := 0.0
 var body: Node3D
 var hull: CollisionShape3D
+var headlights: SpotLight3D
 var front_wheels: Array[Node3D] = []
-const MAX_SPEED := 23.0
+const MAX_SPEED := 150.0 / 3.6
 const REVERSE_SPEED := 5.0
 const WHEELBASE := 2.55
 const MAX_LATERAL_ACCEL := 6.5
@@ -34,6 +35,16 @@ func _ready() -> void:
 	add_child(shape)
 	body = Node3D.new()
 	add_child(body)
+	headlights = SpotLight3D.new()
+	headlights.position = Vector3(0, 0.85, -1.9)
+	headlights.rotation.x = deg_to_rad(-5)
+	headlights.spot_range = 100
+	headlights.spot_angle = 32
+	headlights.light_color = Color("fff2ce")
+	headlights.light_energy = 4
+	headlights.shadow_enabled = false
+	headlights.visible = SolarCycle.current_altitude < 6
+	body.add_child(headlights)
 	var paint := StandardMaterial3D.new()
 	paint.albedo_color = Color("617778")
 	paint.metallic = 0.65
@@ -75,6 +86,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if paused or controls == null:
 		return
+	headlights.visible = SolarCycle.current_altitude < 6
 	controls.sample()
 	var previous_speed := speed
 	update_handling(delta)
@@ -140,7 +152,7 @@ func update_handling(delta: float) -> void:
 	var steering_target := clampf(controls.steering, -1, 1)
 	var steering_response := 5.5 if is_zero_approx(steering_target) else 3.5
 	steer_visual = move_toward(steer_visual, steering_target, steering_response * delta)
-	var max_angle := lerpf(0.48, 0.16, clampf(absf(speed) / MAX_SPEED, 0, 1))
+	var max_angle := lerpf(0.48, 0.16, clampf(absf(speed) / 23.0, 0, 1))
 	steering_angle = steer_visual * max_angle
 	var requested_yaw := speed / WHEELBASE * tan(steering_angle)
 	var yaw_limit := minf(0.9, MAX_LATERAL_ACCEL / maxf(absf(speed), 1.0))

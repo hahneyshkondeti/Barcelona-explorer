@@ -3,8 +3,6 @@ extends CanvasLayer
 
 signal pause_requested
 signal recover_requested
-signal camera_requested
-signal destination_requested
 signal sound_requested
 signal fps_requested
 signal map_orientation_requested
@@ -21,7 +19,6 @@ var map: MiniMap
 var map_orientation_button: Button
 var speed_label: Label
 var route_label: Label
-var progress_label: Label
 var pause_overlay: Control
 var card_overlay: Control
 var sound_button: Button
@@ -58,56 +55,42 @@ func _ready() -> void:
 	var theme := Theme.new()
 	theme.default_font_size = 18
 	root.theme = theme
-	var title := label("B R I S A", 30, Color("fff7df"))
-	place(title, Vector2(30, 22), Vector2(300, 42))
-	var subtitle := label("BARCELONA  /  CITY EXPLORER", 12, Color("ffdfac"))
-	place(subtitle, Vector2(32, 64), Vector2(440, 28))
-	var approximation := label("Mapped streets & footprints · façades estimated", 13, Color("ffffff"))
-	place(approximation, Vector2(32, 92), Vector2(440, 24))
-	var top_actions := HBoxContainer.new()
-	top_actions.add_theme_constant_override("separation", 10)
-	place(top_actions, Vector2(-304, 24), Vector2(276, 48), Vector2(1, 0))
-	top_actions.add_child(button("Camera", camera_requested.emit))
-	top_actions.add_child(button("Pause  II", pause_requested.emit))
+	var pause := button("Ⅱ", pause_requested.emit)
+	pause.custom_minimum_size = Vector2(48, 44)
+	pause.tooltip_text = "Pause"
+	pause.add_theme_font_size_override("font_size", 22)
+	var pause_style := style(Color(0.08, 0.18, 0.20, 0.48))
+	pause_style.content_margin_top = 6
+	pause_style.content_margin_bottom = 6
+	pause_style.content_margin_left = 12
+	pause_style.content_margin_right = 12
+	pause.add_theme_stylebox_override("normal", pause_style)
+	place(pause, Vector2(-76, 20), Vector2(48, 44), Vector2(1, 0))
 	map = MiniMap.new()
 	map.car = car
 	map.navigation = navigation
 	place(map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
-	map_orientation_button = button("Heading up", map_orientation_requested.emit)
-	map_orientation_button.add_theme_font_size_override("font_size", 14)
-	map_orientation_button.tooltip_text = "Toggle between following the car and locking north at the top"
-	place(map_orientation_button, Vector2(-212, 280), Vector2(184, 48), Vector2(1, 0))
-	var hint := label("TAP MAP TO EXPAND", 11)
-	place(hint, Vector2(-201, 332), Vector2(184, 20), Vector2(1, 0))
 	var expand_map := button("", open_map)
 	place(expand_map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
 	for state in ["normal", "hover", "pressed"]:
 		expand_map.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	var places_button := button("Places & addresses", open_places)
-	place(places_button, Vector2(314, 131), Vector2(230, 48))
-	street_label = label("", 16)
-	place(street_label, Vector2(34, 248), Vector2(650, 28))
-	var attribution := label("© OSM · ODbL | Terrain: ICGC · Trees: Open Data BCN · CC BY 4.0", 12)
-	place(attribution, Vector2(32, -184), Vector2(700, 24), Vector2(0, 1))
-	var destination := button("◎  Sagrada Família", destination_requested.emit)
-	place(destination, Vector2(32, 131), Vector2(270, 48))
-	route_label = label("", 17)
-	place(route_label, Vector2(34, 185), Vector2(560, 32))
-	progress_label = label("", 13, Color("ffe1ac"))
-	place(progress_label, Vector2(34, 216), Vector2(470, 28))
-	speed_label = label("0", 34)
-	speed_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	place(speed_label, Vector2(-80, -106), Vector2(160, 48), Vector2(0.5, 1))
-	var units := label("KM/H  ·  TOURING", 11)
-	units.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	place(units, Vector2(-100, -61), Vector2(200, 24), Vector2(0.5, 1))
+	street_label = label("", 18)
+	street_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	place(street_label, Vector2(28, 26), Vector2(640, 60))
+	var speed := HBoxContainer.new()
+	speed.alignment = BoxContainer.ALIGNMENT_CENTER
+	speed.add_theme_constant_override("separation", 6)
+	place(speed, Vector2(-120, -104), Vector2(240, 76), Vector2(0.5, 1))
+	speed_label = label("0", 56)
+	speed.add_child(speed_label)
+	var units := label("KM/H", 15)
+	units.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	units.add_theme_constant_override("outline_size", 2)
+	speed.add_child(units)
 	create_pedal("left", "◀", Vector2(30, -143), Vector2(112, 112), Vector2(0, 1))
 	create_pedal("right", "▶", Vector2(156, -143), Vector2(112, 112), Vector2(0, 1))
 	create_pedal("brake", "BRAKE\nREVERSE", Vector2(-283, -143), Vector2(112, 112), Vector2(1, 1))
 	create_pedal("gas", "DRIVE\n↑", Vector2(-155, -166), Vector2(126, 135), Vector2(1, 1))
-	notice = label("WASD / arrows to drive · R recover · C camera · P pause", 13)
-	notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	place(notice, Vector2(-310, -27), Vector2(620, 22), Vector2(0.5, 1))
 	build_pause()
 	build_card()
 	build_credits()
@@ -230,15 +213,15 @@ func centered_column(parent: Control) -> VBoxContainer:
 	parent.add_child(center)
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(600, 0)
-	column.add_theme_constant_override("separation", 12)
+	column.add_theme_constant_override("separation", 8)
 	center.add_child(column)
 	return column
 
 func build_pause() -> void:
 	pause_overlay = overlay()
 	var column := centered_column(pause_overlay)
-	column.add_child(label("Take the scenic route.", 36))
-	column.add_child(label("PAUSED  /  BARCELONA POSTCARD", 13, Color("e8c281")))
+	column.add_child(label("City Explorer", 30))
+	column.add_child(label("PAUSED  /  BARCELONA", 13, Color("e8c281")))
 	column.add_child(button("Continue exploring", pause_requested.emit))
 	column.add_child(button("Reset car to a safe road", recover_requested.emit))
 	var areas := HBoxContainer.new()
@@ -252,8 +235,11 @@ func build_pause() -> void:
 	column.add_child(sound_button)
 	fps_button = button("Frame cap: 30 FPS", fps_requested.emit)
 	column.add_child(fps_button)
+	notice = label("", 13)
+	column.add_child(notice)
+	column.add_child(label("© 2026 Hahneysh Kondeti · City Explorer\nMap © OpenStreetMap contributors · ODbL\nTerrain: ICGC · Trees: Open Data BCN · CC BY 4.0", 12))
 	column.add_child(button("Credits & licenses", func(): credits.popup_centered(Vector2i(900, 560))))
-	column.add_child(label("WASD / arrows · Brake held at rest = reverse\nR: recover car   C: reset camera   P / Esc: pause\nOpenStreetMap snapshot · Generated façade appearance", 16))
+	column.add_child(label("WASD / arrows · Brake held at rest = reverse\nR: recover car   C: reset camera   P / Esc: pause\nOpenStreetMap snapshot · Generated façade appearance", 13))
 
 func build_card() -> void:
 	card_overlay = overlay()
@@ -267,14 +253,13 @@ func build_card() -> void:
 	column.add_child(label("LANDMARK DISCOVERED  ·  Saved on this device", 14, Color("e8c281")))
 	column.add_child(button("Continue exploring", continue_requested.emit))
 
-func refresh(discovered: bool, muted: bool, fps: int) -> void:
+func refresh(_discovered: bool, muted: bool, fps: int) -> void:
 	speed_label.text = str(roundi(absf(car.speed) * 3.6))
 	if car.speed < -0.3:
 		speed_label.text += "  R"
 	route_label.text = "Follow the gold route · %d m" % roundi(navigation.distance_remaining()) if navigation.active else "Free exploration · select a destination"
 	if car.global_position.distance_to(District.DESTINATION) < 20:
 		route_label.text = "Slow to a stop in the gold arrival ring"
-	progress_label.text = "01 / 01 discovered · tap destination to revisit" if discovered else "00 / 01 discovered · your first stop awaits"
 	sound_button.text = "Sound: off" if muted else "Sound: on"
 	fps_button.text = "Frame cap: %d FPS" % fps
 	street_label.text = District.nearest_segment(car.global_position).road.name
@@ -290,7 +275,7 @@ func refresh(discovered: bool, muted: bool, fps: int) -> void:
 
 func build_credits() -> void:
 	credits = AcceptDialog.new()
-	credits.title = "Brisa · Credits & licenses"
+	credits.title = "City Explorer · Credits & licenses"
 	credits.dialog_text = ""
 	root.add_child(credits)
 	var text := RichTextLabel.new()
@@ -300,7 +285,7 @@ func build_credits() -> void:
 	text.offset_right = -20
 	text.offset_bottom = -60
 	text.add_theme_font_size_override("normal_font_size", 16)
-	text.text = "BRISA — BARCELONA BY CAR\nOriginal procedural appearance, interface and synthesized audio.\nPlaster004 / Asphalt030 materials: ambientCG.com · CC0 1.0.\nStreet-tree inventory: Ajuntament de Barcelona / Open Data BCN · CC BY 4.0.\nhttps://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari\nTree coordinates retained; appearance estimated.\nMap geometry and park-tree records © OpenStreetMap contributors, ODbL 1.0.\nhttps://www.openstreetmap.org/copyright\nData snapshot: " + str(District.DATA.metadata.retrieved_at) + "\nSource and adapted database are distributed in data/.\nTerrain: ICGC MET5, CC BY 4.0; resampled from 5 m to 6 m.\nhttps://www.icgc.cat\nBare-earth grades; bridge decks and tunnels not reconstructed.\nCoastline: OpenStreetMap; sea and terrain colors illustrative.\nBuilding façades and untagged dimensions are estimated.\nLandmark facts: sagradafamilia.org/en/history-of-the-temple\n\nGODOT ENGINE\n" + Engine.get_license_text() + "\n\nTHIRD-PARTY COMPONENTS\n" + JSON.stringify(Engine.get_copyright_info(), "  ") + "\n\nLICENSE TEXTS\n" + JSON.stringify(Engine.get_license_info(), "  ")
+	text.text = "CITY EXPLORER\n© 2026 Hahneysh Kondeti. Original game code and assets.\nThird-party data and assets retain their respective licenses.\nOriginal procedural appearance, interface and synthesized audio.\nPlaster004 / Asphalt030 materials: ambientCG.com · CC0 1.0.\nStreet-tree inventory: Ajuntament de Barcelona / Open Data BCN · CC BY 4.0.\nhttps://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari\nTree coordinates retained; appearance estimated.\nMap geometry and park-tree records © OpenStreetMap contributors, ODbL 1.0.\nhttps://www.openstreetmap.org/copyright\nData snapshot: " + str(District.DATA.metadata.retrieved_at) + "\nSource and adapted database are distributed in data/.\nTerrain: ICGC MET5, CC BY 4.0; resampled from 5 m to 6 m.\nhttps://www.icgc.cat\nBare-earth grades; bridge decks and tunnels not reconstructed.\nCoastline: OpenStreetMap; sea and terrain colors illustrative.\nBuilding façades and untagged dimensions are estimated.\nLandmark facts: sagradafamilia.org/en/history-of-the-temple\n\nGODOT ENGINE\n" + Engine.get_license_text() + "\n\nTHIRD-PARTY COMPONENTS\n" + JSON.stringify(Engine.get_copyright_info(), "  ") + "\n\nLICENSE TEXTS\n" + JSON.stringify(Engine.get_license_info(), "  ")
 	if not BuildingAssets.active_credits.is_empty():
 		text.text += "\n\nIMPORTED BUILDING ASSETS\n" + "\n\n".join(BuildingAssets.active_credits)
 	credits.add_child(text)
@@ -342,14 +327,13 @@ func build_places() -> void:
 	start_place_button = button("Start at this address / place", func():
 		if not selected_place.is_empty(): start_requested.emit(District.vector(selected_place.point)))
 	column.add_child(start_place_button)
-	column.add_child(button("Back to driving", func():
-		places_overlay.hide()
-		pause_requested.emit()))
+	column.add_child(button("Back to map", open_map))
 
 func open_places() -> void:
 	if not car.paused:
 		pause_requested.emit()
 	pause_overlay.hide()
+	map_overlay.hide()
 	places_overlay.show()
 	filter_places()
 
@@ -388,12 +372,20 @@ func build_city_map() -> void:
 	map_overlay.add_child(column)
 	var actions := HBoxContainer.new()
 	column.add_child(actions)
-	actions.add_child(label("BARCELONA  /  CHOOSE A START", 23))
+	actions.add_child(label("Barcelona", 23))
 	actions.add_child(button("−", func(): city_map.change_zoom(1 / 1.5)))
 	actions.add_child(button("+", func(): city_map.change_zoom(1.5)))
 	actions.add_child(button("Whole city", func(): city_map.show_city()))
 	actions.add_child(button("My car", func(): city_map.show_car()))
 	actions.add_child(button("Close", close_map))
+	var tools := HBoxContainer.new()
+	column.add_child(tools)
+	tools.add_child(button("Search places & addresses", open_places))
+	map_orientation_button = button("Heading up", map_orientation_requested.emit)
+	tools.add_child(map_orientation_button)
+	route_label = label("", 15)
+	route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(route_label)
 	city_map = CityMap.new()
 	city_map.car = car
 	city_map.navigation = navigation
@@ -412,7 +404,7 @@ func build_city_map() -> void:
 		if map_target.is_finite(): start_requested.emit(map_target))
 	map_start_button.disabled = true
 	column.add_child(map_start_button)
-	column.add_child(label("© OpenStreetMap contributors · Offline snapshot · White: car  /  Gold ring: starting road", 12))
+	column.add_child(label("White: car  /  Gold ring: starting road", 12))
 
 func open_map() -> void:
 	if not car.paused: pause_requested.emit()

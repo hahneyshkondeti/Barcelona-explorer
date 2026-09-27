@@ -51,8 +51,6 @@ func _ready() -> void:
 	hud.start_requested.connect(start_at)
 	hud.pause_requested.connect(toggle_pause)
 	hud.recover_requested.connect(recover)
-	hud.camera_requested.connect(camera.reset)
-	hud.destination_requested.connect(select_destination)
 	hud.sound_requested.connect(toggle_sound)
 	hud.fps_requested.connect(toggle_fps)
 	hud.map.north_locked = save.north_locked

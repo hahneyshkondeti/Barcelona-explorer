@@ -33,7 +33,7 @@ jobs:
           python3 tests/check_city.py
           python3 tests/check_infrastructure.py
           python3 tests/check_terrain.py
-          for test in handling smoke city building_assets performance exploration infrastructure public_spaces terrain; do
+          for test in handling smoke city building_assets performance exploration infrastructure public_spaces terrain solar interface; do
             Godot --headless --script "tests/$test.gd"
           done
   validate:
@@ -57,15 +57,15 @@ jobs:
         run: |
           Godot --headless --script tools/ci/export_ios.gd
           mkdir -p build/ios
-          Godot --headless --export-release iOS build/ios/Brisa.ipa
-          xcodebuild -project build/ios/Brisa.xcodeproj -scheme Brisa -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
-          python3 tools/ci/check_ios.py build/ios build/DerivedData/Build/Products/Release-iphoneos/Brisa.app
+          Godot --headless --export-release iOS build/ios/CityExplorer.ipa
+          xcodebuild -project build/ios/CityExplorer.xcodeproj -scheme CityExplorer -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build
+          python3 tools/ci/check_ios.py build/ios build/DerivedData/Build/Products/Release-iphoneos/CityExplorer.app
       - name: Package Xcode project for local signing
-        run: ditto -c -k --keepParent build/ios build/Brisa-Xcode.zip
+        run: ditto -c -k --keepParent build/ios build/CityExplorer-Xcode.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: Brisa-Xcode-${{ github.run_number }}
-          path: build/Brisa-Xcode.zip
+          name: CityExplorer-Xcode-${{ github.run_number }}
+          path: build/CityExplorer-Xcode.zip
           retention-days: 7
   release:
     if: github.event_name == 'workflow_dispatch' && inputs.mode != 'unsigned' && github.ref == 'refs/heads/main'
@@ -79,9 +79,9 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
-          name: Brisa-Xcode-${{ github.run_number }}
+          name: CityExplorer-Xcode-${{ github.run_number }}
           path: build
-      - run: ditto -x -k build/Brisa-Xcode.zip build
+      - run: ditto -x -k build/CityExplorer-Xcode.zip build
       - name: Sign, archive and optionally upload
         env:
           RELEASE_MODE: ${{ inputs.mode }}
@@ -94,6 +94,6 @@ jobs:
         run: python3 tools/ci/release_ios.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Brisa-IPA-${{ github.run_number }}
+          name: CityExplorer-IPA-${{ github.run_number }}
           path: build/ipa/*.ipa
           retention-days: 7

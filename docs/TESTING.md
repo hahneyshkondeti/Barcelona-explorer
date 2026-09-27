@@ -94,3 +94,7 @@ The square surfaces and basins follow dated OSM outlines. The vertical monument,
 `python3 tests/check_terrain.py` validates payload lengths, hashes, retained source files, explicit coastal-estimate mask and iOS export inclusion. `Godot --headless --script tests/terrain.gd` checks mountain elevations, sea floor, terrain collision interpolation, bounded patch replacement, flat-save migration, elevated-save round trips, road triangle interiors, physical uphill/downhill driving and braking. Existing smoke/city/public-space tests now use terrain-relative elevations.
 
 `Godot --script tests/terrain_visual.gd` captures Collserola, the coast and Montjuïc to `/tmp/brisa-terrain-*.png` for manual visual inspection. These are desktop rendered checks, not physical-iPhone performance measurements.
+
+## Interface, solar light and 150 km/h
+
+`tests/interface.gd` verifies the minimal HUD and map → address search → map → drive flow. Pass `-- --capture` with a real renderer for driving/pause/map/night screenshots. `tests/solar.gd` checks east/west direction, seasonal elevation, night, sunrise/sunset intervals and minute-to-minute motion using UTC fixtures. Handling tests verify the 150 km/h cap, bounded lateral acceleration, full braking within 52 m and reverse delay; the smoke test now approaches a mapped collision wall at 150 km/h.

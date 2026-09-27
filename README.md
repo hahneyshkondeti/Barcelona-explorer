@@ -1,4 +1,4 @@
-# Brisa — Barcelona city explorer
+# City Explorer — Barcelona
 
 An offline Godot 4.5 driving prototype with map coverage across **all ten Barcelona districts**, using OpenStreetMap roads, footprints, addresses and places, plus the municipal street-tree inventory. Sagrada Família remains the introductory sightseeing destination.
 
@@ -136,3 +136,11 @@ The current snapshot renders 2,001 bus stops at their mapped coordinates and off
 Search either square in Places and addresses (Spanish spelling also works), then use the existing route/start action. The enlarged map displays the squares and basin outlines when zoomed in. Source geometry is from the dated OSM snapshot; fountain sculpture, above-ground proportions, materials, paving decoration, benches and water displays remain simplified interpretations, not scans or current operating conditions. Surrounding buildings remain the existing procedural models.
 
 `python3 tools/build_public_spaces.py` rebuilds the plaza geometry. Full-city refresh rebuilds it too and rejects a snapshot that loses either the twin-fountain footprints or Espanya’s fountain. Water shading is animated without per-frame CPU updates; geometry is batched and loaded with the surrounding tiles.
+
+## Minimal driving UI and real-time light
+
+The driving screen contains the current street, tappable minimap, steering/pedals, speed in KM/H and a compact translucent pause button. Expand the map for address/place search, route details, north lock, and start-anywhere controls. Attribution and © 2026 Hahneysh Kondeti appear on pause; third-party licenses remain in Credits.
+
+The forward-speed cap is 150 km/h. Steering retains its low-speed response with a lateral acceleration limit at high speed; full arcade braking stops from the cap in about 49 m on level ground. Terrain, corners and impacts can reduce actual speed.
+
+Sun direction is calculated offline from the device UTC clock and the car's mapped Barcelona longitude/latitude, following NOAA's approximate solar equations. Light updates once per second, including seasonal sunrise/sunset direction and nighttime sky/headlights. It does not use device GPS, fetch weather, or reproduce atmospheric refraction and local horizon sunrise exactly. Source: https://gml.noaa.gov/grad/solcalc/solareqns.PDF .

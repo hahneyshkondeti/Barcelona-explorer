@@ -68,10 +68,10 @@ def main():
             run("security", "import", str(certificate), "-P", os.environ["P12_PASSWORD"], "-A", "-t", "cert", "-f", "pkcs12", "-k", str(keychain), quiet=True)
             run("security", "set-key-partition-list", "-S", "apple-tool:,apple:", "-k", password, str(keychain), quiet=True)
             run("security", "list-keychains", "-d", "user", "-s", str(keychain), *old_keychains, quiet=True)
-            run("xcodebuild", "-project", "build/ios/Brisa.xcodeproj", "-scheme", "Brisa", "-configuration", "Release", "-destination", "generic/platform=iOS", "-archivePath", "build/Brisa.xcarchive", f"DEVELOPMENT_TEAM={TEAM}", "CODE_SIGN_STYLE=Manual", "CODE_SIGN_IDENTITY=Apple Distribution", f"PROVISIONING_PROFILE_SPECIFIER={uuid}", "archive")
+            run("xcodebuild", "-project", "build/ios/CityExplorer.xcodeproj", "-scheme", "CityExplorer", "-configuration", "Release", "-destination", "generic/platform=iOS", "-archivePath", "build/CityExplorer.xcarchive", f"DEVELOPMENT_TEAM={TEAM}", "CODE_SIGN_STYLE=Manual", "CODE_SIGN_IDENTITY=Apple Distribution", f"PROVISIONING_PROFILE_SPECIFIER={uuid}", "archive")
             options = tmp / "ExportOptions.plist"
             options.write_bytes(plistlib.dumps({"method": "app-store-connect", "destination": "export", "teamID": TEAM, "signingStyle": "manual", "signingCertificate": "Apple Distribution", "provisioningProfiles": {BUNDLE: uuid}, "manageAppVersionAndBuildNumber": False, "uploadSymbols": True}))
-            run("xcodebuild", "-exportArchive", "-archivePath", "build/Brisa.xcarchive", "-exportOptionsPlist", str(options), "-exportPath", "build/ipa")
+            run("xcodebuild", "-exportArchive", "-archivePath", "build/CityExplorer.xcarchive", "-exportOptionsPlist", str(options), "-exportPath", "build/ipa")
             if mode == "upload":
                 key_id = os.environ.get("ASC_KEY_ID", "")
                 issuer = os.environ.get("ASC_ISSUER_ID", "")

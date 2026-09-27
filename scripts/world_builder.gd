@@ -20,6 +20,7 @@ var stream_center := Vector2i(99999,99999)
 var stream_position := Vector3.ZERO
 var desired_chunks: Dictionary = {}
 var surfaces: Dictionary = {}
+var daylight: SolarCycle
 var terrain: TerrainWorld
 var base_elevation := NAN
 var route_root: Node3D
@@ -237,6 +238,7 @@ func load_chunk(key: String, background: bool = false) -> void:
 func stream_at(point: Vector3, immediate: bool = false) -> void:
 	if not point.is_finite() or not District.in_bounds(point, 20): return
 	stream_position = point
+	if daylight != null: daylight.observer = point
 	if terrain != null: terrain.stream_at(point)
 	var center := Vector2i(floori(point.x/District.CELL),floori(point.z/District.CELL))
 	if center != stream_center or immediate:
@@ -344,11 +346,16 @@ func build_lighting() -> void:
 	sun.light_color = Color("fff1d8")
 	sun.light_energy = 1.2
 	sun.light_angular_distance = 0.25 if RenderingServer.get_current_rendering_method() == "forward_plus" else 0.0
-	sun.rotation_degrees = Vector3(-44, -115, 0)
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 110
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	add_child(sun)
+	daylight = SolarCycle.new()
+	daylight.sun = sun
+	daylight.environment = env
+	daylight.sky = sky_mat
+	add_child(daylight)
+	daylight.update_at(Time.get_unix_time_from_system())
 
 func chunk_key(at: Vector3) -> String:
 	return "%d:%d" % [floori(at.x / CHUNK), floori(at.z / CHUNK)]

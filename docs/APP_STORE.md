@@ -4,7 +4,7 @@ App Store account setup and public submission are parked. The repository include
 
 ## Configuration
 
-- Working name: Brisa — Barcelona. Store name availability is not verified.
+- Name: City Explorer. Store name availability is not verified.
 - Bundle ID: `com.hahneyshkondeti.brisa`; Apple team: `SZ65B2964T`.
 - iPhone only, arm64, landscape, minimum iOS 16. Baseline target: iPhone 11/A13 at 30 FPS, optional 60 FPS. City-scale device performance is not yet verified.
 - Godot 4.5 stable, official binaries and templates pinned by SHA-512.
@@ -15,7 +15,7 @@ App Store account setup and public submission are parked. The repository include
 
 1. Open repository Actions → **iOS build** → Run workflow → `unsigned`.
 2. CI imports assets, validates city data, runs handling/gameplay/city/model/streaming tests, exports a fresh Xcode project, compiles for a generic physical iPhone, and checks the app's identity, orientation, data bundle, privacy manifest and icon.
-3. Download the `Brisa-Xcode-<run>` artifact (retained 7 days). Unzip, open `ios/Brisa.xcodeproj`, choose your Apple team/signing and physical iPhone, then Run. The artifact includes the offline city. Use full Xcode 26+, not only Command Line Tools.
+3. Download the `CityExplorer-Xcode-<run>` artifact (retained 7 days). Unzip, open `ios/CityExplorer.xcodeproj`, choose your Apple team/signing and physical iPhone, then Run. The artifact includes the offline city. Use full Xcode 26+, not only Command Line Tools.
 
 CI also runs automatically for code pushes and pull requests. Pull requests never use Apple secrets. The signed job only runs manually from `main` after validation passes. Workflow artifacts are build outputs, not an App Store release.
 
@@ -55,3 +55,5 @@ Sources: [Godot iOS export](https://docs.godotengine.org/en/4.5/tutorials/export
 ## Verified build
 
 The unsigned iPhone compile and exported-app checks passed in [GitHub run 35929020609](https://github.com/hahneyshkondeti/Barcelona-explorer/actions/runs/35929020609), using source commit `b5ac516`. Download **Brisa-Xcode-2** from that run's Artifacts section (about 160 MB compressed; expires after 7 days). This contains the exported project for local signing. No signing or App Store upload was performed.
+
+The visible application name is City Explorer. The existing bundle ID remains unchanged to preserve Apple signing/app identity. New build filenames, Xcode scheme and workflow artifacts use `CityExplorer`; historical artifacts above retain their original names.
