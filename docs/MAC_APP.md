@@ -24,4 +24,6 @@ This packages the current game. Real building scans and weekly downloadable asse
 
 ## Icon
 
-`assets/city-explorer-icon.png` is the exact user-supplied image `ChatGPT Image 28 Sept 2026, 01_18_00.png`, selected on 2026-09-28. The artwork is unchanged; Godot generates the required macOS icon sizes during export. It replaces the previous generated icon.
+`assets/city-explorer-icon.png` adapts the user's selected artwork with rounded macOS-style corners and transparent outer padding. Framing was generated with the built-in image tool on 2026-09-28; it replaces the edge-to-edge square icon. Godot creates the macOS icon sizes on export.
+
+Final prompt: preserve the supplied red-car/Sagrada/sunset artwork, fit it into a centered rounded-square tile with approximately 10% transparent outer padding and 20% corner radius, keep black inside the tile, and add no text or objects.
