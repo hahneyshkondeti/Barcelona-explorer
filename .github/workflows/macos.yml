@@ -1,0 +1,30 @@
+name: Mac application
+on:
+  push:
+    branches: [codex/mac-first]
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned Godot and Mac export template
+        run: bash tools/ci/install_godot.sh macos
+      - name: Build standalone application
+        run: GODOT_BIN="$(command -v Godot)" bash tools/macos/build.sh
+      - name: Smoke test packaged application outside checkout
+        working-directory: /tmp
+        run: |
+          "/tmp/city-explorer-macos/City Explorer.app/Contents/MacOS/City Explorer" --headless --quit-after 5 --log-file /tmp/city-explorer-mac.log
+          if grep -E 'SCRIPT ERROR|ERROR:' /tmp/city-explorer-mac.log; then exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CityExplorer-Mac
+          path: build/macos/CityExplorer-Mac.zip
+          retention-days: 14

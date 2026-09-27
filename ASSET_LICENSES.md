@@ -56,3 +56,7 @@ Original game code and original assets: © 2026 Hahneysh Kondeti. Third-party da
 ## CartoBCN lamp survey
 
 © Ajuntament de Barcelona — CartoBCN, CC BY 3.0 ES. Municipal topographic point layer ENE_06_PT, catalog updated 2025-12-13, retrieved 2026-09-27. [Official terms](https://w20.bcn.cat/CartoBCN/getFile.ashx?f=82071224678486&t=bdd), [license](https://creativecommons.org/licenses/by/3.0/es/). Coordinates transformed and filtered for game use; source attributes retained in `data/source/cartobcn-lamps.json.gz`. Original lamp bodies and lighting output are illustrative, not surveyed shapes. See `docs/STREET_LIGHTS.md` for source, modifications, dates and refresh steps.
+
+## City Explorer app icon
+
+`assets/city-explorer-icon.png`: generated with OpenAI's built-in image-generation tool for this project, 2026-09-28. Red car with a black Sagrada Família silhouette; an illustrative game icon, not a surveyed architectural model. Final prompt is recorded in `docs/MAC_APP.md`.

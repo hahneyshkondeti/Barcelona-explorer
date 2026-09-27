@@ -6,7 +6,7 @@ staging="${RUNNER_TEMP:-/tmp}/brisa-godot-ci"
 mkdir -p "$staging"
 cd "$staging"
 assets=(Godot_v4.5-stable_macos.universal.zip)
-if [ "${1:-ios}" = ios ]; then assets+=(Godot_v4.5-stable_export_templates.tpz); fi
+if [ "${1:-ios}" != editor ]; then assets+=(Godot_v4.5-stable_export_templates.tpz); fi
 for asset in "${assets[@]}"; do
   curl --fail --location --retry 3 --output "$asset" "https://github.com/godotengine/godot-builds/releases/download/4.5-stable/$asset"
   expected=$(awk -v name="$asset" '$2 == name {print $1}' "$root/tools/ci/godot.sha512")
@@ -14,8 +14,10 @@ for asset in "${assets[@]}"; do
   printf '%s  %s\n' "$expected" "$asset" | shasum -a 512 -c -
 done
 unzip -q -o Godot_v4.5-stable_macos.universal.zip
-if [ "${1:-ios}" = ios ]; then
+if [ "${1:-ios}" != editor ]; then
 mkdir -p "$HOME/Library/Application Support/Godot/export_templates/4.5.stable"
-unzip -p Godot_v4.5-stable_export_templates.tpz templates/ios.zip > "$HOME/Library/Application Support/Godot/export_templates/4.5.stable/ios.zip"
+template="ios.zip"
+if [ "${1:-ios}" = macos ]; then template="macos.zip"; fi
+unzip -p Godot_v4.5-stable_export_templates.tpz "templates/$template" > "$HOME/Library/Application Support/Godot/export_templates/4.5.stable/$template"
 fi
 printf '%s\n' "$staging/Godot.app/Contents/MacOS" >> "$GITHUB_PATH"

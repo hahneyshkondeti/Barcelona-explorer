@@ -1,3 +1,5 @@
+> **Mac-first branch:** standalone application build and installation instructions are in [docs/MAC_APP.md](docs/MAC_APP.md). The Mac build includes the offline city and requires no Godot editor to play.
+
 # City Explorer — Barcelona
 
 An offline Godot 4.5 driving prototype with map coverage across **all ten Barcelona districts**, using OpenStreetMap roads, footprints, addresses and places, plus the municipal street-tree inventory. Sagrada Família remains the introductory sightseeing destination.
