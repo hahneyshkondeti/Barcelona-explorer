@@ -41,6 +41,7 @@ func run() -> void:
 			hud.pause_overlay.visible = scene == "pause"
 			hud.map_overlay.visible = scene == "map"
 			game.car.headlights.visible = scene == "night"
+			game.world.street_lighting.update_lights()
 			for i in 6: await process_frame
 			await RenderingServer.frame_post_draw
 			root.get_texture().get_image().save_png("/tmp/city-explorer-%s.png" % scene)

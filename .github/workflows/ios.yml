@@ -33,7 +33,8 @@ jobs:
           python3 tests/check_city.py
           python3 tests/check_infrastructure.py
           python3 tests/check_terrain.py
-          for test in handling smoke city building_assets performance exploration infrastructure public_spaces terrain solar interface; do
+          python3 tests/check_street_lights.py
+          for test in handling smoke city building_assets performance exploration infrastructure public_spaces terrain solar interface street_lights; do
             Godot --headless --script "tests/$test.gd"
           done
   validate:

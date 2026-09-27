@@ -144,3 +144,7 @@ The driving screen contains the current street, tappable minimap, steering/pedal
 The forward-speed cap is 150 km/h. Steering retains its low-speed response with a lateral acceleration limit at high speed; full arcade braking stops from the cap in about 49 m on level ground. Terrain, corners and impacts can reduce actual speed.
 
 Sun direction is calculated offline from the device UTC clock and the car's mapped Barcelona longitude/latitude, following NOAA's approximate solar equations. Light updates once per second, including seasonal sunrise/sunset direction and nighttime sky/headlights. It does not use device GPS, fetch weather, or reproduce atmospheric refraction and local horizon sunrise exactly. Source: https://gml.noaa.gov/grad/solcalc/solareqns.PDF .
+
+## Mapped street lighting
+
+132,556 lamp positions now come from official CartoBCN municipal topography. The former estimated roadside poles are removed. Lamps fade on at dusk with the real-time solar cycle; batched fixtures and a capped eight-light pool limit runtime cost. **Exact fixture shapes are not supplied by this survey**: the visible poles and luminaires remain original approximations. [Source, accuracy limits and refresh instructions](docs/STREET_LIGHTS.md).

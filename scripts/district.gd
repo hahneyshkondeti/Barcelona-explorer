@@ -18,6 +18,7 @@ static var CELL := 192.0
 static var AREAS: Array = []
 static var INFRASTRUCTURE: Dictionary = {}
 static var TRANSIT: Array = []
+static var LIGHTS: Dictionary = {}
 static var PUBLIC_SPACES: Dictionary = {}
 static var space_tiles: Dictionary = {}
 
@@ -27,6 +28,10 @@ static func _static_init() -> void:
 	for records in INFRASTRUCTURE.cells.values():
 		for record in records:
 			if record.kind in ["metro_station", "metro_entrance", "bus_stop"]: TRANSIT.append(record)
+	LIGHTS = JSON.parse_string(FileAccess.get_file_as_string("res://data/lighting/street_lights.json"))
+	for key in LIGHTS.cells:
+		if not DATA.tile_dependencies.has(key): DATA.tile_dependencies[key] = []
+		if key not in DATA.tile_dependencies[key]: DATA.tile_dependencies[key].append(key)
 	AREAS = JSON.parse_string(FileAccess.get_file_as_string("res://data/city/areas.json"))
 	for key in INFRASTRUCTURE.cells:
 		if not DATA.tile_dependencies.has(key): DATA.tile_dependencies[key] = []
@@ -132,6 +137,7 @@ static func tile(key: String) -> Dictionary:
 			tile_cache[key] = JSON.parse_string(FileAccess.get_file_as_string(DATA.tiles[key]))
 		else:
 			tile_cache[key] = {"roads":[], "buildings":[], "trees":[], "parks":[], "addresses":[], "places":[]}
+		tile_cache[key]["street_lights"] = LIGHTS.cells.get(key, [])
 		tile_cache[key]["public_spaces"] = space_tiles.get(key, [])
 		tile_cache[key]["infrastructure"] = INFRASTRUCTURE.cells.get(key, [])
 	return tile_cache[key]

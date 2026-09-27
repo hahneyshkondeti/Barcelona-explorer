@@ -52,3 +52,7 @@ The procedural geometry in `scripts/public_spaces.gd` and water shader are origi
 Terrain source: Institut Cartogràfic i Geològic de Catalunya (ICGC), MET5, CC BY 4.0. Product: https://www.icgc.cat/en/Geoinformation-and-Maps/Data-and-products/Bessons-digitals-Elevacions/5x5-m-Terrain-elevation-model . License: https://creativecommons.org/licenses/by/4.0/ . Source retrieved 2026-09-27; reprojection and 6 m resampling are adaptations. See `data/terrain/metadata.json` and `docs/TERRAIN.md`. Coast geometry and source extract © OpenStreetMap contributors, ODbL 1.0. Sea waves and terrain shaders are original code; seabed depth and land colors are illustrative.
 
 Original game code and original assets: © 2026 Hahneysh Kondeti. Third-party data/assets retain the licenses and attribution listed above. Solar positioning implements published NOAA mathematical equations: https://gml.noaa.gov/grad/solcalc/solareqns.PDF .
+
+## CartoBCN lamp survey
+
+© Ajuntament de Barcelona — CartoBCN, CC BY 3.0 ES. Municipal topographic point layer ENE_06_PT, catalog updated 2025-12-13, retrieved 2026-09-27. [Official terms](https://w20.bcn.cat/CartoBCN/getFile.ashx?f=82071224678486&t=bdd), [license](https://creativecommons.org/licenses/by/3.0/es/). Coordinates transformed and filtered for game use; source attributes retained in `data/source/cartobcn-lamps.json.gz`. Original lamp bodies and lighting output are illustrative, not surveyed shapes. See `docs/STREET_LIGHTS.md` for source, modifications, dates and refresh steps.

@@ -39,3 +39,5 @@ Changes: geographic clipping, coordinate projection, field selection, and combin
 ## Terrain and coast
 
 Terrain source: Institut Cartogràfic i Geològic de Catalunya (ICGC), MET5, CC BY 4.0. Product: https://www.icgc.cat/en/Geoinformation-and-Maps/Data-and-products/Bessons-digitals-Elevacions/5x5-m-Terrain-elevation-model . License: https://creativecommons.org/licenses/by/4.0/ . Source retrieved 2026-09-27; reprojection and 6 m resampling are adaptations. See `data/terrain/metadata.json` and `docs/TERRAIN.md`. Coast geometry and source extract © OpenStreetMap contributors, ODbL 1.0. Sea waves and terrain shaders are original code; seabed depth and land colors are illustrative.
+
+Lamp survey: © Ajuntament de Barcelona — CartoBCN, CC BY 3.0 ES; catalog updated 2025-12-13, retrieved 2026-09-27. [Terms](https://w20.bcn.cat/CartoBCN/getFile.ashx?f=82071224678486&t=bdd). `source/cartobcn-lamps.json.gz` retains original ENE_06_PT attributes/coordinates; `lighting/street_lights.json` is a filtered, reprojected derivative. Fixture shape/height is not supplied. See `docs/STREET_LIGHTS.md`.

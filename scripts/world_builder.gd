@@ -21,6 +21,7 @@ var stream_position := Vector3.ZERO
 var desired_chunks: Dictionary = {}
 var surfaces: Dictionary = {}
 var daylight: SolarCycle
+var street_lighting: StreetLights
 var terrain: TerrainWorld
 var base_elevation := NAN
 var route_root: Node3D
@@ -105,6 +106,8 @@ func _ready() -> void:
 	prepare_materials()
 	if not is_chunk:
 		build_lighting()
+		street_lighting = StreetLights.new()
+		add_child(street_lighting)
 		terrain = TerrainWorld.new()
 		add_child(terrain)
 		var manifest = JSON.parse_string(FileAccess.get_file_as_string("res://data/building_assets.json"))
@@ -186,6 +189,15 @@ func _ready() -> void:
 		base_elevation = TerrainData.height(p[0], p[1])
 		StreetFurniture.build(self, record)
 		base_elevation = NAN
+	for record in features.get("street_lights", []):
+		if incremental and budget_expired():
+			await get_tree().process_frame
+			if retired:
+				queue_free()
+				return
+		base_elevation = TerrainData.height(record.point[0], record.point[1])
+		StreetLights.build(self, record)
+		base_elevation = NAN
 	await build_addresses()
 	if retired:
 		queue_free()
@@ -239,6 +251,7 @@ func stream_at(point: Vector3, immediate: bool = false) -> void:
 	if not point.is_finite() or not District.in_bounds(point, 20): return
 	stream_position = point
 	if daylight != null: daylight.observer = point
+	if street_lighting != null: street_lighting.observer = point
 	if terrain != null: terrain.stream_at(point)
 	var center := Vector2i(floori(point.x/District.CELL),floori(point.z/District.CELL))
 	if center != stream_center or immediate:
@@ -440,10 +453,7 @@ func build_road(road: Dictionary) -> void:
 		if road.width >= 10:
 			for d in range(3, int(length) - 4, 9):
 				strip(a + direction * d, a + direction * (d + 3), 0.1, 0.106, material(Color("c3c1b3")))
-		if length > 30:
-			var pole: Vector3 = a.lerp(b, 0.5) + side * (road.width / 2 + 2.5)
-			instance_box(Vector3(0.12, 7, 0.12), pole + Vector3.UP * 3.5, 0, Color("444b4a"), false)
-			instance_box(Vector3(0.7, 0.16, 0.4), pole + Vector3.UP * 7, 0, Color("c0bab0"), false)
+
 	else:
 		strip(a, b, road.width, 0.07, pavement)
 
@@ -729,6 +739,8 @@ func flush_batches() -> void:
 		var node := MultiMeshInstance3D.new()
 		node.multimesh = multi
 		node.material_override = material(batch.color)
+		if batch.color == StreetLights.HEAD_COLOR:
+			node.material_override = StreetLights.lens_material()
 		if batch.color == Color("344044") or batch.color == Color("303b3b"):
 			if not shared_shaders.has("glass"):
 				var glass := ShaderMaterial.new()
