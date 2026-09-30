@@ -2,7 +2,7 @@
 
 # City Explorer — Barcelona
 
-An offline Godot 4.5 driving prototype with map coverage across **all ten Barcelona districts**, using OpenStreetMap roads, footprints, addresses and places, plus the municipal street-tree inventory. Sagrada Família remains the introductory sightseeing destination.
+A Godot 4.5 driving application with map coverage across **all ten Barcelona districts**, using OpenStreetMap roads, footprints, addresses and places, plus the municipal street-tree inventory. The city remains playable offline; an optional Google Places (New) key expands starting-location search.
 
 ![Driving in Barcelona](docs/driving.png)
 
@@ -34,11 +34,10 @@ Development engine on this Mac (installed in Applications):
 | W / Up / DRIVE | Accelerate |
 | S / Down / Space / BRAKE | Brake; hold 0.35 seconds after stopping for reverse |
 | A / D or Left / Right | Steer |
-| C / Camera | Reset camera |
+| C | Reset camera |
 | R | Recover to last safe road |
 | P / Escape / Pause | Pause/resume |
-| Pause → district selector → Start in district | Move to a safe mapped road in any of the ten districts |
-| Places & addresses | Search city-wide records and route to a nearby mapped road |
+| Pause → Choose new location | Return to city-scoped place search |
 
 District spawn anchors are selected from municipal tree records near each district's average inventory location, then projected to a connected road. They are convenient starting points, not district centroids or sightseeing claims. Place search displays up to 300 matches; refine the query to find a specific record. The minimap shows the local streets around the car.
 
@@ -105,11 +104,11 @@ See [docs/APP_STORE.md](docs/APP_STORE.md). Every code push runs gameplay/data c
 
 ## Choose where to begin
 
-Tap the minimap on the right to open the full-city map. Drag to pan, use + / − (or the mouse wheel) to zoom, tap a point and press **Start here**. **My car** zooms to the current position; **Whole city** restores the overview. Detailed street names appear when zoomed in. Driving pauses while the map is open.
+Startup follows **Home → City → Location → Car → Explore**. Search accepts addresses, landmarks, businesses, hotels, restaurants, parks and neighbourhoods. Google Places results are restricted to the selected city bounds; without a key the same screen uses bundled dated records. See [Google Places setup](docs/PLACES.md).
 
-In **Places & addresses**, search an offline street address, select a record, then choose **Start at this address / place** or follow a driving route there. Search includes standalone address records, ignores accents and common street prefixes, and labels spelling suggestions. For example, `Carrer Gretel Ammann Marinez 12` finds the source record `Carrer de Gretel Ammann Martínez 16-12`; this is a recorded range, not a surveyed individual door. Missing numbers are not invented.
+Selecting a result resolves its coordinates, converts them to the local map projection, and uses the existing road index to choose the nearest safe driveable point and heading. The raw coordinate is never used as an unchecked vehicle spawn. For example, the offline query `Carrer Gretel Ammann Marinez 12` finds the source range `Carrer de Gretel Ammann Martínez 16-12`; missing door numbers are not invented.
 
-Both launch actions position the car on the nearest mapped drivable road, reset its heading/camera and save the new safe position. The map shows the offset from a tapped point before launch. Floating street labels now include short named streets and repeat along longer streets, with nearby duplicates suppressed. Long names wrap across multiple lines; screen-overlapping labels yield to the nearest street. Unnamed source roads are not assigned invented names.
+Floating street labels include short named streets and repeat along longer streets, with nearby duplicates suppressed. Long names wrap across multiple lines; screen-overlapping labels yield to the nearest street. Unnamed source roads are not assigned invented names.
 
 `tools/build_city.py` regenerates the address index and overview during each city refresh. To regenerate them from an existing tile set: `python3 tools/build_navigation_assets.py`. All map content remains offline and retains OpenStreetMap attribution.
 
@@ -120,7 +119,7 @@ The driving minimap defaults to **Heading up**: streets and the route rotate wit
 The offline city now includes **461 mapped metro entrances**, **174 metro station records**, **3,772 bus stops**, **8,205 traffic-signal records**, **725 stop controls**, **1,427 yield controls**, and **594 other mapped signs** from the existing OSM snapshot. Counts cover the city bounding envelope, including neighboring fringe, and are not a guarantee of every real-world installation. Station records can represent individual line platforms rather than unique named interchanges.
 
 - Metro entrances have original red M markers; bus stops have blue BUS poles and recorded names/references. Shelters and benches appear only where those attributes are recorded, with estimated geometry.
-- Search **Metro Sagrada Família**, **Bus stop**, or a stop name under **Places and addresses**, then route or start on the nearest drivable road. Nearby transit appears on the minimap. On the enlarged map, zoom in for M metro markers and further for B bus stops.
+- Search **Metro Sagrada Família**, **Bus stop**, or a stop name during starting-location search, then start on the nearest driveable road. Nearby transit appears on the minimap.
 - Station centers are map/search markers only: no invented surface entrance or underground interior is created there.
 - Stop, yield, speed and no-entry signs have distinct simplified graphics. Unsupported sign codes use a neutral plaque displaying the source code. Traffic lights have static, unlit lenses; traffic phases and enforcement are not simulated.
 - Original coordinates are preserved. Control nodes mapped on the roadway are offset to an estimated roadside for rendering, with this approximation recorded separately. Bus-stop poles and shelter footprints are checked against nearby rendered roads and building outlines; unsafe shelters are omitted, and unresolved stops retain their map/search records without 3D furniture. Sign orientation, pole dimensions and shelters are illustrative. Furniture is streamed and batched, has distance-limited labels, and has no additional collision bodies.
@@ -135,13 +134,13 @@ The current snapshot renders 2,001 bus stops at their mapped coordinates and off
 
 **Plaça de Catalunya** now has its mapped pedestrian outline, planting beds, twin-fountain footprints, other basins, the mapped compass-rose area with an original paving pattern, and mapped benches. **Plaça d’Espanya** has the central island, fountain basin and a dedicated model interpreting Jujol’s triangular monument and documented 33-metre height. The old generic building extrusion at that fountain is replaced. Basin walls and the island edge have collision boundaries. The separate Montjuïc Magic Fountain is not part of this change.
 
-Search either square in Places and addresses (Spanish spelling also works), then use the existing route/start action. The enlarged map displays the squares and basin outlines when zoomed in. Source geometry is from the dated OSM snapshot; fountain sculpture, above-ground proportions, materials, paving decoration, benches and water displays remain simplified interpretations, not scans or current operating conditions. Surrounding buildings remain the existing procedural models.
+Search either square during starting-location search (Spanish spelling also works), then begin on the nearest driveable road. Source geometry is from the dated OSM snapshot; fountain sculpture, above-ground proportions, materials, paving decoration, benches and water displays remain simplified interpretations, not scans or current operating conditions. Surrounding buildings remain the existing procedural models.
 
 `python3 tools/build_public_spaces.py` rebuilds the plaza geometry. Full-city refresh rebuilds it too and rejects a snapshot that loses either the twin-fountain footprints or Espanya’s fountain. Water shading is animated without per-frame CPU updates; geometry is batched and loaded with the surrounding tiles.
 
-## Minimal driving UI and real-time light
+## Application flow, minimal driving UI and real-time light
 
-The driving screen contains the current street, tappable minimap, steering/pedals, speed in KM/H and a compact translucent pause button. Expand the map for address/place search, route details, north lock, and start-anywhere controls. Attribution and © 2026 Hahneysh Kondeti appear on pause; third-party licenses remain in Credits.
+The default dark interface uses a focused onboarding flow, with reusable city and vehicle catalogs ready for future additions. The driving screen contains only city/street context, the minimap, speed, a compact translucent pause button, and touch pedals on mobile. Keyboard instructions, sound, frame cap and all legal attribution are nested under Pause → Settings. Dark, Light and System appearance preferences persist locally.
 
 The forward-speed cap is 150 km/h. Steering retains its low-speed response with a lateral acceleration limit at high speed; full arcade braking stops from the cap in about 49 m on level ground. Terrain, corners and impacts can reduce actual speed.
 

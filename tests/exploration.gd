@@ -26,6 +26,9 @@ func run() -> void:
 	game.save.path = "user://exploration_test.json"
 	if FileAccess.file_exists(game.save.path): DirAccess.remove_absolute(game.save.path)
 	root.add_child(game)
+	game.onboarding.hide()
+	game.onboarding.active = false
+	game.begin_exploration(game.session.selected_city, {"name":"Test start"}, game.session.selected_vehicle, District.START)
 	var original_heading: float = game.car.rotation.y
 	for heading in [0.0, PI * 0.5, PI, -PI * 0.5]:
 		game.car.rotation.y = heading
@@ -45,10 +48,12 @@ func run() -> void:
 	check(settings.north_locked, "North-lock preference survives save and reload")
 	game.hud.map_orientation_button.pressed.emit()
 	check(not game.hud.map.north_locked, "Tapping the map mode again restores heading-following")
-	game.hud.open_map()
+	var map := CityMap.new()
+	map.car = game.car
+	map.navigation = game.navigation
+	map.size = Vector2(800, 500)
+	root.add_child(map)
 	await process_frame
-	check(game.is_paused and game.hud.map_overlay.visible, "Expanded map pauses driving")
-	var map: CityMap = game.hud.city_map
 	var point := District.vector(record.point)
 	check(map.world_point(map.map_point(point)).distance_to(point) < 0.02, "Map coordinates round-trip without aspect distortion")
 	var anchor := map.size * Vector2(0.65, 0.4)
@@ -56,24 +61,27 @@ func run() -> void:
 	map.change_zoom(2, anchor)
 	check(map.world_point(anchor).distance_to(before) < 0.02, "Zoom stays anchored at the pointer")
 	map.choose(map.map_point(point))
-	check(not game.hud.map_start_button.disabled and map.selected.distance_to(District.nearest_road(point)) < 0.02, "Map selection previews the actual drivable starting point")
+	check(map.selected.distance_to(District.nearest_road(point)) < 0.02, "Map selection previews the actual drivable starting point")
 	var previous: Vector3 = map.selected
 	map.begin_drag(map.size * 0.5)
 	map.move_drag(map.size * 0.5 + Vector2(40, 20))
 	map.end_drag(map.size * 0.5 + Vector2(40, 20))
 	check(map.selected == previous, "Dragging pans without accidentally choosing a start")
-	game.hud.map_start_button.pressed.emit()
-	check(not game.is_paused and not game.hud.map_overlay.visible and District.is_safe(game.car.position), "Start here resumes driving on a safe road")
+	var selected_point: Vector3 = map.selected
+	map.free()
+	game.start_at(selected_point)
+	check(not game.is_paused and District.is_safe(game.car.position), "Start coordinates snap to a safe road")
 	var saved := SaveStore.new()
 	saved.path = game.save.path
 	saved.load_journey()
 	check(saved.safe_position.distance_to(game.car.position) < 0.02, "Chosen starting point persists locally")
-	game.hud.open_places()
-	game.hud.place_search.text = "Carrer Gretel Ammann Marinez 12"
-	game.hud.filter_places()
-	game.hud.select_place(0)
-	game.hud.start_place_button.pressed.emit()
-	check(not game.hud.places_overlay.visible and game.car.position.distance_to(District.nearest_road(point)) < 0.02, "Address action launches at the matching road")
+	game.choose_new_location()
+	game.onboarding.search_field.text = "Carrer Gretel Ammann Marinez 12"
+	game.onboarding._search_now()
+	game.onboarding._choose_place(game.onboarding.results[0])
+	check(game.session.screen == AppSession.Screen.VEHICLE and game.session.selected_point.distance_to(point) < 0.02, "Address action resolves the matching map coordinate")
+	game.onboarding._start_exploring()
+	check(not game.onboarding.visible and game.car.position.distance_to(District.nearest_road(point)) < 0.02, "Start exploring launches on the matching safe road")
 	var old: Vector3 = game.car.position
 	game.start_at(Vector3.INF)
 	check(game.car.position == old, "Invalid launch coordinates cannot move the car")
@@ -101,18 +109,9 @@ func run() -> void:
 		await create_timer(0.3).timeout
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://docs/street-labels.png")
-		game.hud.open_map()
-		await process_frame
-		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png("res://docs/expanded-map.png")
-		game.hud.city_map.show_car()
-		await process_frame
-		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png("res://docs/expanded-map-detail.png")
-		game.hud.close_map()
-		game.hud.open_places()
-		game.hud.filter_places()
-		game.hud.select_place(0)
+		game.choose_new_location()
+		game.onboarding.search_field.text = "Gretel Ammann"
+		game.onboarding._search_now()
 		await process_frame
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://docs/address-start.png")

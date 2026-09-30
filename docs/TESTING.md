@@ -20,7 +20,7 @@ The unchanged 11 handling checks cover progressive takeoff, stationary/tight/spe
 
 ## Render and packaging
 
-`tests/capture.gd` captures the original driving area, landmark/card/place UI, a distant Sant Martí street and the district selector. The desktop renderer is Forward+ using Metal. Mobile renderer captures run on this Mac; they are not iPhone screenshots. The known desktop Metal sampler LOD-bias warning with TAA remains; it is not a failed render.
+`tests/interface.gd -- --capture` can capture the onboarding, driving, pause and settings states; `tests/capture.gd` captures driving and landmark scenes. The desktop renderer is Forward+ using Metal. Mobile renderer captures run on this Mac; they are not iPhone screenshots. The known desktop Metal sampler LOD-bias warning with TAA remains; it is not a failed render.
 
 The iOS preset exports `build/Brisa.pck` successfully, approximately 340 MiB, with the city manifest and tile JSON included and source archives, old pilot runtime files and test fixtures excluded. This is a resource pack, not a signed iOS executable or Xcode device build.
 

@@ -6,98 +6,59 @@ signal recover_requested
 signal sound_requested
 signal fps_requested
 signal map_orientation_requested
-signal place_requested(place: Dictionary)
-signal area_requested(index: int)
-signal start_requested(point: Vector3)
 signal continue_requested
+signal restart_requested
+signal choose_location_requested
+signal choose_vehicle_requested
+signal home_requested
+signal theme_requested(mode: String)
 
 var controls: DriveInput
 var car: TouringCar
 var navigation: RoadNavigation
 var root: Control
+var chrome: Control
 var map: MiniMap
 var map_orientation_button: Button
 var speed_label: Label
-var route_label: Label
+var city_label: Label
+var street_label: Label
 var pause_overlay: Control
+var settings_overlay: Control
+var controls_overlay: Control
+var credits_overlay: Control
 var card_overlay: Control
 var sound_button: Button
 var fps_button: Button
-var touch_rects: Dictionary = {}
+var notice: Label
 var touch_ids: Dictionary = {}
 var touch_buttons: Dictionary = {}
-var notice: Label
-var credits: AcceptDialog
-var places_overlay: Control
-var places_list: ItemList
-var places_info: RichTextLabel
-var place_search: LineEdit
-var filtered_places: Array = []
-var selected_place: Dictionary = {}
-var route_place_button: Button
-var street_label: Label
-var start_place_button: Button
-var address_lookup := AddressSearch.new()
-var search_timer: Timer
-var map_overlay: Control
-var city_map: CityMap
-var map_info: Label
-var map_start_button: Button
-var map_target := Vector3.INF
+var theme_mode := "dark"
+var selected_city_name := "Barcelona"
 
 func _ready() -> void:
+	layer = 10
 	root = Control.new()
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
+	chrome = Control.new()
+	chrome.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	chrome.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(chrome)
 	get_viewport().size_changed.connect(apply_safe_area)
 	apply_safe_area()
-	var theme := Theme.new()
-	theme.default_font_size = 18
-	root.theme = theme
-	var pause := button("Ⅱ", pause_requested.emit)
-	pause.custom_minimum_size = Vector2(48, 44)
-	pause.tooltip_text = "Pause"
-	pause.add_theme_font_size_override("font_size", 22)
-	var pause_style := style(Color(0.08, 0.18, 0.20, 0.48))
-	pause_style.content_margin_top = 6
-	pause_style.content_margin_bottom = 6
-	pause_style.content_margin_left = 12
-	pause_style.content_margin_right = 12
-	pause.add_theme_stylebox_override("normal", pause_style)
-	place(pause, Vector2(-76, 20), Vector2(48, 44), Vector2(1, 0))
-	map = MiniMap.new()
-	map.car = car
-	map.navigation = navigation
-	place(map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
-	var expand_map := button("", open_map)
-	place(expand_map, Vector2(-212, 88), Vector2(184, 184), Vector2(1, 0))
-	for state in ["normal", "hover", "pressed"]:
-		expand_map.add_theme_stylebox_override(state, StyleBoxEmpty.new())
-	street_label = label("", 18)
-	street_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	place(street_label, Vector2(28, 26), Vector2(640, 60))
-	var speed := HBoxContainer.new()
-	speed.alignment = BoxContainer.ALIGNMENT_CENTER
-	speed.add_theme_constant_override("separation", 6)
-	place(speed, Vector2(-120, -104), Vector2(240, 76), Vector2(0.5, 1))
-	speed_label = label("0", 56)
-	speed.add_child(speed_label)
-	var units := label("KM/H", 15)
-	units.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	units.add_theme_constant_override("outline_size", 2)
-	speed.add_child(units)
-	create_pedal("left", "◀", Vector2(30, -143), Vector2(112, 112), Vector2(0, 1))
-	create_pedal("right", "▶", Vector2(156, -143), Vector2(112, 112), Vector2(0, 1))
-	create_pedal("brake", "BRAKE\nREVERSE", Vector2(-283, -143), Vector2(112, 112), Vector2(1, 1))
-	create_pedal("gas", "DRIVE\n↑", Vector2(-155, -166), Vector2(126, 135), Vector2(1, 1))
+	build_chrome()
 	build_pause()
-	build_card()
+	build_settings()
+	build_controls()
 	build_credits()
-	build_places()
-	build_city_map()
+	build_card()
+	apply_theme(theme_mode)
 
 func apply_safe_area() -> void:
+	if root == null:
+		return
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	if OS.get_name() != "iOS":
 		return
@@ -112,40 +73,102 @@ func apply_safe_area() -> void:
 	root.offset_right = -(screen.x - safe.end.x) * factor.x
 	root.offset_bottom = -(screen.y - safe.end.y) * factor.y
 
-func label(text: String, font_size: int, color: Color = Color("fff8e6")) -> Label:
+func apply_theme(mode: String) -> void:
+	theme_mode = mode
+	if root == null:
+		return
+	root.theme = UIDesignSystem.theme(mode)
+	var c := UIDesignSystem.colors(mode)
+	for item in [city_label, street_label, speed_label]:
+		if item != null:
+			item.add_theme_color_override("font_color", Color.WHITE)
+			item.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.72))
+			item.add_theme_constant_override("shadow_offset_y", 2)
+	for item in root.find_children("*", "Label", true, false):
+		if item.get_meta("secondary", false):
+			item.add_theme_color_override("font_color", c.secondary)
+	if is_instance_valid(pause_overlay):
+		for overlay_node in [pause_overlay, settings_overlay, controls_overlay, credits_overlay, card_overlay]:
+			overlay_node.color = Color(c.background, 0.97)
+	for button_node in get_tree().get_nodes_in_group("primary_ui_button"):
+		if is_ancestor_of(button_node):
+			UIDesignSystem.primary(button_node, mode)
+
+func set_city_name(value: String) -> void:
+	selected_city_name = value
+	if city_label != null:
+		city_label.text = value
+
+func set_exploring_visible(value: bool) -> void:
+	root.visible = value
+	if not value:
+		release_touches()
+
+func build_chrome() -> void:
+	city_label = _label(selected_city_name, 14)
+	_place(chrome, city_label, Vector2(28, 24), Vector2(500, 22))
+	street_label = _label("", 20)
+	street_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	street_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_place(chrome, street_label, Vector2(28, 46), Vector2(520, 56))
+	var pause := _button("Ⅱ", pause_requested.emit)
+	pause.tooltip_text = "Pause"
+	pause.custom_minimum_size = Vector2(46, 42)
+	pause.add_theme_font_size_override("font_size", 19)
+	pause.add_theme_stylebox_override("normal", UIDesignSystem.translucent_panel(true, 0.68, 12))
+	pause.add_theme_stylebox_override("hover", UIDesignSystem.translucent_panel(true, 0.86, 12))
+	_place(chrome, pause, Vector2(-72, 20), Vector2(46, 42), Vector2(1, 0))
+	map = MiniMap.new()
+	map.car = car
+	map.navigation = navigation
+	_place(chrome, map, Vector2(-204, 76), Vector2(176, 176), Vector2(1, 0))
+	map_orientation_button = _button("N ↑", map_orientation_requested.emit)
+	map_orientation_button.tooltip_text = "Lock north up"
+	map_orientation_button.custom_minimum_size = Vector2(60, 34)
+	map_orientation_button.add_theme_font_size_override("font_size", 13)
+	map_orientation_button.add_theme_stylebox_override("normal", UIDesignSystem.translucent_panel(true, 0.68, 10))
+	map_orientation_button.add_theme_stylebox_override("hover", UIDesignSystem.translucent_panel(true, 0.86, 10))
+	_place(chrome, map_orientation_button, Vector2(-92, 258), Vector2(64, 36), Vector2(1, 0))
+	var speed := HBoxContainer.new()
+	speed.alignment = BoxContainer.ALIGNMENT_CENTER
+	speed.add_theme_constant_override("separation", 7)
+	_place(chrome, speed, Vector2(-130, -92), Vector2(260, 62), Vector2(0.5, 1))
+	speed_label = _label("0", 52)
+	speed.add_child(speed_label)
+	var unit := _label("KM/H", 14)
+	unit.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	unit.custom_minimum_size.y = 43
+	speed.add_child(unit)
+	create_pedal("left", "‹", Vector2(24, -132), Vector2(96, 96), Vector2(0, 1))
+	create_pedal("right", "›", Vector2(132, -132), Vector2(96, 96), Vector2(0, 1))
+	create_pedal("brake", "BRAKE", Vector2(-240, -132), Vector2(96, 96), Vector2(1, 1))
+	create_pedal("gas", "DRIVE", Vector2(-132, -132), Vector2(96, 96), Vector2(1, 1))
+	var show_touch := OS.has_feature("mobile")
+	for pedal in touch_buttons.values():
+		pedal.visible = show_touch
+
+func _label(value: String, size: int, secondary := false) -> Label:
 	var result := Label.new()
-	result.text = text
-	result.add_theme_font_size_override("font_size", font_size)
-	result.add_theme_color_override("font_color", color)
-	result.add_theme_color_override("font_shadow_color", Color(0.08, 0.16, 0.17, 0.8))
-	result.add_theme_constant_override("shadow_offset_y", 1)
+	result.text = value
+	result.add_theme_font_size_override("font_size", size)
+	if secondary:
+		result.add_theme_color_override("font_color", UIDesignSystem.colors(theme_mode).secondary)
+		result.set_meta("secondary", true)
 	result.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return result
 
-func style(color: Color) -> StyleBoxFlat:
-	var result := StyleBoxFlat.new()
-	result.bg_color = color
-	result.set_corner_radius_all(14)
-	result.content_margin_left = 18
-	result.content_margin_right = 18
-	result.content_margin_top = 12
-	result.content_margin_bottom = 12
-	return result
-
-func button(text: String, action: Callable) -> Button:
+func _button(value: String, action: Callable, primary := false) -> Button:
 	var result := Button.new()
-	result.text = text
-	result.custom_minimum_size = Vector2(100, 48)
-	result.add_theme_stylebox_override("normal", style(Color("25494e")))
-	result.add_theme_stylebox_override("hover", style(Color("376067")))
-	result.add_theme_stylebox_override("pressed", style(Color("9c6a40")))
-	result.add_theme_color_override("font_color", Color("fff5dc"))
-	result.focus_mode = Control.FOCUS_NONE
+	result.text = value
+	result.custom_minimum_size.y = 50
 	result.pressed.connect(action)
+	if primary:
+		result.add_to_group("primary_ui_button")
+		UIDesignSystem.primary(result, theme_mode)
 	return result
 
-func place(control: Control, offset: Vector2, extent: Vector2, anchor: Vector2 = Vector2.ZERO) -> void:
-	root.add_child(control)
+func _place(parent: Control, control: Control, offset: Vector2, extent: Vector2, anchor := Vector2.ZERO) -> void:
+	parent.add_child(control)
 	control.anchor_left = anchor.x
 	control.anchor_right = anchor.x
 	control.anchor_top = anchor.y
@@ -156,13 +179,15 @@ func place(control: Control, offset: Vector2, extent: Vector2, anchor: Vector2 =
 	control.offset_bottom = offset.y + extent.y
 
 func create_pedal(id: String, text: String, offset: Vector2, extent: Vector2, anchor: Vector2) -> void:
-	var pedal := button(text, func(): pass)
-	place(pedal, offset, extent, anchor)
+	var pedal := _button(text, func(): pass)
 	pedal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pedal.add_theme_font_size_override("font_size", 16)
+	pedal.add_theme_stylebox_override("normal", UIDesignSystem.translucent_panel(true, 0.58, 18))
+	_place(chrome, pedal, offset, extent, anchor)
 	touch_buttons[id] = pedal
 
 func _input(event: InputEvent) -> void:
-	if not controls.enabled:
+	if root == null or not root.visible or controls == null or not controls.enabled:
 		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
@@ -173,250 +198,184 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag:
 		assign_touch(event.index, event.position)
 		sync_touches()
-	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed:
-			assign_touch(-1, event.position)
-		else:
-			touch_ids.erase(-1)
-		sync_touches()
-	elif event is InputEventMouseMotion and touch_ids.has(-1):
-		assign_touch(-1, event.position)
-		sync_touches()
 
 func assign_touch(id: int, point: Vector2) -> void:
 	touch_ids.erase(id)
 	for key in touch_buttons:
-		if touch_buttons[key].get_global_rect().has_point(point):
+		if touch_buttons[key].visible and touch_buttons[key].get_global_rect().has_point(point):
 			touch_ids[id] = key
 
 func sync_touches() -> void:
+	if controls == null:
+		return
 	for key in controls.held:
 		controls.held[key] = key in touch_ids.values()
 	for key in touch_buttons:
-		touch_buttons[key].modulate = Color("ffcb79") if controls.held[key] else Color.WHITE
+		touch_buttons[key].modulate = Color(0.72, 0.72, 0.74) if controls.held[key] else Color.WHITE
 
 func release_touches() -> void:
 	touch_ids.clear()
-	controls.clear()
+	if controls != null:
+		controls.clear()
 	sync_touches()
 
-func overlay() -> PanelContainer:
-	var shade := PanelContainer.new()
-	root.add_child(shade)
+func _overlay() -> ColorRect:
+	var shade := ColorRect.new()
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shade.add_theme_stylebox_override("panel", style(Color(0.06, 0.13, 0.15, 0.96)))
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.add_child(shade)
 	shade.hide()
 	return shade
 
-func centered_column(parent: Control) -> VBoxContainer:
+func _column(parent: Control, width := 560.0) -> VBoxContainer:
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 24)
+	margin.add_theme_constant_override("margin_bottom", 24)
+	parent.add_child(margin)
 	var center := CenterContainer.new()
-	parent.add_child(center)
+	margin.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size.x = minf(width, maxf(300.0, get_viewport().get_visible_rect().size.x - 48.0))
+	center.add_child(panel)
+	var inner_margin := MarginContainer.new()
+	inner_margin.add_theme_constant_override("margin_left", 28)
+	inner_margin.add_theme_constant_override("margin_right", 28)
+	inner_margin.add_theme_constant_override("margin_top", 24)
+	inner_margin.add_theme_constant_override("margin_bottom", 24)
+	panel.add_child(inner_margin)
 	var column := VBoxContainer.new()
-	column.custom_minimum_size = Vector2(600, 0)
-	column.add_theme_constant_override("separation", 8)
-	center.add_child(column)
+	column.add_theme_constant_override("separation", 10)
+	inner_margin.add_child(column)
 	return column
 
+func _title(column: VBoxContainer, title: String, subtitle: String = "") -> void:
+	column.add_child(_label(title, 32))
+	if not subtitle.is_empty():
+		var text := _label(subtitle, 15, true)
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		column.add_child(text)
+	var spacer := Control.new()
+	spacer.custom_minimum_size.y = 10
+	column.add_child(spacer)
+
 func build_pause() -> void:
-	pause_overlay = overlay()
-	var column := centered_column(pause_overlay)
-	column.add_child(label("City Explorer", 30))
-	column.add_child(label("PAUSED  /  BARCELONA", 13, Color("e8c281")))
-	column.add_child(button("Continue exploring", pause_requested.emit))
-	column.add_child(button("Reset car to a safe road", recover_requested.emit))
-	var areas := HBoxContainer.new()
-	var picker := OptionButton.new()
-	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	for area in District.AREAS: picker.add_item(area.name)
-	areas.add_child(picker)
-	areas.add_child(button("Start in district", func(): area_requested.emit(picker.selected)))
-	column.add_child(areas)
-	sound_button = button("Sound: on", sound_requested.emit)
-	column.add_child(sound_button)
-	fps_button = button("Frame cap: 30 FPS", fps_requested.emit)
-	column.add_child(fps_button)
-	notice = label("", 13)
+	pause_overlay = _overlay()
+	var column := _column(pause_overlay)
+	_title(column, "City Explorer", "Paused")
+	column.add_child(_button("Resume", pause_requested.emit, true))
+	column.add_child(_button("Restart from selected location", restart_requested.emit))
+	column.add_child(_button("Reset car to nearest road", recover_requested.emit))
+	column.add_child(_button("Choose new location", choose_location_requested.emit))
+	column.add_child(_button("Choose another car", choose_vehicle_requested.emit))
+	column.add_child(_button("Settings", open_settings))
+	column.add_child(_button("Exit to Home", home_requested.emit))
+	notice = _label("", 13, true)
+	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(notice)
-	column.add_child(label("© 2026 Hahneysh Kondeti · City Explorer\nMap © OpenStreetMap contributors · ODbL\nTerrain: ICGC · Trees: Open Data BCN · CC BY 4.0\nLamp positions: CartoBCN · CC BY 3.0 ES", 12))
-	column.add_child(button("Credits & licenses", func(): credits.popup_centered(Vector2i(900, 560))))
-	column.add_child(label("WASD / arrows · Brake held at rest = reverse\nR: recover car   C: reset camera   P / Esc: pause\nOpenStreetMap snapshot · Generated façade appearance", 13))
 
-func build_card() -> void:
-	card_overlay = overlay()
-	var column := centered_column(card_overlay)
-	column.add_child(label("01  /  A CITY IMAGINED IN STONE", 14, Color("e8c281")))
-	column.add_child(label(District.TITLE, 42))
-	var description := label(District.DESCRIPTION, 19)
-	description.custom_minimum_size = Vector2(600, 0)
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(description)
-	column.add_child(label("LANDMARK DISCOVERED  ·  Saved on this device", 14, Color("e8c281")))
-	column.add_child(button("Continue exploring", continue_requested.emit))
+func build_settings() -> void:
+	settings_overlay = _overlay()
+	var column := _column(settings_overlay)
+	_title(column, "Settings")
+	column.add_child(_section("Appearance"))
+	var appearance := OptionButton.new()
+	appearance.custom_minimum_size.y = 48
+	for item in ["Dark", "Light", "System"]:
+		appearance.add_item(item)
+	appearance.item_selected.connect(func(index: int): theme_requested.emit(["dark", "light", "system"][index]))
+	column.add_child(appearance)
+	column.add_child(_section("Audio"))
+	sound_button = _button("Sound On", sound_requested.emit)
+	column.add_child(sound_button)
+	column.add_child(_section("Performance"))
+	fps_button = _button("Frame rate · 30 FPS", fps_requested.emit)
+	column.add_child(fps_button)
+	column.add_child(_section("Controls"))
+	column.add_child(_button("View controls", open_controls))
+	column.add_child(_section("Legal"))
+	column.add_child(_button("Credits & Licences", open_credits))
+	column.add_child(_button("Done", open_pause, true))
+	settings_overlay.set_meta("appearance", appearance)
 
-func refresh(_discovered: bool, muted: bool, fps: int) -> void:
-	speed_label.text = str(roundi(absf(car.speed) * 3.6))
-	if car.speed < -0.3:
-		speed_label.text += "  R"
-	route_label.text = "Follow the gold route · %d m" % roundi(navigation.distance_remaining()) if navigation.active else "Free exploration · select a destination"
-	if car.global_position.distance_to(District.DESTINATION) < 20:
-		route_label.text = "Slow to a stop in the gold arrival ring"
-	sound_button.text = "Sound: off" if muted else "Sound: on"
-	fps_button.text = "Frame cap: %d FPS" % fps
-	street_label.text = District.nearest_segment(car.global_position).road.name
-	if TerrainData.is_estimated(car.global_position): street_label.text += " · approximate coastal elevation"
-	if navigation.active:
-		route_label.text = "%s · %d m by road" % [navigation.destination_name, roundi(navigation.distance_remaining())]
-		if not navigation.reachable:
-			route_label.text = "No permitted route inside this map extract"
-		elif car.position.distance_to(navigation.destination) < 15:
-			route_label.text = "Destination nearby · slow to a stop"
-	map_orientation_button.text = "North up · locked" if map.north_locked else "Heading up"
-	map.queue_redraw()
+func _section(text: String) -> Label:
+	var result := _label(text.to_upper(), 12, true)
+	result.custom_minimum_size.y = 22
+	return result
+
+func build_controls() -> void:
+	controls_overlay = _overlay()
+	var column := _column(controls_overlay)
+	_title(column, "Controls", "Drive without permanent instructions covering the city.")
+	var details := _label("W / ↑   Accelerate\nS / ↓   Brake and reverse\nA D / ← →   Steer\nR   Reset car to road\nC   Reset camera\nP / Esc   Pause", 17)
+	details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(details)
+	column.add_child(_button("Back to Settings", open_settings, true))
 
 func build_credits() -> void:
-	credits = AcceptDialog.new()
-	credits.title = "City Explorer · Credits & licenses"
-	credits.dialog_text = ""
-	root.add_child(credits)
+	credits_overlay = _overlay()
+	var column := _column(credits_overlay, 680)
+	_title(column, "Credits & Licences")
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size.y = 390
+	column.add_child(scroll)
 	var text := RichTextLabel.new()
-	text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	text.offset_left = 20
-	text.offset_top = 16
-	text.offset_right = -20
-	text.offset_bottom = -60
-	text.add_theme_font_size_override("normal_font_size", 16)
-	text.text = "CITY EXPLORER\n© 2026 Hahneysh Kondeti. Original game code and assets.\nThird-party data and assets retain their respective licenses.\nOriginal procedural appearance, interface and synthesized audio.\nPlaster004 / Asphalt030 materials: ambientCG.com · CC0 1.0.\nStreet-tree inventory: Ajuntament de Barcelona / Open Data BCN · CC BY 4.0.\nhttps://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari\nTree coordinates retained; appearance estimated.\nLamp positions: Ajuntament de Barcelona / CartoBCN, CC BY 3.0 ES.\nSource updated 2025-12-13; retrieved 2026-09-27. ENE_06_PT survey layer.\nhttps://creativecommons.org/licenses/by/3.0/es/\nCoordinates transformed; lamp heights, shapes and light output illustrative.\nMap geometry and park-tree records © OpenStreetMap contributors, ODbL 1.0.\nhttps://www.openstreetmap.org/copyright\nData snapshot: " + str(District.DATA.metadata.retrieved_at) + "\nSource and adapted database are distributed in data/.\nTerrain: ICGC MET5, CC BY 4.0; resampled from 5 m to 6 m.\nhttps://www.icgc.cat\nBare-earth grades; bridge decks and tunnels not reconstructed.\nCoastline: OpenStreetMap; sea and terrain colors illustrative.\nBuilding façades and untagged dimensions are estimated.\nLandmark facts: sagradafamilia.org/en/history-of-the-temple\n\nGODOT ENGINE\n" + Engine.get_license_text() + "\n\nTHIRD-PARTY COMPONENTS\n" + JSON.stringify(Engine.get_copyright_info(), "  ") + "\n\nLICENSE TEXTS\n" + JSON.stringify(Engine.get_license_info(), "  ")
+	text.fit_content = true
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_font_size_override("normal_font_size", 15)
+	text.text = "CITY EXPLORER\n© 2026 Hahneysh Kondeti. Original game code and assets.\nThird-party data and assets retain their respective licences.\n\nPlaster004 / Asphalt030: ambientCG.com · CC0 1.0.\nStreet-tree inventory: Ajuntament de Barcelona / Open Data BCN · CC BY 4.0.\nhttps://opendata-ajuntament.barcelona.cat/data/en/dataset/arbrat-viari\n\nLamp positions: Ajuntament de Barcelona / CartoBCN · CC BY 3.0 ES.\nSource updated 2025-12-13; retrieved 2026-09-27. ENE_06_PT survey layer. Coordinates retained; lamp heights, shapes and light output illustrative.\nhttps://creativecommons.org/licenses/by/3.0/es/\n\nMap geometry and park-tree records © OpenStreetMap contributors · ODbL 1.0.\nhttps://www.openstreetmap.org/copyright\nData snapshot: %s\nSource and adapted database are distributed in data/.\n\nTerrain: ICGC MET5 · CC BY 4.0; resampled from 5 m to 6 m.\nhttps://www.icgc.cat\nBare-earth grades; bridge decks and tunnels not reconstructed.\nCoastline: OpenStreetMap; sea and terrain colours illustrative.\nBuilding façades and untagged dimensions are estimated.\n\nLandmark facts: sagradafamilia.org/en/history-of-the-temple\n\nGODOT ENGINE\n%s\n\nTHIRD-PARTY COMPONENTS\n%s\n\nLICENSE TEXTS\n%s" % [str(District.DATA.metadata.retrieved_at), Engine.get_license_text(), JSON.stringify(Engine.get_copyright_info(), "  "), JSON.stringify(Engine.get_license_info(), "  ")]
 	if not BuildingAssets.active_credits.is_empty():
 		text.text += "\n\nIMPORTED BUILDING ASSETS\n" + "\n\n".join(BuildingAssets.active_credits)
-	credits.add_child(text)
+	scroll.add_child(text)
+	column.add_child(_button("Back to Settings", open_settings, true))
 
-func build_places() -> void:
-	places_overlay = overlay()
-	var column := centered_column(places_overlay)
-	column.custom_minimum_size.x = 850
-	column.add_child(label("Explore the recorded city", 30))
-	column.add_child(label("Offline OSM snapshot · " + str(District.DATA.metadata.retrieved_at).left(10) + " · Records may be older", 14, Color("e8c281")))
-	place_search = LineEdit.new()
-	place_search.placeholder_text = "Search shop, café, street or house number"
-	place_search.custom_minimum_size.y = 44
-	search_timer = Timer.new()
-	search_timer.one_shot = true
-	search_timer.wait_time = 0.25
-	add_child(search_timer)
-	search_timer.timeout.connect(filter_places)
-	place_search.text_changed.connect(func(_text: String):
-		route_place_button.disabled = true
-		start_place_button.disabled = true
-		search_timer.start())
-	place_search.text_submitted.connect(func(_text: String): filter_places())
-	column.add_child(place_search)
-	places_list = ItemList.new()
-	places_list.custom_minimum_size = Vector2(850, 180)
-	places_list.add_theme_font_size_override("font_size", 17)
-	places_list.item_selected.connect(select_place)
-	column.add_child(places_list)
-	places_info = RichTextLabel.new()
-	places_info.custom_minimum_size = Vector2(850, 120)
-	places_info.add_theme_font_size_override("normal_font_size", 16)
-	column.add_child(places_info)
-	route_place_button = button("Drive to the nearest mapped road", func():
-		if not selected_place.is_empty():
-			places_overlay.hide()
-			place_requested.emit(selected_place))
-	column.add_child(route_place_button)
-	start_place_button = button("Start at this address / place", func():
-		if not selected_place.is_empty(): start_requested.emit(District.vector(selected_place.point)))
-	column.add_child(start_place_button)
-	column.add_child(button("Back to map", open_map))
+func build_card() -> void:
+	card_overlay = _overlay()
+	var column := _column(card_overlay)
+	_title(column, District.TITLE, "Landmark discovered")
+	var description := _label(District.DESCRIPTION, 17)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(description)
+	column.add_child(_button("Continue exploring", continue_requested.emit, true))
 
-func open_places() -> void:
-	if not car.paused:
-		pause_requested.emit()
-	pause_overlay.hide()
-	map_overlay.hide()
-	places_overlay.show()
-	filter_places()
+func _hide_overlays() -> void:
+	for item in [pause_overlay, settings_overlay, controls_overlay, credits_overlay, card_overlay]:
+		item.hide()
 
-func filter_places() -> void:
-	filtered_places.clear()
-	places_list.clear()
-	selected_place = {}
-	route_place_button.disabled = true
-	places_info.text = "Select a record. Missing addresses are never inferred. OSM edit dates are not business verification dates."
-	start_place_button.disabled = true
-	search_timer.stop()
-	filtered_places = address_lookup.search(place_search.text)
-	for record in filtered_places:
-		var text := "%s  ·  %s %s" % [record.name, record.street, record.number]
-		if record.category.begins_with("Recorded address"): text = record.name + "  ·  " + record.category
-		if record.category.begins_with("Metro") or record.category == "Bus stop":
-			text = "%s · %s %s" % [record.name, record.category, record.get("ref", "")]
-		if record.get("suggested", false): text = "Suggested: " + text
-		places_list.add_item(text)
-	if filtered_places.is_empty(): places_info.text = "No recorded match. Try the street name without a number, or choose a starting point on the city map."
-	elif filtered_places.size() >= 300: places_info.text = "Showing the first 300 matches. Add a street name or house number to narrow the search."
+func open_pause() -> void:
+	_hide_overlays()
+	pause_overlay.show()
 
-func select_place(index: int) -> void:
-	selected_place = filtered_places[index]
-	var p := selected_place
-	var address := "%s %s" % [p.street, p.number] if not p.street.is_empty() and not p.number.is_empty() else "Full street address not recorded"
-	places_info.text = "%s · %s\n%s\nOSM %s · edited %s\nSurvey/check date: %s · Appearance is illustrative" % [p.name, p.category, address, p.id, p.timestamp.left(10), p.check_date if not p.check_date.is_empty() else "not recorded"]
-	route_place_button.disabled = false
-	start_place_button.disabled = false
-	places_info.text += "\nStart here places your car on the nearest drivable road. Address ranges retain the source location."
+func open_settings() -> void:
+	_hide_overlays()
+	settings_overlay.show()
 
-func build_city_map() -> void:
-	map_overlay = overlay()
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	map_overlay.add_child(column)
-	var actions := HBoxContainer.new()
-	column.add_child(actions)
-	actions.add_child(label("Barcelona", 23))
-	actions.add_child(button("−", func(): city_map.change_zoom(1 / 1.5)))
-	actions.add_child(button("+", func(): city_map.change_zoom(1.5)))
-	actions.add_child(button("Whole city", func(): city_map.show_city()))
-	actions.add_child(button("My car", func(): city_map.show_car()))
-	actions.add_child(button("Close", close_map))
-	var tools := HBoxContainer.new()
-	column.add_child(tools)
-	tools.add_child(button("Search places & addresses", open_places))
-	map_orientation_button = button("Heading up", map_orientation_requested.emit)
-	tools.add_child(map_orientation_button)
-	route_label = label("", 15)
-	route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(route_label)
-	city_map = CityMap.new()
-	city_map.car = car
-	city_map.navigation = navigation
-	city_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	city_map.custom_minimum_size = Vector2(0, 250)
-	column.add_child(city_map)
-	city_map.point_selected.connect(func(point: Vector3):
-		map_target = point
-		var nearest := District.nearest_segment(point)
-		map_info.text = "%s · start on the road, %d m from selected point" % [nearest.road.name, roundi(nearest.distance)]
-		map_start_button.disabled = false)
-	map_info = label("Tap a point, then Start here. Drag to pan; use + / − or the mouse wheel to zoom.", 16)
-	map_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(map_info)
-	map_start_button = button("Start here", func():
-		if map_target.is_finite(): start_requested.emit(map_target))
-	map_start_button.disabled = true
-	column.add_child(map_start_button)
-	column.add_child(label("White: car  /  Gold ring: starting road", 12))
+func open_controls() -> void:
+	_hide_overlays()
+	controls_overlay.show()
 
-func open_map() -> void:
-	if not car.paused: pause_requested.emit()
-	pause_overlay.hide()
-	places_overlay.hide()
-	map_target = Vector3.INF
-	map_start_button.disabled = true
-	map_info.text = "Tap a point, then Start here. Drag to pan; use + / − or the mouse wheel to zoom."
-	map_overlay.show()
-	city_map.selected = Vector3.INF
-	city_map.show_city()
+func open_credits() -> void:
+	_hide_overlays()
+	credits_overlay.show()
 
-func close_map() -> void:
-	map_overlay.hide()
-	if car.paused: pause_requested.emit()
+func close_all_overlays() -> void:
+	_hide_overlays()
+
+func refresh(_discovered: bool, muted: bool, fps: int) -> void:
+	if car == null:
+		return
+	speed_label.text = str(roundi(absf(car.speed) * 3.6)) + (" R" if car.speed < -0.3 else "")
+	var nearest := District.nearest_segment(car.global_position)
+	street_label.text = nearest.road.name if not nearest.is_empty() else ""
+	map_orientation_button.text = "N ↑" if map.north_locked else "↻"
+	map_orientation_button.tooltip_text = "North up · locked" if map.north_locked else "Heading up"
+	if sound_button != null:
+		sound_button.text = "Sound Off" if muted else "Sound On"
+	if fps_button != null:
+		fps_button.text = "Frame rate · %d FPS" % fps
+	var appearance: OptionButton = settings_overlay.get_meta("appearance")
+	if appearance != null:
+		appearance.select(["dark", "light", "system"].find(theme_mode))
+	map.queue_redraw()

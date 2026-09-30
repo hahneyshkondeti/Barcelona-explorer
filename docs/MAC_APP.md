@@ -16,7 +16,7 @@ The app is ad-hoc signed for local use. Public friction-free distribution needs 
 
 ## Play
 
-Open `/Applications/City Explorer.app`, or search **City Explorer** in Spotlight. WASD/arrows drive, brake held at rest reverses, R recovers the car, C resets the camera, P/Escape pauses. Onscreen driving controls and map/address search remain available. The native window can enter fullscreen using its green window button; Command-Q quits.
+Open `/Applications/City Explorer.app`, or search **City Explorer** in Spotlight. Choose Explore, Barcelona, a starting location and the touring car. WASD/arrows drive, brake held at rest reverses, R recovers the car, C resets the camera, and P/Escape pauses. Search uses bundled records unless a Google Places key is supplied as described in [PLACES.md](PLACES.md). The native window can enter fullscreen using its green window button; Command-Q quits.
 
 Local saves remain under `~/Library/Application Support/Godot/app_userdata/City Explorer/`, shared with the editor version. Avoid running two copies while driving, because both write the same save. Earlier Brisa saves are migrated when no City Explorer save exists.
 

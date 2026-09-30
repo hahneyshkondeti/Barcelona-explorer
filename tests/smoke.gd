@@ -33,10 +33,13 @@ func run() -> void:
 	root.add_child(game)
 	Engine.max_fps = 0
 	await frames(3)
-	var onscreen := true
+	game.onboarding.hide()
+	game.onboarding.active = false
+	game.begin_exploration(game.session.selected_city, {"name":"Test start"}, game.session.selected_vehicle, District.START)
+	var desktop_pedals_hidden := true
 	for pedal in game.hud.touch_buttons.values():
-		onscreen = onscreen and root.get_visible_rect().encloses(pedal.get_global_rect())
-	check(onscreen and root.get_visible_rect().encloses(game.hud.map.get_global_rect()), "Touch controls and mapped minimap fit inside viewport")
+		desktop_pedals_hidden = desktop_pedals_hidden and not pedal.visible
+	check(desktop_pedals_hidden and root.get_visible_rect().encloses(game.hud.map.get_global_rect()), "Desktop keeps touch pedals hidden while the minimap fits inside the viewport")
 	var car: TouringCar = game.car
 	game.controls.injected = true
 	car.recover(District.START, District.START_HEADING)
@@ -120,6 +123,8 @@ func run() -> void:
 	Input.parse_input_event(release)
 	Input.flush_buffered_events()
 	await process_frame
+	for pedal in game.hud.touch_buttons.values():
+		pedal.show()
 	game.hud.assign_touch(1, game.hud.touch_buttons.left.get_global_rect().get_center())
 	game.hud.assign_touch(2, game.hud.touch_buttons.gas.get_global_rect().get_center())
 	game.hud.sync_touches()
@@ -155,19 +160,20 @@ func run() -> void:
 	game.controls.clear()
 	game.close_card()
 	check(not game.is_paused, "Continue exploring resumes the loop")
-	game.hud.open_places()
-	game.hud.place_search.text = "Provença"
-	game.hud.filter_places()
-	check(game.hud.filtered_places.size() > 0 and game.is_paused, "Offline places browser searches real street names while paused")
-	game.hud.select_place(0)
-	check("edited" in game.hud.places_info.text and "Survey/check date" in game.hud.places_info.text, "Place details distinguish OSM edit date and survey date")
-	var place: Dictionary = game.hud.selected_place
+	game.choose_new_location()
+	game.onboarding.search_field.text = "Provença"
+	game.onboarding._search_now()
+	check(game.onboarding.results.size() > 0 and game.is_paused, "New location flow searches real offline street records while paused")
+	var place: Dictionary = game.onboarding.results[0].duplicate(true)
 	var original_id: String = place.id
-	game.hud.filter_places()
+	game.onboarding._search_now()
 	check(place.get("id", "") == original_id, "Filtering places does not mutate the source record")
 	game.route_to_place(place)
 	check(game.navigation.destination_name == place.name and District.nearest_segment(game.navigation.destination).distance < 0.01, "Selected shop routes to a mapped road")
-	game.hud.places_overlay.hide()
+	game.onboarding.hide()
+	game.onboarding.active = false
+	game.hud.set_exploring_visible(true)
+	game.set_paused(false)
 	game.toggle_sound()
 	game.toggle_fps()
 	game.persist()
