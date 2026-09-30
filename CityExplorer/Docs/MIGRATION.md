@@ -2,11 +2,17 @@
 
 ## Preservation and scope
 
-GitHub default: `main`, verified with remote symbolic HEAD. Active local Godot branch: `codex/mac-first`. Its previously staged and unstaged tracked application changes were committed together as `53fb555` before branching. No Godot source files were deleted or changed for the Unreal scaffold. Git history was not rewritten. Existing `/Applications/City Explorer.app` was left untouched. Preservation and migration commits are local; they have not been pushed.
+GitHub default: `main`, verified with remote symbolic HEAD. Active local Godot branch: `codex/mac-first`. Its previously staged and unstaged tracked application changes were committed together as `53fb555` before branching. No Godot source files were deleted or changed for the Unreal scaffold. Git history was not rewritten. Existing `/Applications/City Explorer.app` was left untouched. The Unreal branch and its inherited preservation commit are now pushed to `origin/unreal-migration`. The Godot branch remote was not updated. Upstream tracking is configured.
 
 `unreal-migration` is checked out in `Explorer/UnrealMigration`. The original `Explorer` checkout remains on `codex/mac-first`. The Unreal project is `CityExplorer/CityExplorer.uproject` in the migration checkout. Both branches retain the Godot source and data. A separate checkout avoids disrupting normal Godot development.
 
-## Build prerequisite failure
+## Current toolchain verification
+
+Full Xcode 27.0 (27A266a) is now installed and selected at `/Applications/Xcode.app/Contents/Developer`. The host is arm64 and `xcrun --find metal` locates the Metal compiler. However, UE 5.5.4 rejects the detected Xcode version 27.0 against its 15.2.0–16.9.0 range in `Engine/Config/Apple/Apple_SDK.json`. Both renewed platform validation and the explicit `-architecture=arm64` editor build failed before project compilation. See the `*-resume.log` diagnostics. No compatible alternate Xcode was discovered.
+
+Install a compatible Xcode side by side and pass its Developer path through `DEVELOPER_DIR` to `Tools/build_editor.py`. This avoids changing the default Xcode for other applications. The helper validates using Unreal itself and refuses to continue when Mac is INVALID, even though Unreal platform validation returns process exit code zero. No SDK bounds or compiler compatibility checks were bypassed.
+
+## Original prerequisite failure (historical)
 
 Installed engine: Unreal 5.5.4, changelist 40574608, Apple Silicon bundled .NET runtime. Only `/Library/Developer/CommandLineTools` is selected; no Xcode.app was found in Applications. Unreal platform validation reports `Mac INVALID`; the actual CityExplorerEditor build exits 6 with `Platform Mac is not a valid platform to build`. Unreal's local SDK diagnostic requires Xcode 15.2–16.9. Full compatible Xcode and its Metal tools must be installed, first-launch setup completed, and its Developer directory selected. Installing the current newest Xcode without checking that range may not resolve the UE 5.5 prerequisite.
 
@@ -76,7 +82,7 @@ All Unreal gameplay entries are pending implementation; these are requirements, 
 | HUD/maps/settings | Compact HUD, heading/north map, sound/FPS/theme preferences | Not implemented | Pending | No widgets |
 | Persistence | Safe-road journey JSON, local preferences | Not implemented | Pending | Godot save untouched |
 | Pause/recover/focus | Pause and clear controls, recover safe position, focus-loss pause | Not implemented | Pending | No PlayerController |
-| Mac editor/build | Working Godot installed application preserved | C++ scaffold only | Blocked | Mac SDK invalid; compile exits 6 |
+| Mac editor/build | Working Godot installed application preserved | C++ scaffold only | Blocked | Xcode 27.0 exceeds UE 5.5.4 supported range; arm64 compile exits 6 |
 | Packaged independent app | Existing /Applications/City Explorer.app | No Unreal app | Blocked | Package to separate Unreal folder after validation |
 
 ## Next execution milestone
