@@ -1,6 +1,6 @@
 {
   "FileVersion": 3,
-  "EngineAssociation": "5.5",
+  "EngineAssociation": "5.8",
   "Category": "Games",
   "Description": "City Explorer Unreal migration \u2014 initial scaffold, gameplay not migrated",
   "Modules": [

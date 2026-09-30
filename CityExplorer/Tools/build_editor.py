@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 project = Path(__file__).resolve().parents[1]
-engine = Path(os.environ.get("UE_ROOT", "/Users/Shared/Epic Games/UE_5.5"))
+engine = Path(os.environ.get("UE_ROOT", "/Users/Shared/Epic Games/UE_5.8"))
 build = engine / "Engine/Build/BatchFiles/Mac/Build.sh"
 logs = project / "Saved/BuildDiagnostics"
 logs.mkdir(parents=True, exist_ok=True)

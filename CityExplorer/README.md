@@ -1,9 +1,9 @@
 # CityExplorer — Unreal migration
 
-This is the initial Unreal 5.5.4 C++ project scaffold. It is not yet a playable migration. No levels, widgets, input assets or migrated gameplay classes exist yet. Compilation, editor launch and packaging are blocked by the incompatible Xcode 27.0 toolchain. Do not substitute this for the working Godot application.
+The existing project now targets Unreal Engine 5.8.3. Xcode 27 is accepted by Unreal platform validation; the arm64 editor module builds successfully. Project files were regenerated after adopting the engine's V7 build settings and Unreal5_8 include order. Apple's Metal Toolchain 27A266a was installed for shader compilation.
 
-The preserved Godot source remains at this checkout's root and on `codex/mac-first` at commit `53fb555`. The original checkout remains on that branch. This checkout is on `unreal-migration`.
+This remains an in-progress migration, not a replacement for the working Godot application. Read `Docs/MIGRATION.md` and `Docs/UE58_UPGRADE.md` for status and validation.
 
-Read `Docs/MIGRATION.md` for the architecture mapping, validation checklist and next steps. `Docs/SOURCE_INVENTORY.json` records source hashes, script interfaces and asset types. Offline geographic data and compatible source textures remain at the repository root; they have not been imported or staged into Unreal yet.
+Build the editor with `python3 Tools/build_editor.py`. The default engine is `/Users/Shared/Epic Games/UE_5.8`; override `UE_ROOT` or `DEVELOPER_DIR` when needed. Generated Xcode workspace, Binaries, Intermediate, Saved and shader caches are local build products.
 
-Once full compatible Xcode is installed and selected, build the editor target using the installed Unreal engine's Mac Build.sh with `CityExplorerEditor Mac Development -Project=<absolute path>/CityExplorer.uproject`. Only proceed with asset generation and gameplay migration after successful compilation.
+Godot remains on `codex/mac-first` at `53fb555`, and its installed app is untouched. Unreal development remains on `unreal-migration` with upstream `origin/unreal-migration`.

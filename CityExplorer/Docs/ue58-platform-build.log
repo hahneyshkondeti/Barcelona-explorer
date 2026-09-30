@@ -1,0 +1,37 @@
+Setting temp directory to '/var/folders/8t/tpcqsvl14sn8t1gqzfl78j5r0000gn/T/UnrealBuildTool/e4251925'
+    Registering build platform: UnrealBuildTool.AndroidPlatformFactory
+Unable to find valid SDK(s) for Android:
+  Found Sdk Version, MinRequired=r27c, MaxRequired=r29.
+  Found AutoSdk Version, Required=r27c.
+        Registering build platform: Android - buildable: False
+    Registering build platform: UnrealBuildTool.IOSPlatformFactory
+IOS Installed SDK(s): MinVersion_Sdk=15.2.0, MaxVersion_Sdk=27.9.0, CurrentVersion_Sdk=27.0, Version_AutoSdk=26.1.1, CurrentVersion_AutoSdk=
+        Registering build platform: IOS - buildable: True
+    Registering build platform: UnrealBuildTool.LinuxPlatformFactory
+        Registering build platform: Linux - buildable: False
+        Registering build platform: LinuxArm64 - buildable: False
+    Registering build platform: UnrealBuildTool.MacPlatformFactory
+Mac Installed SDK(s): MinVersion_Sdk=15.2.0, MaxVersion_Sdk=27.9.0, CurrentVersion_Sdk=27.0, Version_AutoSdk=26.1.1, CurrentVersion_AutoSdk=
+        Registering build platform: Mac - buildable: True
+    Registering build platform: UnrealBuildTool.TVOSPlatformFactory
+TVOS Installed SDK(s): MinVersion_Sdk=15.2.0, MaxVersion_Sdk=27.9.0, CurrentVersion_Sdk=27.0, Version_AutoSdk=26.1.1, CurrentVersion_AutoSdk=
+        Registering build platform: TVOS - buildable: True
+    Registering build platform: UnrealBuildTool.WindowsPlatformFactory
+        Registering build platform: Win64 - buildable: False
+    Registering build platform: UnrealBuildTool.VisionOSPlatformFactory
+VisionOS Installed SDK(s): MinVersion_Sdk=15.3.0, MaxVersion_Sdk=27.9.0, CurrentVersion_Sdk=27.0, Version_AutoSdk=26.1.1, CurrentVersion_AutoSdk=
+        Registering build platform: VisionOS - buildable: True
+##PlatformValidate: Mac VALID 
+WriteFileIfChanged() wrote 0 changed files of 1 requested writes.
+
+Timeline:
+[  0.000]  +0.378 Main
+   0.045          [  0.045]  +0.069 Apply XmlConfig
+   0.049             0.049          [  0.003]  +0.004 Find target files
+   0.118          [  0.118]  +0.030 AddTelemetry
+   0.153          [  0.152]  +0.225 RegisterPlatforms
+[  0.383]  +0.002 TelemetryService.FlushEvents
+[  0.386]
+
+Result: Succeeded
+Total execution time: 0.39 seconds

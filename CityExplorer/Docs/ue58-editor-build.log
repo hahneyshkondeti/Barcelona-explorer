@@ -1,0 +1,153 @@
+Log started at 09/30/2026 23:40:19 (2026-09-30T21:40:19Z)
+Resolved project argument /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/CityExplorer.uproject to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/CityExplorer.uproject
+No config file at /usr/share/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+No config file at /Users/hahneyshkondeti/Documents/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+Configuration will be read from:
+  /Users/hahneyshkondeti/Library/Application Support/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+  /Users/hahneyshkondeti/Library/Application Support/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+Reading configuration file from: /Users/hahneyshkondeti/Library/Application Support/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+Reading configuration file from: /Users/hahneyshkondeti/Library/Application Support/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+Reading configuration file from: /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Saved/UnrealBuildTool/BuildConfiguration.xml
+Reading configuration file from: /Users/hahneyshkondeti/Library/Application Support/Epic/UnrealEngine/Intermediate/Build/UnrealBuildTool.Env.BuildConfiguration.xml
+Log file: /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Saved/BuildDiagnostics/editor.log
+
+Setting temp directory to '/var/folders/8t/tpcqsvl14sn8t1gqzfl78j5r0000gn/T/UnrealBuildTool/e4251925'
+    Registering build platform: UnrealBuildTool.AndroidPlatformFactory
+    Registering build platform: UnrealBuildTool.IOSPlatformFactory
+    Registering build platform: UnrealBuildTool.LinuxPlatformFactory
+    Registering build platform: UnrealBuildTool.MacPlatformFactory
+Mac Installed SDK(s): MinVersion_Sdk=15.2.0, MaxVersion_Sdk=27.9.0, CurrentVersion_Sdk=27.0, Version_AutoSdk=26.1.1, CurrentVersion_AutoSdk=
+        Registering build platform: Mac - buildable: True
+    Registering build platform: UnrealBuildTool.TVOSPlatformFactory
+    Registering build platform: UnrealBuildTool.WindowsPlatformFactory
+    Registering build platform: UnrealBuildTool.VisionOSPlatformFactory
+Command line: "/Users/Shared/Epic Games/UE_5.8/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll" CityExplorerEditor Mac Development -architecture=arm64 -Project=/Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/CityExplorer.uproject -Log=/Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Saved/BuildDiagnostics/editor.log
+Determining max actions to execute in parallel (12 physical cores, 12 logical cores)
+  Executing up to 12 processes, one per physical core
+  Requested 1.5 GB memory per action, 16 GB available: limiting max parallel actions to 10
+[UBA] UE_SDKS_ROOT not set, skipping Apple cross-architecture path registration
+UbaStorageServer - Database loaded from /Users/hahneyshkondeti/.epic/UnrealBuildAccelerator/cas/casdb (v35) in 2ms (contained 0 entries estimated to 0b)
+UbaServer - Listening on 0.0.0.0:1345
+Using 'git status' to determine working set for adaptive non-unity build (/Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration).
+Creating makefile for CityExplorerEditor (no existing makefile)
+Skipping /Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/BuildRules/UE5Rules.dll: File is installed
+Skipping /Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/BuildRules/UE5ProgramRules.dll: File is installed
+Converted Apple version 27.0 to LLVM version 21.1.6
+Using EngineIncludeOrderVersion.Unreal5_8 for target CityExplorerEditor.Target.cs
+Building UnrealEditor - CityExplorerEditor - Mac - Development
+VerseVMBytecodeGenerator.Generate, generating CPP headers in: '/Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/Mac/UnrealEditor/Inc/CoreUObject/VerseVMBytecode'
+	Writing out generated header file. Changed:False Path:'/Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/Mac/UnrealEditor/Inc/CoreUObject/VerseVMBytecode/VVMBytecodeOps.gen.h'
+	Writing out generated header file. Changed:False Path:'/Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/Mac/UnrealEditor/Inc/CoreUObject/VerseVMBytecode/VVMBytecodesAndCaptures.gen.h'
+	Writing out generated header file. Changed:False Path:'/Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/Mac/UnrealEditor/Inc/CoreUObject/VerseVMBytecode/VVMMakeCapturesFuncs.gen.h'
+	Writing out generated header file. Changed:False Path:'/Users/Shared/Epic Games/UE_5.8/Engine/Intermediate/Build/Mac/UnrealEditor/Inc/CoreUObject/VerseVMBytecode/VVMCaptureSwitch.gen.h'
+Found 5 shared PCH headers (listed in order of preference):
+	UnrealEd
+	Engine
+	Slate
+	CoreUObject
+	Core
+Parsing headers for CityExplorerEditor
+  Running Internal UnrealHeaderTool /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/CityExplorer.uproject /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/CityExplorerEditor/CityExplorerEditor.uhtmanifest -WarningsAsErrors -installed
+Compiling with Mac SDK 27.0, minimum Target OS version 14.00
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Core/SharedPCH.Core.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Core/SharedPCH.Core.Cpp20.h.gch.rsp.old.
+UHT compiled-in object format Default
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Core/SharedPCH.Core.Plat.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Core/SharedPCH.Core.Plat.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/CoreUObject/SharedPCH.CoreUObject.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/CoreUObject/SharedPCH.CoreUObject.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/CoreUObject/SharedPCH.CoreUObject.RTTI.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/CoreUObject/SharedPCH.CoreUObject.RTTI.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/CoreUObject/SharedPCH.CoreUObject.Plat.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/CoreUObject/SharedPCH.CoreUObject.Plat.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Slate/SharedPCH.Slate.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Slate/SharedPCH.Slate.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Slate/SharedPCH.Slate.Plat.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Slate/SharedPCH.Slate.Plat.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Engine/SharedPCH.Engine.Plat.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Engine/SharedPCH.Engine.Plat.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Engine/SharedPCH.Engine.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Engine/SharedPCH.Engine.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Engine/SharedPCH.Engine.Project.ValApi.ValExpApi.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/Engine/SharedPCH.Engine.Project.ValApi.ValExpApi.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/UnrealEd/SharedPCH.UnrealEd.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/UnrealEd/SharedPCH.UnrealEd.Cpp20.h.gch.rsp.old.
+Updating /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/UnrealEd/SharedPCH.UnrealEd.Plat.Cpp20.h.gch.rsp: contents have changed. Saving previous version to /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/UnrealEd/SharedPCH.UnrealEd.Plat.Cpp20.h.gch.rsp.old.
+Module 'CityExplorer' uses PCH 'arm64' for Architecture '/Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/Mac/arm64/CityExplorerEditor/Development/UnrealEd/SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.h.gch'
+Step - Parse Headers
+Reading engine version from file: /Users/Shared/Epic Games/UE_5.8/Engine/Source/Runtime/Launch/Resources/Version.h
+Got engine version 5.8.3
+Step - Populate symbol table
+Step - Exports
+       Exporter Stats skipped
+       Exporter Json skipped
+       Running exporter CodeGen
+UHT processed CityExplorerEditor in 2.651411 seconds (0 generated files written)
+Checking for live coding mutex: Global\LiveCoding_+Users+Shared+Epic Games+UE_5.8+Engine+Binaries+Mac+UnrealEditor
+Building CityExplorerEditor...
+===== Toolchain Information =====
+Using Clang compiler 21.1.6 (/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++)
+  Apple clang version 21.0.0 (clang-2100.3.34.2) Target: arm64-apple-darwin25.6.0 Thread model: posix InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+Using Clang archiver (/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool)
+  Apple clang version 21.0.0 (clang-2100.3.34.2) Target: arm64-apple-darwin25.6.0 Thread model: posix InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+=================================
+Using Unreal Build Accelerator local executor to run 5 action(s)
+  CPU 12 physical cores, 12 logical cores
+  Memory 16 GB physical, 14.81 GB/16 GB committed
+  UBA Storage capacity 40 GB
+  UBA RootDir /Users/hahneyshkondeti/.epic/UnrealBuildAccelerator
+Cache bucket 2397331484 used. Action: Compile [Apple] SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.h ()
+Cache bucket 37314249 used. Action: Compile [Apple] CityExplorer.cpp ()
+Cache bucket 3328318318 used. Action: Link [Apple] libUnrealEditor-CityExplorer.dylib ()
+All processes queued
+[1/5] Compile [Apple] SharedPCH.UnrealEd.Project.ValApi.ValExpApi.Cpp20.h
+[2/5] Compile [Apple] PerModuleInline.gen.cpp
+[3/5] Compile [Apple] CityExplorer.cpp
+[4/5] Link [Apple] libUnrealEditor-CityExplorer.dylib
+[5/5] WriteMetadata CityExplorerEditor.target [NoUba]
+
+Total time in Unreal Build Accelerator local executor: 23.59 seconds
+Output binary: /Users/Shared/Epic Games/UE_5.8/Engine/Binaries/Mac/UnrealEditor
+Deploying CityExplorerEditor Mac Development...
+Deploying now!
+UbaStorageServer - Database saved in 2ms (0 file entries, 0 cas entries. deleted 0 dropped cas files)
+WriteFileIfChanged() wrote 0 changed files of 1 requested writes.
+
+Timeline:
+[  0.000]  +0.344 Main
+   0.020          [  0.020]  +0.083 Apply XmlConfig
+   0.107          [  0.107]  +0.046 AddTelemetry
+   0.171          [  0.170]  +0.173 RegisterPlatforms
+[  0.361]  +0.066 ParseCommandLine
+[  0.427]  +0.772 <unknown>
+[  1.199]  +0.205 EngineRulesPlugins
+[  1.431]  +0.107 EngineRulesFetchDirs
+[  1.544]  +0.007 EngineRulesAssembly
+[  1.552]  +0.000 ProgramRulesAssembly
+[  1.552]  +0.002 ProjectRulesAssembly
+[  1.555]  +0.076 CreateTargetRules
+[  1.682]  +0.001 CppDependencyCache
+[  1.690]  +2.889 CityExplorerEditor Mac Development
+   1.690          [  0.000]  +0.548 <unknown>
+   2.239          [  0.548]  +1.262 UHTModules
+   3.681          [  1.991]  +0.111 UHTManifest
+   3.793          [  2.102]  +2.667 UHT
+   3.977             2.287          [  0.184]  +0.000 GitWait
+   3.977             2.287          [  0.184]  +0.563 <unknown>
+   4.541             2.851          [  0.748]  +0.000 WaitOnWrites
+   4.581             2.890          [  0.788]  +0.234 SavingMakefile
+   4.815             3.125          [  1.022]  +1.644 <unknown>
+[  4.580]  +1.880 <unknown>
+[  6.461]  +0.023 UHTTimestamps
+[  6.486]  +0.000 CppDependencyCache
+[  6.487]  +0.047 Preparing ActionGraph
+   6.507          [  0.020]  +0.006 LinkActions
+   6.513             0.026          [  0.006]  +0.000 DetectActionGraphCycles
+   6.514          [  0.027]  +0.000 GatherPrerequisiteActions
+   6.515          [  0.028]  +0.000 CppDependencyCacheWait
+   6.516          [  0.029]  +0.010 GatherOutdatedActions
+   6.528          [  0.041]  +0.001 LinkActions
+   6.528             0.041          [  0.000]  +0.000 DetectActionGraphCycles
+   6.531          [  0.044]  +0.000 DeleteOutdatedProducedItems
+   6.532          [  0.044]  +0.002 SaveActionHistory
+   6.534          [  0.047]  +0.000 CreateDirectoriesForProducedItems
+[  6.542]  +0.503 GarbageCollect
+[  7.046] +23.087 <unknown>
+[ 30.134]  +0.035 Deploying targets
+[ 30.170]  +0.000 DisconnectCache
+[ 30.173]  +0.003 SaveCasTable
+[ 30.177]  +0.094 Saving caches
+[ 30.272]  +0.001 TelemetryService.FlushEvents
+[ 30.274]
+
+Result: Succeeded
+Total execution time: 30.27 seconds
