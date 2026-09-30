@@ -2,7 +2,7 @@
   "FileVersion": 3,
   "EngineAssociation": "5.8",
   "Category": "Games",
-  "Description": "City Explorer Unreal migration \u2014 initial scaffold, gameplay not migrated",
+  "Description": "City Explorer Unreal migration",
   "Modules": [
     {
       "Name": "CityExplorer",
@@ -32,6 +32,10 @@
       "TargetAllowList": [
         "Editor"
       ]
+    },
+    {
+      "Name": "AndroidFileServer",
+      "Enabled": false
     }
   ],
   "TargetPlatforms": [

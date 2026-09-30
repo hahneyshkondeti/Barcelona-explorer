@@ -9,7 +9,7 @@ Existing project upgraded in place on unreal-migration. Engine: 5.8.3, CL 582107
 - Mac VALID, without changing engine SDK bounds.
 - CityExplorerEditor Mac Development -architecture=arm64 succeeded. Resulting project dylib is Mach-O arm64.
 - Editor launch initially discovered the missing optional Xcode Metal Toolchain. Downloaded through xcodebuild -downloadComponent MetalToolchain; xcrun metal --version now succeeds.
-- Editor validation and gameplay migration continue separately; a C++ module build does not establish feature parity or a packaged game.
+- Existing project opened successfully in Unreal Editor with Metal SM6 on Apple M2 Pro. Gameplay migration continues separately; a C++ module build does not establish feature parity or a packaged game.
 - Engine project generation warns about a missing MetalShaderConverter third-party include directory. It did not prevent the editor module build.
 
 No Godot source, branch, save or installed application was changed. Original Unreal commit history is retained. Generated project files are not committed.

@@ -6,7 +6,7 @@ public class CityExplorer : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         PublicDependencyModuleNames.AddRange(new[] {
             "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput",
-            "UMG", "HTTP", "Json", "JsonUtilities", "DeveloperSettings", "ProceduralMeshComponent"
+            "UMG", "HTTP", "Json", "JsonUtilities", "DeveloperSettings", "ProceduralMeshComponent", "GeometryCore"
         });
         PrivateDependencyModuleNames.AddRange(new[] { "Slate", "SlateCore" });
     }

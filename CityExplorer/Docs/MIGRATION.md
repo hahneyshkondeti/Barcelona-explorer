@@ -8,17 +8,15 @@ GitHub default: `main`, verified with remote symbolic HEAD. Active local Godot b
 
 ## Current toolchain verification
 
-Full Xcode 27.0 (27A266a) is now installed and selected at `/Applications/Xcode.app/Contents/Developer`. The host is arm64 and `xcrun --find metal` locates the Metal compiler. However, UE 5.5.4 rejects the detected Xcode version 27.0 against its 15.2.0–16.9.0 range in `Engine/Config/Apple/Apple_SDK.json`. Both renewed platform validation and the explicit `-architecture=arm64` editor build failed before project compilation. See the `*-resume.log` diagnostics. No compatible alternate Xcode was discovered.
+Upgraded the existing project to Unreal 5.8.3 (CL 58210709), regenerated its Xcode workspace and compiled CityExplorerEditor for arm64 using Xcode 27.0 and Mac SDK 27.0. Mac validation is VALID. Installed the optional Xcode Metal Toolchain through Apple's component downloader. The editor opens the existing project and initializes Metal SM6 on the M2 Pro. See UE58_UPGRADE.md for upgrade details. Historical UE5.5 failures are retained in BuildDiagnostics.
 
-Install a compatible Xcode side by side and pass its Developer path through `DEVELOPER_DIR` to `Tools/build_editor.py`. This avoids changing the default Xcode for other applications. The helper validates using Unreal itself and refuses to continue when Mac is INVALID, even though Unreal platform validation returns process exit code zero. No SDK bounds or compiler compatibility checks were bypassed.
+## Implemented foundation
 
-## Original prerequisite failure (historical)
+Native GameMode and PlayerController coordinate the application. GameInstance subsystems own immutable geographic data, screen state, preferences and optional Google Places requests. A WorldSubsystem owns procedural tile actors. A reusable movement component preserves the existing arcade handling and uses Enhanced Input assets configured in the touring car Blueprint. A native UMG view subscribes to service events rather than owning search or world logic.
 
-Installed engine: Unreal 5.5.4, changelist 40574608, Apple Silicon bundled .NET runtime. Only `/Library/Developer/CommandLineTools` is selected; no Xcode.app was found in Applications. Unreal platform validation reports `Mac INVALID`; the actual CityExplorerEditor build exits 6 with `Platform Mac is not a valid platform to build`. Unreal's local SDK diagnostic requires Xcode 15.2–16.9. Full compatible Xcode and its Metal tools must be installed, first-launch setup completed, and its Developer directory selected. Installing the current newest Xcode without checking that range may not resolve the UE 5.5 prerequisite.
+Automation passes: handling (speed, braking, reverse delay, steering and frame-rate consistency), terrain triangle interpolation, offline road/address loading, bounded spawn and tile dependencies. Native Mac runtime validation completed Home → Barcelona → offline search → location → car → exploration and keyboard pause. A procedural winding issue discovered during rendering validation is being corrected. Driving collision and sustained tile-boundary driving remain under validation.
 
-No Unreal MCP tools are advertised in this session, and the Codex configuration inspected exposes no Unreal MCP connection. The installed client skill describes tools but does not itself establish an editor connection. An available live connection must be configured and verified with a read-only editor call before MCP asset work. No existing editor session was modified.
-
-No editor launch, shader compilation, gameplay comparison, package or installed Unreal application is claimed. The module scaffold has not compiled. No binary assets have been generated.
+Offline staging copies preserved data and attribution into an ignored Content mirror; rerun Tools/stage_offline_data.py before cooking. Tools/bootstrap_assets.py creates the Blueprint configuration, Enhanced Input assets, vertex-color material and Barcelona level idempotently. Google Places uses the runtime environment key, cancellation generations, timeout and offline fallback; live authenticated requests remain untested.
 
 ## Source architecture discovered
 
@@ -64,35 +62,19 @@ Use CITY_EXPLORER_GOOGLE_PLACES_API_KEY only at runtime. Finder launch does not 
 
 ## Validation checklist
 
-All Unreal gameplay entries are pending implementation; these are requirements, not passed comparisons.
-
 | Feature | Godot behavior | Unreal behavior | Status | Differences / known issues |
 | --- | --- | --- | --- | --- |
-| Startup | Home → City → Location → Car → Explore | Not implemented | Pending | No UMG assets |
-| Catalogs | Barcelona and touring car | Not implemented | Pending | No DataAssets |
-| Search | Offline places/addresses/transit/squares; optional Google Places | Not implemented | Pending | API requests untested |
-| Spawn | Bounded selection projected to connected safe road | Not implemented | Pending | Unsafe raw coordinate spawning must be rejected |
-| Vehicle | 150 km/h, progressive throttle, speed-sensitive steering, 0.35 s reverse delay | Not implemented | Pending | No Pawn/movement component |
-| Camera | Damped chase, obstruction checks, C reset | Not implemented | Pending | No camera components |
-| World | Procedural offline city and ownership-aware streaming | Not implemented | Pending | No renderer or map level |
-| Terrain/coast | Shared 6 m grid, slopes, collision, sea and distant hills | Not implemented | Pending | No meshes or materials |
-| Transit/signs/squares | Corrected placement, source labels, fountains and basin collision | Not implemented | Pending | Source data retained only |
-| Navigation | Directed route, partial edges, trimming, arrival discovery | Not implemented | Pending | No road graph service |
-| Lighting/audio | UTC solar, dusk lamps/headlights, generated engine sound | Not implemented | Pending | No lighting/audio assets |
-| HUD/maps/settings | Compact HUD, heading/north map, sound/FPS/theme preferences | Not implemented | Pending | No widgets |
-| Persistence | Safe-road journey JSON, local preferences | Not implemented | Pending | Godot save untouched |
-| Pause/recover/focus | Pause and clear controls, recover safe position, focus-loss pause | Not implemented | Pending | No PlayerController |
-| Mac editor/build | Working Godot installed application preserved | C++ scaffold only | Blocked | Xcode 27.0 exceeds UE 5.5.4 supported range; arm64 compile exits 6 |
-| Packaged independent app | Existing /Applications/City Explorer.app | No Unreal app | Blocked | Package to separate Unreal folder after validation |
+| Startup | Home → City → Location → Car → Explore | Same stages in native UMG | Runtime checked | Styling and mouse interaction need further validation |
+| Search | Offline addresses/places/transit/squares and Google | Addresses/places plus optional HTTP adapter | Partial | Fuzzy suggestions, transit and squares pending; live API untested |
+| Spawn | Connected, bounded road with terrain height | Map subsystem performs checked projection | Automated pass | Height clearance adjusted for Unreal road collision |
+| Vehicle | Arcade handling and procedural touring car | Movement component, Enhanced Input, Blueprint configuration | Core tests pass | Sustained driving validation and final car visuals pending |
+| Camera | Damped chase, obstruction, reset | SpringArm/Camera | Implemented | Obstruction comparison pending |
+| World | Terrain, roads, buildings and rich street detail | Streamed procedural terrain/road/building mesh actors | Partial | Winding correction, async construction and detailed assets pending |
+| Navigation/maps | Directed routing, minimap, expanded map, arrival | Not yet implemented | Pending | Required before parity |
+| Lighting/audio | Solar cycle, street lamps, headlights, generated engine | Basic level light/sky | Pending | Dynamic lighting/audio pending |
+| Settings/save | Sound/FPS/theme and safe journey | Separate versioned Unreal SaveGame, FPS/theme state | Partial | Audio and journey resume comparison pending |
+| Pause/recover/focus | Clear held input and recover | Controller plus focus delegate | Keyboard pause checked | Recovery and focus tests pending |
+| Mac toolchain/editor | Preserved working Godot app | UE5.8.3 arm64 module, editor and standalone development session | Passed | Independent packaged app pending |
+| Installed application | /Applications/City Explorer.app | No installed Unreal app yet | Pending | Must use separate Unreal location |
 
-## Next execution milestone
-
-1. Resolve compatible full Xcode/Metal setup and establish live Unreal MCP connection.
-2. Compile the existing module scaffold and create bootstrap level, native gameplay classes and Blueprint configuration.
-3. Implement map repository, shared terrain sampler, safe spawn and directed routing with fixture checks against Godot.
-4. Add async tile preparation, terrain/road/building collision, vehicle/Enhanced Input and camera; validate a continuous drive across tile boundaries before expanding detail.
-5. Implement UMG onboarding/search/HUD/settings/persistence and optional API adapter.
-6. Recreate materials, procedural visual assets, squares, transit, solar and audio; import compatible textures with attribution.
-7. Compare all flows, profile on this Mac, cook/package, then place `City Explorer.app` in a separate Unreal installation folder. Never replace the existing Godot app.
-
-Commit each verified system milestone. Do not label migration complete before the comparison checklist and independent packaged launch pass.
+Migration is not complete. Continue driving/rendering validation, implement navigation/maps, richer world visuals, lighting/audio and remaining UI/persistence behavior, then compare and package a separate native macOS app. Commit verified milestones and push origin/unreal-migration. Never replace the Godot application.
