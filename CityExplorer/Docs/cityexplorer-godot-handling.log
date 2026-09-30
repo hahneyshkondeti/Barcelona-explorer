@@ -1,0 +1,17 @@
+Godot Engine v4.5.stable.official.876b29033 - https://godotengine.org
+
+ERROR: Condition "ret != noErr" is true. Returning: ""
+   at: get_system_ca_certificates (platform/macos/os_macos.mm:991)
+PASS: Steering at rest cannot rotate the car
+PASS: Throttle ramps smoothly from rest
+PASS: Slow-speed steering allows tight city turns
+PASS: Full steering at speed stays within lateral acceleration budget
+PASS: Full throttle reaches the 150 km/h cap
+PASS: Releasing steering settles back to straight driving
+PASS: Full braking stops from 150 km/h within 52 metres
+PASS: Holding brake briefly after stopping does not reverse
+PASS: Continued brake hold engages bounded reverse
+PASS: Reverse steering turns in the opposite direction
+PASS: Both pedals stop the car without changing direction
+PASS: Handling remains consistent across 30/60/120 Hz steps
+RESULT: 12 handling checks, 0 failures

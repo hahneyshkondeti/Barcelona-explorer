@@ -1,0 +1,44 @@
+Log started at 09/30/2026 23:06:45 (2026-09-30T21:06:45Z)
+No config file at /usr/share/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+No config file at /Users/hahneyshkondeti/Documents/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+Configuration will be read from:
+  /Users/hahneyshkondeti/Library/Application Support/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+  /Users/hahneyshkondeti/Library/Application Support/Unreal Engine/UnrealBuildTool/BuildConfiguration.xml
+Log file: /private/tmp/cityexplorer-editor-build.log
+
+Setting temp directory to '/var/folders/8t/tpcqsvl14sn8t1gqzfl78j5r0000gn/T/UnrealBuildTool/f0f5cb59'
+    Registering build platform: UnrealBuildTool.AndroidPlatformFactory
+    Registering build platform: UnrealBuildTool.IOSPlatformFactory
+    Registering build platform: UnrealBuildTool.LinuxPlatformFactory
+    Registering build platform: UnrealBuildTool.MacPlatformFactory
+Unable to find valid SDK(s) for Mac:
+  Found Sdk Version, MinRequired=15.2.0, MaxRequired=16.9.0.
+  Found AutoSdk Version, Required=15.2.
+        Registering build platform: Mac - buildable: False
+    Registering build platform: UnrealBuildTool.TVOSPlatformFactory
+    Registering build platform: UnrealBuildTool.WindowsPlatformFactory
+    Registering build platform: UnrealBuildTool.VisionOSPlatformFactory
+Command line: "/Users/Shared/Epic Games/UE_5.5/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll" CityExplorerEditor Mac Development -Project=/Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/CityExplorer.uproject -Log=/private/tmp/cityexplorer-editor-build.log
+Skipping /Users/Shared/Epic Games/UE_5.5/Engine/Intermediate/Build/BuildRules/UE5Rules.dll: File is installed
+Skipping /Users/Shared/Epic Games/UE_5.5/Engine/Intermediate/Build/BuildRules/UE5ProgramRules.dll: File is installed
+Compiling /Users/hahneyshkondeti/Documents/Library/Application Support/Epic/UnrealEngine/Intermediate/Build/BuildRules/MarketplaceRules.dll: Assembly does not exist
+/Users/Shared/Epic Games/UE_5.5/Engine/Plugins/Marketplace/Cesiumfo27e669801be6V8/Source/CesiumRuntime/CesiumRuntime.Build.cs(150,31): warning CS0618: 'EngineIncludeOrderVersion.Unreal5_2' is obsolete: 'The Unreal 5.2 include order is unsupported.'
+/Users/Shared/Epic Games/UE_5.5/Engine/Plugins/Marketplace/Cesiumfo27e669801be6V8/Source/CesiumEditor/CesiumEditor.Build.cs(123,31): warning CS0618: 'EngineIncludeOrderVersion.Unreal5_2' is obsolete: 'The Unreal 5.2 include order is unsupported.'
+Compiling /Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration/CityExplorer/Intermediate/Build/BuildRules/CityExplorerModuleRules.dll: Assembly does not exist
+Using 'git status' to determine working set for adaptive non-unity build (/Users/hahneyshkondeti/Documents/ChatGPT/Explorer/UnrealMigration).
+Creating makefile for CityExplorerEditor (no existing makefile)
+Total execution time: 2.32 seconds
+Platform Mac is not a valid platform to build. Check that the SDK is installed properly and that you have the necessary platform support files (DataDrivenPlatformInfo.ini, SDK.json, etc).
+BuildException: Platform Mac is not a valid platform to build. Check that the SDK is installed properly and that you have the necessary platform support files (DataDrivenPlatformInfo.ini, SDK.json, etc).
+   at UnrealBuildTool.UEBuildTarget.Create(TargetDescriptor Descriptor, Boolean bSkipRulesCompile, Boolean bForceRulesCompile, Boolean bUsePrecompiled, UnrealIntermediateEnvironment IntermediateEnvironment, ILogger Logger) in /Users/build/Build/++UE5/Sync/Engine/Saved/CsTools/Engine/Source/Programs/UnrealBuildTool/Configuration/UEBuildTarget.cs:line 1263
+   at UnrealBuildTool.UEBuildTarget.Create(TargetDescriptor Descriptor, BuildConfiguration BuildConfiguration, ILogger Logger) in /Users/build/Build/++UE5/Sync/Engine/Saved/CsTools/Engine/Source/Programs/UnrealBuildTool/Configuration/UEBuildTarget.cs:line 1220
+   at UnrealBuildTool.BuildMode.CreateMakefileAsync(BuildConfiguration BuildConfiguration, TargetDescriptor TargetDescriptor, ISourceFileWorkingSet WorkingSet, ILogger Logger) in /Users/build/Build/++UE5/Sync/Engine/Saved/CsTools/Engine/Source/Programs/UnrealBuildTool/Modes/BuildMode.cs:line 1144
+   at UnrealBuildTool.BuildMode.BuildAsync(List`1 TargetDescriptors, BuildConfiguration BuildConfiguration, ISourceFileWorkingSet WorkingSet, BuildOptions Options, FileReference WriteOutdatedActionsFile, ILogger Logger, Boolean bSkipPreBuildTargets, String ActionTypeFilter) in /Users/build/Build/++UE5/Sync/Engine/Saved/CsTools/Engine/Source/Programs/UnrealBuildTool/Modes/BuildMode.cs:line 402
+   at UnrealBuildTool.BuildMode.ExecuteAsync(CommandLineArguments Arguments, ILogger Logger) in /Users/build/Build/++UE5/Sync/Engine/Saved/CsTools/Engine/Source/Programs/UnrealBuildTool/Modes/BuildMode.cs:line 257
+   at UnrealBuildTool.UnrealBuildTool.Main(String[] ArgumentsArray) in /Users/build/Build/++UE5/Sync/Engine/Saved/CsTools/Engine/Source/Programs/UnrealBuildTool/UnrealBuildTool.cs:line 687
+WriteFileIfChanged() wrote 0 changed files of 0 requested writes.
+Timeline:
+
+[ 0.000]
+[ 0.000](+2.325) <unknown>
+[ 2.325]

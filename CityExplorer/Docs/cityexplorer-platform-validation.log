@@ -1,0 +1,38 @@
+Setting temp directory to '/var/folders/8t/tpcqsvl14sn8t1gqzfl78j5r0000gn/T/UnrealBuildTool/f0f5cb59'
+    Registering build platform: UnrealBuildTool.AndroidPlatformFactory
+Unable to find valid SDK(s) for Android:
+  Found Sdk Version, MinRequired=r25b, MaxRequired=r27.
+  Found AutoSdk Version, Required=r25b.
+        Registering build platform: Android - buildable: False
+    Registering build platform: UnrealBuildTool.IOSPlatformFactory
+Unable to find valid SDK(s) for IOS:
+  Found Sdk Version, MinRequired=15.2.0, MaxRequired=16.9.0.
+  Found AutoSdk Version, Required=15.2.
+        Registering build platform: IOS - buildable: False
+    Registering build platform: UnrealBuildTool.LinuxPlatformFactory
+        Registering build platform: Linux - buildable: False
+        Registering build platform: LinuxArm64 - buildable: False
+    Registering build platform: UnrealBuildTool.MacPlatformFactory
+Unable to find valid SDK(s) for Mac:
+  Found Sdk Version, MinRequired=15.2.0, MaxRequired=16.9.0.
+  Found AutoSdk Version, Required=15.2.
+        Registering build platform: Mac - buildable: False
+    Registering build platform: UnrealBuildTool.TVOSPlatformFactory
+Unable to find valid SDK(s) for TVOS:
+  Found Sdk Version, MinRequired=15.2.0, MaxRequired=16.9.0.
+  Found AutoSdk Version, Required=15.2.
+        Registering build platform: TVOS - buildable: False
+    Registering build platform: UnrealBuildTool.WindowsPlatformFactory
+        Registering build platform: Win64 - buildable: False
+    Registering build platform: UnrealBuildTool.VisionOSPlatformFactory
+Unable to find valid SDK(s) for VisionOS:
+  Found Sdk Version, MinRequired=15.3.0, MaxRequired=16.9.0.
+  Found AutoSdk Version, Required=15.2.
+        Registering build platform: VisionOS - buildable: False
+##PlatformValidate: Mac INVALID 
+WriteFileIfChanged() wrote 0 changed files of 0 requested writes.
+Timeline:
+
+[ 0.000]
+[ 0.000](+0.273) <unknown>
+[ 0.273]

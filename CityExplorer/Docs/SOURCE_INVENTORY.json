@@ -1,0 +1,731 @@
+{
+  "preserved_godot_commit": "53fb555",
+  "scripts": [
+    {
+      "path": "scripts/address_search.gd",
+      "sha256": "6ef1f1f71244d43d61be87c56408426cd15cd26ff881eecb4162912d4d07ab20",
+      "lines": 81,
+      "classes": [
+        "AddressSearch"
+      ],
+      "functions": [
+        "normalize(value: String) -> String:",
+        "words_match(query: Array[String], text: String, fuzzy: bool = false) -> bool:",
+        "number_matches(query: String, number: String) -> bool:",
+        "search(query: String, limit: int = 300) -> Array:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/app_catalog.gd",
+      "sha256": "f6aaa082f1889b64acd25395aee4c4fe9989cba83151985e57b854f52ba2deca",
+      "lines": 45,
+      "classes": [
+        "AppCatalog"
+      ],
+      "functions": [
+        "cities() -> Array[Dictionary]:",
+        "vehicles() -> Array[Dictionary]:",
+        "city(id: String) -> Dictionary:",
+        "vehicle(id: String) -> Dictionary:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/app_session.gd",
+      "sha256": "e9e9e4a0e86451f19325ee9e85ad22bfd955d02aae0582397abb5777e28280f8",
+      "lines": 18,
+      "classes": [
+        "AppSession"
+      ],
+      "functions": [
+        "select_city(id: String) -> void:",
+        "select_vehicle(id: String) -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/building_assets.gd",
+      "sha256": "a2286034640ec1a3ab6c287cc6b1827c339a2e4c1cd0e4b7b7b7c99712ef345f",
+      "lines": 125,
+      "classes": [
+        "BuildingAssets"
+      ],
+      "functions": [
+        "finite_number(value: Variant) -> bool:",
+        "anchor_position(lon: float, lat: float, elevation: float) -> Vector3:",
+        "install(parent: Node3D, manifest: Variant, buildings: Array, mobile: bool) -> void:",
+        "validate(entry: Variant, known: Dictionary) -> String:",
+        "visual_only(node: Node) -> bool:",
+        "set_range(node: Node, distance: float) -> void:",
+        "mesh_count(node: Node) -> int:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/car.gd",
+      "sha256": "508f6d7f0b9550af621d91b1001b491d3261f74e75ce878b4282880bc4634599",
+      "lines": 206,
+      "classes": [
+        "TouringCar"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "_physics_process(delta: float) -> void:",
+        "update_handling(delta: float) -> void:",
+        "recover(point: Vector3, heading: float = 0) -> void:",
+        "profile_mesh(sections: Array, mat: Material) -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/chase_camera.gd",
+      "sha256": "0b0f8f118c3a1f69814c25560caf14e156e16ffd6b392a26f26d1d2cb0d6fba9",
+      "lines": 32,
+      "classes": [
+        "ChaseCamera"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "_physics_process(delta: float) -> void:",
+        "reset() -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/city_map.gd",
+      "sha256": "d53af70dff062afc71077edf55db4df2652e49f322374f132176b3715db11476",
+      "lines": 167,
+      "classes": [
+        "CityMap"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "scale_factor() -> float:",
+        "map_point(point: Vector3) -> Vector2:",
+        "world_point(point: Vector2) -> Vector3:",
+        "change_zoom(factor: float, anchor: Vector2 = Vector2.INF) -> void:",
+        "clamp_center() -> void:",
+        "show_city() -> void:",
+        "show_car() -> void:",
+        "choose(point: Vector2) -> void:",
+        "begin_drag(point: Vector2) -> void:",
+        "move_drag(point: Vector2) -> void:",
+        "end_drag(point: Vector2) -> void:",
+        "_gui_input(event: InputEvent) -> void:",
+        "_draw() -> void:",
+        "draw_local_streets() -> void:"
+      ],
+      "dependencies": [
+        "res://data/city/overview.svg"
+      ]
+    },
+    {
+      "path": "scripts/district.gd",
+      "sha256": "b2b3a30b657a0bd284b0e068941301af74c279c81b4958634d8a384b7af3c525",
+      "lines": 152,
+      "classes": [
+        "District"
+      ],
+      "functions": [
+        "_static_init() -> void:",
+        "vector(point: Array, y: float = 0.55) -> Vector3:",
+        "ground(point: Array, y: float = 0.55) -> Vector3:",
+        "nearest_segment(point: Vector3) -> Dictionary:",
+        "nearest_road(point: Vector3) -> Vector3:",
+        "heading_at(point: Vector3) -> float:",
+        "in_bounds(point: Vector3, margin: float = 0) -> bool:",
+        "is_safe(point: Vector3) -> bool:",
+        "tile_key(cell: Vector2i) -> String:",
+        "needed_tiles(point: Vector3, radius: int) -> Dictionary:",
+        "tile(key: String) -> Dictionary:",
+        "nearby_features(point: Vector3, radius: int = 1) -> Dictionary:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/drive_input.gd",
+      "sha256": "aa932f2fef92873a05d8261815c719b39a08c3a63f50871365be1747a6adb7be",
+      "lines": 46,
+      "classes": [
+        "DriveInput"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "bind(action: String, keys: Array) -> void:",
+        "sample() -> void:",
+        "clear() -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/engine_audio.gd",
+      "sha256": "4b4fe048f33204c2e43ee706f81d5935ad98091ac821545b90f90883d38e7368",
+      "lines": 33,
+      "classes": [
+        "EngineAudio"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "_process(_delta: float) -> void:",
+        "_exit_tree() -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/hud.gd",
+      "sha256": "44332c07368a603dc9d3f45813e32e42a67406a0549b1a9a888434cff90f5db8",
+      "lines": 381,
+      "classes": [
+        "DrivingHUD"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "apply_safe_area() -> void:",
+        "apply_theme(mode: String) -> void:",
+        "set_city_name(value: String) -> void:",
+        "set_exploring_visible(value: bool) -> void:",
+        "build_chrome() -> void:",
+        "_label(value: String, size: int, secondary := false) -> Label:",
+        "_button(value: String, action: Callable, primary := false) -> Button:",
+        "_place(parent: Control, control: Control, offset: Vector2, extent: Vector2, anchor := Vector2.ZERO) -> void:",
+        "create_pedal(id: String, text: String, offset: Vector2, extent: Vector2, anchor: Vector2) -> void:",
+        "_input(event: InputEvent) -> void:",
+        "assign_touch(id: int, point: Vector2) -> void:",
+        "sync_touches() -> void:",
+        "release_touches() -> void:",
+        "_overlay() -> ColorRect:",
+        "_column(parent: Control, width := 560.0) -> VBoxContainer:",
+        "_title(column: VBoxContainer, title: String, subtitle: String = \"\") -> void:",
+        "build_pause() -> void:",
+        "build_settings() -> void:",
+        "_section(text: String) -> Label:",
+        "build_controls() -> void:",
+        "build_credits() -> void:",
+        "build_card() -> void:",
+        "_hide_overlays() -> void:",
+        "open_pause() -> void:",
+        "open_settings() -> void:",
+        "open_controls() -> void:",
+        "open_credits() -> void:",
+        "close_all_overlays() -> void:",
+        "refresh(_discovered: bool, muted: bool, fps: int) -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/landmarks.gd",
+      "sha256": "2dab0bffc6e7b2a1b46eab344c8034c8e5331afc222312f2f6546aff4add4ebd",
+      "lines": 23,
+      "classes": [
+        "Landmarks"
+      ],
+      "functions": [
+        "_process(delta: float) -> void:",
+        "dismiss() -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/main.gd",
+      "sha256": "0ea233eab014bff66d67fb194157d6fd833e7695b65383950ae3d6c325c362de",
+      "lines": 283,
+      "classes": [],
+      "functions": [
+        "_ready() -> void:",
+        "_process(delta: float) -> void:",
+        "_unhandled_input(event: InputEvent) -> void:",
+        "update_route() -> void:",
+        "set_paused(value: bool) -> void:",
+        "toggle_pause() -> void:",
+        "recover() -> void:",
+        "select_destination() -> void:",
+        "on_arrival() -> void:",
+        "close_card() -> void:",
+        "toggle_sound() -> void:",
+        "toggle_map_orientation() -> void:",
+        "toggle_fps() -> void:",
+        "persist() -> void:",
+        "persist_preferences() -> void:",
+        "_notification(what: int) -> void:",
+        "route_to_place(place: Dictionary) -> void:",
+        "explore_area(index: int) -> void:",
+        "start_at(point: Vector3) -> bool:",
+        "begin_exploration(city: Dictionary, place: Dictionary, vehicle: Dictionary, point: Vector3) -> void:",
+        "restart_selected_location() -> void:",
+        "choose_new_location() -> void:",
+        "choose_new_vehicle() -> void:",
+        "exit_to_home() -> void:",
+        "change_theme(mode: String) -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/minimap.gd",
+      "sha256": "d8d0c5219afa1b46b2ca74f2b8bf59dae9906c22aaf29a93743b8cc4d6ef6489",
+      "lines": 70,
+      "classes": [
+        "MiniMap"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "orientation_angle() -> float:",
+        "map_point(point: Vector3) -> Vector2:",
+        "_draw() -> void:",
+        "panel_style() -> StyleBoxFlat:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/navigation.gd",
+      "sha256": "ec9513b027065dde1077292729f6f5a24113846bebde1a35d817c6e629d39ebf",
+      "lines": 94,
+      "classes": [
+        "RoadNavigation"
+      ],
+      "functions": [
+        "_init() -> void:",
+        "route(from: Vector3) -> PackedVector3Array:",
+        "distance_remaining() -> float:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/public_spaces.gd",
+      "sha256": "f69ac90c9d73a1b002e713a397c7094fdb680d1d8bbd76651813bed5afc0e1eb",
+      "lines": 180,
+      "classes": [
+        "PublicSpaces"
+      ],
+      "functions": [
+        "prepare() -> void:",
+        "cylinder(world: WorldBuilder, at: Vector3, radius: float, height: float, color: Color, taper: bool = false) -> void:",
+        "segment(world: WorldBuilder, a: Vector3, b: Vector3, radius: float, color: Color) -> void:",
+        "jet(world: WorldBuilder, from: Vector3, to: Vector3, height: float) -> void:",
+        "wall(world: WorldBuilder, ring: Array, height: float, width: float, collision: bool) -> void:",
+        "inside(point: Vector3, ring: Array) -> bool:",
+        "fountain(world: WorldBuilder, feature: Dictionary) -> void:",
+        "mosaic(world: WorldBuilder, feature: Dictionary) -> void:",
+        "monument(world: WorldBuilder, center: Vector3) -> void:",
+        "yield_budget(world: WorldBuilder) -> void:",
+        "build(world: WorldBuilder, site: Dictionary) -> void:"
+      ],
+      "dependencies": [
+        "res://assets/shaders/fountain_water.gdshader"
+      ]
+    },
+    {
+      "path": "scripts/save_store.gd",
+      "sha256": "8ab6ca175338ca6beab1fec57beb355d1ce501f4c51578f4a2ee7a31fe4f4464",
+      "lines": 53,
+      "classes": [
+        "SaveStore"
+      ],
+      "functions": [
+        "load_journey() -> void:",
+        "write_journey() -> bool:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/services/place_search_service.gd",
+      "sha256": "a8b830b0f0762ad61d6ddcad52fb420837e1fb76582434fb9ab8589e6200227a",
+      "lines": 124,
+      "classes": [
+        "PlaceSearchService"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "has_google_key() -> bool:",
+        "search(query: String, city: Dictionary) -> void:",
+        "resolve(place: Dictionary) -> void:",
+        "_request_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:",
+        "_offline_results(query: String) -> Array:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/solar_cycle.gd",
+      "sha256": "7a30feeed1cc18fb56044455146f251b0a81579507f067e548520090806f9859",
+      "lines": 58,
+      "classes": [
+        "SolarCycle"
+      ],
+      "functions": [
+        "position_at(unix_seconds: float, latitude: float, longitude: float) -> Dictionary:",
+        "_process(delta: float) -> void:",
+        "update_at(unix_seconds: float) -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/street_furniture.gd",
+      "sha256": "9d02dfb32aa99a1f841e683fa5511d2efa4e098fb247ebad9129b11b489b239c",
+      "lines": 89,
+      "classes": [
+        "StreetFurniture"
+      ],
+      "functions": [
+        "face(sides: int, turn: float = 0.0) -> ArrayMesh:",
+        "label(world: WorldBuilder, text: String, at: Vector3, heading: float, pixel: float = 0.008, color: Color = Color.WHITE) -> void:",
+        "build(world: WorldBuilder, record: Dictionary) -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/street_lights.gd",
+      "sha256": "84463743af76af0a79f0aa4d9f097155c2d7ffb1857b217fec166a7d29377a4f",
+      "lines": 74,
+      "classes": [
+        "StreetLights"
+      ],
+      "functions": [
+        "night_strength(altitude: float) -> float:",
+        "lens_material() -> StandardMaterial3D:",
+        "build(world: WorldBuilder, record: Dictionary) -> void:",
+        "_ready() -> void:",
+        "_process(delta: float) -> void:",
+        "update_lights() -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/terrain_data.gd",
+      "sha256": "0c48a6549090401fe654f5e876f6af58dabe58674c79b23a17f6261e56341ec8",
+      "lines": 47,
+      "classes": [
+        "TerrainData"
+      ],
+      "functions": [
+        "sample(x: int, z: int) -> float:",
+        "height(x: float, z: float) -> float:",
+        "ground(p: Vector3) -> Vector3:",
+        "normal_at(x: float, z: float) -> Vector3:",
+        "is_estimated(p: Vector3) -> bool:",
+        "park_at(x: int, z: int) -> bool:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/terrain_world.gd",
+      "sha256": "4fba07d15fedd9ed8a80144e04edd2c617333e1d6abc0b326d17b9845af37cbf",
+      "lines": 134,
+      "classes": [
+        "TerrainWorld"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "stream_at(point: Vector3) -> void:",
+        "mesh_patch(start: Vector2, size: Vector2i, step: int, mat: Material, collision: bool) -> Node3D:",
+        "build_sea() -> void:"
+      ],
+      "dependencies": [
+        "res://assets/shaders/terrain.gdshader",
+        "res://assets/shaders/sea.gdshader"
+      ]
+    },
+    {
+      "path": "scripts/ui/design_system.gd",
+      "sha256": "96b5171b162e3dded4f8f741a17572d976aa3b8bfa586bc44b320048c168a680",
+      "lines": 92,
+      "classes": [
+        "UIDesignSystem"
+      ],
+      "functions": [
+        "resolved_mode(mode: String) -> String:",
+        "colors(mode: String) -> Dictionary:",
+        "box(color: Color, radius: int = 14, border_color := Color.TRANSPARENT, border_width: int = 0) -> StyleBoxFlat:",
+        "theme(mode: String) -> Theme:",
+        "primary(button: Button, mode: String) -> void:",
+        "translucent_panel(dark: bool = true, alpha: float = 0.78, radius: int = 14) -> StyleBoxFlat:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/ui/onboarding_flow.gd",
+      "sha256": "bb7437b1a1a55db7b444bf3180ff5c0a135621d1c67a482ffa0cd8090b7600aa",
+      "lines": 348,
+      "classes": [
+        "OnboardingFlow"
+      ],
+      "functions": [
+        "_ready() -> void:",
+        "configure(value: AppSession) -> void:",
+        "apply_theme(mode: String) -> void:",
+        "_apply_layout() -> void:",
+        "_clear() -> void:",
+        "_heading(title: String, subtitle: String = \"\") -> void:",
+        "_spacer(height: int) -> void:",
+        "_button(text: String, action: Callable, primary := false) -> Button:",
+        "_back(action: Callable) -> void:",
+        "_transition() -> void:",
+        "_restyle_primary_buttons() -> void:",
+        "show_home(animate := true) -> void:",
+        "_game_mode_notice() -> void:",
+        "show_city() -> void:",
+        "_select_city(city: Dictionary) -> void:",
+        "show_location() -> void:",
+        "_search_now() -> void:",
+        "_search_loading(loading: bool) -> void:",
+        "_clear_results() -> void:",
+        "_search_results(value: Array) -> void:",
+        "_search_failed(message: String) -> void:",
+        "show_error(message: String) -> void:",
+        "_choose_place(place: Dictionary) -> void:",
+        "_place_resolved(place: Dictionary) -> void:",
+        "show_vehicle() -> void:",
+        "_select_vehicle(vehicle: Dictionary) -> void:",
+        "_vehicle_preview() -> Control:",
+        "_start_exploring() -> void:"
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "scripts/world_builder.gd",
+      "sha256": "290f6c73443ec4a4ec218ae17fb465d377235571039c0fec91fef921b4b5c897",
+      "lines": 814,
+      "classes": [
+        "WorldBuilder"
+      ],
+      "functions": [
+        "material(color: Color) -> StandardMaterial3D:",
+        "box(parent: Node3D, size: Vector3, at: Vector3, color: Color) -> MeshInstance3D:",
+        "cylinder(parent: Node3D, radius: float, height: float, at: Vector3, color: Color, top: float = -1) -> MeshInstance3D:",
+        "solid_box(size: Vector3, at: Vector3, color: Color) -> void:",
+        "prepare_materials() -> void:",
+        "_ready() -> void:",
+        "retire() -> void:",
+        "budget_expired() -> bool:",
+        "load_chunk(key: String, background: bool = false) -> void:",
+        "stream_at(point: Vector3, immediate: bool = false) -> void:",
+        "_process(delta: float) -> void:",
+        "refresh_street_labels() -> void:",
+        "build_lighting() -> void:",
+        "chunk_key(at: Vector3) -> String:",
+        "surface(at: Vector3, mat: Material) -> SurfaceTool:",
+        "elevated(p: Vector3) -> Vector3:",
+        "collision_quad(points: PackedVector3Array) -> void:",
+        "quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, width: float, height: float) -> void:",
+        "strip(a: Vector3, b: Vector3, width: float, y: float, mat: Material) -> void:",
+        "drape_polygon(st: SurfaceTool, polygon: PackedVector2Array, y: float) -> void:",
+        "build_road(road: Dictionary) -> void:",
+        "road_join(at: Vector3, radius: float, y: float, mat: Material) -> void:",
+        "flat_polygon(coords: Array, y: float, mat: Material) -> void:",
+        "build_building(building: Dictionary) -> void:",
+        "facade(a: Vector3, b: Vector3, normal: Vector3, height: float, heading: float, seed_value: int) -> void:",
+        "instance_box(size: Vector3, at: Vector3, heading: float, color: Color, detail: bool) -> void:",
+        "instance(mesh: Mesh, transform: Transform3D, color: Color, detail: bool) -> void:",
+        "build_tree(at: Vector3, record: Dictionary = {}) -> void:",
+        "build_landmark() -> void:",
+        "wrap_street_name(street_name: String) -> String:",
+        "build_addresses() -> void:",
+        "flush_surfaces() -> void:",
+        "flush_batches() -> void:",
+        "update_route(points: PackedVector3Array) -> void:",
+        "build_shop_signs() -> void:"
+      ],
+      "dependencies": [
+        "res://assets/shaders/asphalt.gdshader",
+        "res://assets/shaders/pavement.gdshader",
+        "res://assets/shaders/masonry.gdshader",
+        "res://assets/materials/plaster/Plaster004_1K-JPG_Color.jpg",
+        "res://assets/materials/plaster/Plaster004_1K-JPG_NormalGL.jpg",
+        "res://assets/materials/plaster/Plaster004_1K-JPG_Roughness.jpg",
+        "res://assets/shaders/glass.gdshader",
+        "res://assets/shaders/foliage.gdshader"
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "path": "assets/buildings/_test_only/triangle.gltf",
+      "bytes": 518,
+      "sha256": "5a20cd910d2bf3132515c9774098737998b32bc3a550d0634d7940d41217450c"
+    },
+    {
+      "path": "assets/city-explorer-icon.png",
+      "bytes": 1987509,
+      "sha256": "48ba0e4bb7d3d66996208f0ec74305823fa2a72db165e437c3f4dadcbf1e53ef"
+    },
+    {
+      "path": "assets/icon.svg",
+      "bytes": 596,
+      "sha256": "1f6d462001f843a55a0c12b0e32183cd370dae71e4d27fa9ce9e2e64b3e4e904"
+    },
+    {
+      "path": "assets/materials/asphalt/Asphalt030_1K-JPG_Color.jpg",
+      "bytes": 1857110,
+      "sha256": "3095d3352a25474e2aec53dcdaa5574b839b8ce50935847f9cb38e01902891cd"
+    },
+    {
+      "path": "assets/materials/asphalt/Asphalt030_1K-JPG_NormalGL.jpg",
+      "bytes": 2209659,
+      "sha256": "52b5946c7e763abc8d56a66b42066e3868ca188214b0f07583d29a3036d35287"
+    },
+    {
+      "path": "assets/materials/asphalt/Asphalt030_1K-JPG_Roughness.jpg",
+      "bytes": 718817,
+      "sha256": "e9ff4d449ac12c000df859dad92ede192bd7a8db4a843b9e118ff6040e9c1f97"
+    },
+    {
+      "path": "assets/materials/plaster/Plaster004_1K-JPG_Color.jpg",
+      "bytes": 1093948,
+      "sha256": "ea7bcf4c5af54df095300caeb4179a601b9126d08fe38d273fe71075546919f2"
+    },
+    {
+      "path": "assets/materials/plaster/Plaster004_1K-JPG_NormalGL.jpg",
+      "bytes": 2237930,
+      "sha256": "d4f7af819be607020c06c7ef70d659d0584430dd598e148f5f9ac18fd877c909"
+    },
+    {
+      "path": "assets/materials/plaster/Plaster004_1K-JPG_Roughness.jpg",
+      "bytes": 604413,
+      "sha256": "4755ea52a42515be051976f6bcac0bab31a9417de864939b0ec1c83153cb1c8b"
+    },
+    {
+      "path": "assets/shaders/asphalt.gdshader",
+      "bytes": 518,
+      "sha256": "f391daf172f7867b76cbd4348d9d23e677b548f0effa40df97d7b7f3556983fb"
+    },
+    {
+      "path": "assets/shaders/asphalt.gdshader.uid",
+      "bytes": 20,
+      "sha256": "9f17f8d06f01cee9108772e394cd555814117847789ff4ae2c5edc551d38fa22"
+    },
+    {
+      "path": "assets/shaders/foliage.gdshader",
+      "bytes": 464,
+      "sha256": "486d5b4841bea5929803f940251df31b5cd065cd3e1eb0ee28fda9c1b7550abd"
+    },
+    {
+      "path": "assets/shaders/foliage.gdshader.uid",
+      "bytes": 20,
+      "sha256": "48bd548ae823b52a05ee07313b5d11d9a9cde40ab6d595fea2a02e3ab5c044f3"
+    },
+    {
+      "path": "assets/shaders/fountain_water.gdshader",
+      "bytes": 573,
+      "sha256": "42b50ce3b89c4e15f85a4902b94076f73d9fad772758d375e60547aa26dc6d84"
+    },
+    {
+      "path": "assets/shaders/fountain_water.gdshader.uid",
+      "bytes": 20,
+      "sha256": "1fdb67a1f9d143bca12c3dc9a1623e9285e9951fc623c90edcebe85c590bf278"
+    },
+    {
+      "path": "assets/shaders/glass.gdshader",
+      "bytes": 245,
+      "sha256": "16a331fd9b98ffbeb1ab74355da25245ff95f12030a1d262db0dcf55eba5841d"
+    },
+    {
+      "path": "assets/shaders/glass.gdshader.uid",
+      "bytes": 18,
+      "sha256": "ff6763407676fa35960a011224a1f450022ee0e65419436d4bb8253b9205ab62"
+    },
+    {
+      "path": "assets/shaders/masonry.gdshader",
+      "bytes": 1257,
+      "sha256": "d084cf45151f15cdd9461b5da8edf54c4ab0e58f3b4909182ee6cfb4af6e0dbb"
+    },
+    {
+      "path": "assets/shaders/masonry.gdshader.uid",
+      "bytes": 20,
+      "sha256": "5883e3d16a0bd83afebc71572b3119b960f09ff11dac39bafe29925ed646050e"
+    },
+    {
+      "path": "assets/shaders/pavement.gdshader",
+      "bytes": 868,
+      "sha256": "07026b03713a55f390714c686573a1a69f2994164487b9a234e6f6ec84721cd2"
+    },
+    {
+      "path": "assets/shaders/pavement.gdshader.uid",
+      "bytes": 20,
+      "sha256": "fac1ae74337976ab364490d07959f3e0daf83ed55b6cc310808ef4e1398d3060"
+    },
+    {
+      "path": "assets/shaders/sea.gdshader",
+      "bytes": 445,
+      "sha256": "cb38fdd36cdf3a58fadd43e6c9fc752b95517b3528c26a21b42befd9e2257546"
+    },
+    {
+      "path": "assets/shaders/sea.gdshader.uid",
+      "bytes": 20,
+      "sha256": "542a5909dbcf7a1c2ccb546406e1412ab057b125459d7af5ed862ec072e43805"
+    },
+    {
+      "path": "assets/shaders/terrain.gdshader",
+      "bytes": 633,
+      "sha256": "08ef2b211f303022cad96869465d04123362c9e83696dd106cefbaec9e959aba"
+    },
+    {
+      "path": "assets/shaders/terrain.gdshader.uid",
+      "bytes": 17,
+      "sha256": "4f7ed95eb830863a9ab189a3366fe8d5e8ea76ffe2f3c5e4f1d49eddc9f88993"
+    }
+  ],
+  "data": {
+    "city/manifest.json": {
+      "schema": 2,
+      "district_id": "barcelona_city_v1",
+      "origin_lonlat": 2,
+      "bbox_lonlat": 4,
+      "bounds": 2,
+      "places": 20576,
+      "graph": 2,
+      "start": 2,
+      "start_heading": 2.341828872658512,
+      "destination": 2,
+      "landmark_center": 2,
+      "metadata": 12,
+      "roads": 126836,
+      "buildings": 104694,
+      "addresses": 0,
+      "parks": 0,
+      "trees": 0,
+      "cell_size": 192,
+      "tiles": 5744,
+      "tile_dependencies": 5816,
+      "municipal_boundary": 5,
+      "tree_metadata": 5
+    },
+    "city/infrastructure.json": {
+      "metadata": 7,
+      "cells": 2856
+    },
+    "city/public_spaces.json": {
+      "metadata": 5,
+      "sites": 2,
+      "features": 40,
+      "replaced_buildings": 1
+    },
+    "terrain/metadata.json": {
+      "schema": 1,
+      "origin": 2,
+      "columns": 2561,
+      "rows": 2913,
+      "spacing_m": 6,
+      "encoding": "little-endian float32, row-major, +X east / +Z south",
+      "source": "ICGC MET5",
+      "source_resolution_m": 5,
+      "source_crs": "EPSG:25831",
+      "vertical_datum": "orthometric metres",
+      "retrieved_at": "2026-09-27",
+      "capture_date": "See ICGC product metadata; retrieval date is not survey date",
+      "source_url": "https://geoserveis.icgc.cat/icc_mdt/wcs/service?SERVICE=WCS&VERSION=1.0.0&REQUEST=GetCoverage&COVERAGE=icc:met&CRS=EPSG:25831&BBOX=419845,4573120,436410,4592255&RESX=5&RESY=5&FORMAT=ARCGRID",
+      "product_url": "https://www.icgc.cat/en/Geoinformation-and-Maps/Data-and-products/Bessons-digitals-Elevacions/5x5-m-Terrain-elevation-model",
+      "attribution": "Institut Cartogràfic i Geològic de Catalunya (ICGC), CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "source_sha256": "f0c7204e774f9ed4fa2edccc449f977b0f4bdbe15fac5beef12c4b4fd653e9b4",
+      "park_mask_source": "Current committed OSM city park polygons, rasterized at 6 m; boundary interpolation is approximate",
+      "height_sha256": "1ed0541204c5c21938ded462e8e977c77fb7c4c5de8985b8f762609b92b753e5",
+      "min_m": -4.0,
+      "max_m": 515.9710083007812,
+      "shore_nodata_filled": 17608,
+      "adaptations": "MET5 bilinearly resampled to a 6 m game grid; triangular interpolation at runtime. Coastal MET5 nodata within 1000 m of current OSM water uses nearest valid MET5 elevations before resampling; these coastal heights are approximate. OSM sea cells set to -4 m solely for rendering, not bathymetry. Road grades follow bare earth; bridge decks, tunnels, retaining walls and surveyed road crossfalls are not reconstructed. Terrain colors are illustrative."
+    },
+    "building_assets.json": {
+      "schema": 1,
+      "assets": 0
+    }
+  }
+}
