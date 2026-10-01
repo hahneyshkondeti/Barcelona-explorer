@@ -14,6 +14,23 @@
 #include "../Tests/ExplorerPhysicsProbe.h"
 #include "Components/InputComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Engine/GameViewportClient.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Framework/Application/IInputProcessor.h"
+#include "Layout/WidgetPath.h"
+namespace {
+class FExplorerInputTrace : public IInputProcessor
+{
+public:
+    virtual void Tick(float, FSlateApplication&, TSharedRef<ICursor>) override {}
+    virtual bool HandleMouseButtonDownEvent(FSlateApplication& App, const FPointerEvent& Event) override
+    {
+        const auto Path = App.LocateWindowUnderMouse(Event.GetScreenSpacePosition(), App.GetInteractiveTopLevelWindows());
+        FString Types; for (int32 I = 0; I < Path.Widgets.Num(); ++I) Types += Path.Widgets[I].Widget->GetTypeAsString() + TEXT("/");
+        UE_LOG(LogTemp, Display, TEXT("CityExplorer Slate mouse down position=%s path=%s"), *Event.GetScreenSpacePosition().ToString(), *Types); return false;
+    }
+};
+}
 AExplorerGameMode::AExplorerGameMode()
 {
     DefaultPawnClass = AExplorerVehicle::StaticClass(); PlayerControllerClass = AExplorerPlayerController::StaticClass();
@@ -40,8 +57,10 @@ void AExplorerGameMode::StartPlay()
 void AExplorerPlayerController::BeginPlay()
 {
     Super::BeginPlay(); if (!IsLocalController()) return;
+    if (!UE_BUILD_SHIPPING) { InputTrace = MakeShared<FExplorerInputTrace>(); FSlateApplication::Get().RegisterInputPreProcessor(InputTrace); }
     AppWidget = CreateWidget<UExplorerAppWidget>(this, AppWidgetClass ? AppWidgetClass.Get() : UExplorerAppWidget::StaticClass());
-    AppWidget->AddToViewport(); ShowHome();
+    AppWidget->AddToViewport();
+    GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->OnScreenChanged.AddDynamic(this, &AExplorerPlayerController::ConfigureScreenInput); ShowHome();
     GEngine->SetMaxFPS(GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->Preferences->FrameCap);
     FCoreDelegates::ApplicationWillDeactivateDelegate.AddUObject(this, &AExplorerPlayerController::PauseOnFocusLoss);
     GetWorldTimerManager().SetTimer(SaveTimer, this, &AExplorerPlayerController::Persist, 3, true);
@@ -58,7 +77,7 @@ void AExplorerPlayerController::ShowHome()
 {
     if (auto* Car = Cast<AExplorerVehicle>(GetPawn())) { Car->DrivePhysics->ClearInput(); SetPause(true); }
     GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->SetScreen(EExplorerScreen::Home);
-    bShowMouseCursor = true; SetInputMode(FInputModeUIOnly());
+    ConfigureScreenInput(EExplorerScreen::Home);
 }
 bool AExplorerPlayerController::BeginExplore(FVector2D Point)
 {
@@ -66,7 +85,7 @@ bool AExplorerPlayerController::BeginExplore(FVector2D Point)
     GetWorld()->GetSubsystem<UExplorerWorldSubsystem>()->StreamAt(Car->GetActorLocation(), true);
     SetPause(false);
     GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->SetScreen(EExplorerScreen::Exploring);
-    bShowMouseCursor = true; FInputModeGameAndUI Mode; Mode.SetHideCursorDuringCapture(false); SetInputMode(Mode); Persist(); return true;
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI world started at selected safe road")); Persist(); return true;
 }
 void AExplorerPlayerController::TogglePause()
 {
@@ -74,11 +93,11 @@ void AExplorerPlayerController::TogglePause()
     if (Session->Screen == EExplorerScreen::Exploring)
     {
         Car->DrivePhysics->ClearInput(); SetPause(true); Persist();
-        Session->SetScreen(EExplorerScreen::Paused); bShowMouseCursor = true; SetInputMode(FInputModeGameAndUI());
+        Session->SetScreen(EExplorerScreen::Paused);
     }
     else if (Session->Screen == EExplorerScreen::Paused || Session->Screen == EExplorerScreen::Settings)
     {
-        SetPause(false); Session->SetScreen(EExplorerScreen::Exploring); bShowMouseCursor = true; FInputModeGameAndUI Mode; Mode.SetHideCursorDuringCapture(false); SetInputMode(Mode);
+        SetPause(false); Session->SetScreen(EExplorerScreen::Exploring);
     }
 }
 void AExplorerPlayerController::Persist()
@@ -94,11 +113,36 @@ void AExplorerPlayerController::RecoverVehicle()
 void AExplorerPlayerController::ResetVehicleCamera() { if (auto* Car = Cast<AExplorerVehicle>(GetPawn())) Car->ResetCamera(); }
 void AExplorerPlayerController::EndPlay(EEndPlayReason::Type Reason)
 {
+    if (InputTrace) { FSlateApplication::Get().UnregisterInputPreProcessor(InputTrace); InputTrace.Reset(); }
     FCoreDelegates::ApplicationWillDeactivateDelegate.RemoveAll(this);
+    GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->OnScreenChanged.RemoveAll(this);
     Persist(); GetWorldTimerManager().ClearTimer(SaveTimer); Super::EndPlay(Reason);
 }
 
 void AExplorerPlayerController::PauseOnFocusLoss()
 {
     if (GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->Screen == EExplorerScreen::Exploring) TogglePause();
+}
+
+void AExplorerPlayerController::ConfigureScreenInput(EExplorerScreen Screen)
+{
+    if (!AppWidget || !IsLocalController()) return;
+    bShowMouseCursor = true; bEnableClickEvents = true; bEnableMouseOverEvents = true;
+    const bool Driving = Screen == EExplorerScreen::Exploring;
+    SetPause(!Driving);
+    if (Driving)
+    {
+        FInputModeGameAndUI Mode; Mode.SetHideCursorDuringCapture(false); Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock); SetInputMode(Mode);
+        FSlateApplication::Get().SetAllUserFocusToGameViewport();
+    }
+    else
+    {
+        if (auto* Car = Cast<AExplorerVehicle>(GetPawn())) Car->DrivePhysics->ClearInput();
+        FInputModeUIOnly Mode; Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        UWidget* Target = AppWidget->GetFocusTarget();
+        if (Target) Mode.SetWidgetToFocus(Target->TakeWidget());
+        SetInputMode(Mode); if (Target) Target->SetUserFocus(this);
+    }
+    if (auto* Viewport = GetWorld()->GetGameViewport()) { Viewport->SetMouseCaptureMode(EMouseCaptureMode::NoCapture); Viewport->SetMouseLockMode(EMouseLockMode::DoNotLock); }
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer input mode=%s screen=%d cursor=1 capture=none"), Driving ? TEXT("GameAndUI") : TEXT("UIOnly"), int32(Screen));
 }

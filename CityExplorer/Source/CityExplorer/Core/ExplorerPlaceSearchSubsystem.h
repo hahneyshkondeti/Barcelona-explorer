@@ -14,6 +14,7 @@ class CITYEXPLORER_API UExplorerPlaceSearchSubsystem : public UGameInstanceSubsy
 public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
+    void InvalidateSearch() { Cancel(); }
     UFUNCTION(BlueprintCallable) void Search(const FString& Query);
     UFUNCTION(BlueprintCallable) void Resolve(FExplorerPlace Place);
     UFUNCTION(BlueprintPure) bool HasGoogleKey() const { return !ApiKey.IsEmpty(); }

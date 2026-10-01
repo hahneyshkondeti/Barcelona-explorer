@@ -8,7 +8,7 @@ Controls: W/up for throttle, S/down/space for braking and reverse, A/D or left/r
 
 The signed staged app was launched outside Unreal Editor using both NullRHI and the native Metal renderer. Both completed the actual Barcelona Chaos simulation with `CITY_EXPLORER_PHYSICS_SUCCESS`. The installed copy is checked separately from its final Applications location. Signature verification uses `codesign --verify --deep --strict`.
 
-A locked Mac prevented the latest visible mouse/menu, wheel-animation and sustained-driving checks. The build is a playable development milestone, not the finished visual-quality upgrade. Terrain and road geometry/materials remain the existing migration baseline. Live Google API behavior, broad collision/camera testing and performance profiling remain pending.
+The user confirmed Explore works, but reported address selection as a blocker. The installed search repair has passed keyboard text/Enter/result checks; mouse selection, Next, and selected-location world startup remain pending. See PACKAGED_SEARCH_VALIDATION.md. A locked Mac currently prevents the remaining visible checks. The build is a playable development milestone, not the finished visual-quality upgrade. Terrain and road geometry/materials remain the existing migration baseline. Live Google API behavior, broad collision/camera testing and performance profiling remain pending.
 
 ## Packaging
 

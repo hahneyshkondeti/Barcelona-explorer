@@ -18,6 +18,9 @@ public:
     virtual void NativeDestruct() override;
     UFUNCTION() void RebuildScreen(EExplorerScreen Screen);
     void Refresh();
+    UWidget* GetFocusTarget() const;
+    virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& Geometry, const FPointerEvent& Event) override;
+    virtual FReply NativeOnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
 private:
     UPROPERTY() TObjectPtr<UVerticalBox> Panel;
     UPROPERTY() TObjectPtr<class UBorder> RootBorder;
@@ -25,6 +28,8 @@ private:
     UPROPERTY() TObjectPtr<UTextBlock> Status;
     UPROPERTY() TObjectPtr<UEditableTextBox> Query;
     UPROPERTY() TObjectPtr<UComboBoxString> Results;
+    UPROPERTY() TObjectPtr<class UButton> NextButton;
+    UPROPERTY() TObjectPtr<class UButton> FirstButton;
     UPROPERTY() TArray<FExplorerPlace> Matches;
     FVector2D SelectedPoint = FVector2D::ZeroVector;
     bool bSelected = false;
@@ -35,6 +40,9 @@ private:
     UFUNCTION() void ExploreMode();
     UFUNCTION() void ChooseCity();
     UFUNCTION() void Search();
+    UFUNCTION() void QueryCommitted(const FText& Text, ETextCommit::Type Method);
+    UFUNCTION() void QueryChanged(const FText& Text);
+    UFUNCTION() void ResultChanged(FString Value, ESelectInfo::Type Method);
     UFUNCTION() void ReceiveResults(const TArray<FExplorerPlace>& Values);
     UFUNCTION() void ReceiveResolved(FExplorerPlace Place);
     UFUNCTION() void ReceiveError(FString Message);

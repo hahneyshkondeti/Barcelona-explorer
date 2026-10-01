@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
+#include "ExplorerSessionSubsystem.h"
 #include "ExplorerGameMode.generated.h"
 class UExplorerAppWidget;
 UCLASS()
@@ -21,8 +22,10 @@ public:
     UPROPERTY() TObjectPtr<UExplorerAppWidget> AppWidget;
 private:
     FTimerHandle SaveTimer;
+    TSharedPtr<class IInputProcessor> InputTrace;
     void Persist();
     void PauseOnFocusLoss();
+    UFUNCTION() void ConfigureScreenInput(EExplorerScreen Screen);
 };
 UCLASS()
 class CITYEXPLORER_API AExplorerGameMode : public AGameModeBase

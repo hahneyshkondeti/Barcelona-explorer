@@ -26,7 +26,8 @@ void UExplorerPlaceSearchSubsystem::Search(const FString& Query)
     Cancel(); const FString Clean = Query.TrimStartAndEnd(); const int32 Token = Generation;
     auto* Map = GetGameInstance()->GetSubsystem<UExplorerMapSubsystem>();
     if (Clean.Len() < 2) { OnResults.Broadcast({}); return; }
-    if (!HasGoogleKey()) { OnResults.Broadcast(Map->SearchOffline(Clean)); return; }
+    if (!Map->LoadCity()) { OnError.Broadcast(Map->GetLastError()); return; }
+    if (!HasGoogleKey()) { auto Results = Map->SearchOffline(Clean); UE_LOG(LogTemp, Display, TEXT("CityExplorer search offline count=%d"), Results.Num()); OnResults.Broadcast(Results); return; }
     auto Body = MakeShared<FJsonObject>(); Body->SetStringField(TEXT("input"), Clean); Body->SetStringField(TEXT("languageCode"), TEXT("en")); Body->SetStringField(TEXT("regionCode"), TEXT("es"));
     auto Low = MakeShared<FJsonObject>(); Low->SetNumberField(TEXT("latitude"), 41.3170354); Low->SetNumberField(TEXT("longitude"), 2.0524977);
     auto High = MakeShared<FJsonObject>(); High->SetNumberField(TEXT("latitude"), 41.4679135); High->SetNumberField(TEXT("longitude"), 2.2283555);

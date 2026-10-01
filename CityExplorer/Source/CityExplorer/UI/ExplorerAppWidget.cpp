@@ -15,6 +15,8 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "TimerManager.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 UExplorerSessionSubsystem* UExplorerAppWidget::Session() const { return GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>(); }
 TSharedRef<SWidget> UExplorerAppWidget::RebuildWidget()
 {
@@ -27,7 +29,7 @@ void UExplorerAppWidget::NativeConstruct()
     Service->OnResults.AddDynamic(this, &UExplorerAppWidget::ReceiveResults);
     Service->OnResolved.AddDynamic(this, &UExplorerAppWidget::ReceiveResolved);
     Service->OnError.AddDynamic(this, &UExplorerAppWidget::ReceiveError);
-    RebuildScreen(Session()->Screen); GetWorld()->GetTimerManager().SetTimer(RefreshTimer, this, &UExplorerAppWidget::Refresh, 0.1, true);
+    GetWorld()->GetTimerManager().SetTimer(RefreshTimer, this, &UExplorerAppWidget::Refresh, 0.1, true);
 }
 void UExplorerAppWidget::NativeDestruct()
 {
@@ -44,7 +46,8 @@ UTextBlock* UExplorerAppWidget::Text(const FString& Value, int32 Size)
 UButton* UExplorerAppWidget::Button(const FString& Value)
 {
     auto* B = WidgetTree->ConstructWidget<UButton>(); auto* T = WidgetTree->ConstructWidget<UTextBlock>(); T->SetText(FText::FromString(Value));
-    auto Font = T->GetFont(); Font.Size = 20; T->SetFont(Font); B->AddChild(T); Panel->AddChild(B); return B;
+    auto Font = T->GetFont(); Font.Size = 20; T->SetFont(Font); T->SetVisibility(ESlateVisibility::HitTestInvisible); B->SetVisibility(ESlateVisibility::Visible); B->SetIsEnabled(true);
+    B->AddChild(T); Panel->AddChild(B); if (!FirstButton) FirstButton = B; return B;
 }
 void UExplorerAppWidget::RebuildScreen(EExplorerScreen Screen)
 {
@@ -57,7 +60,8 @@ void UExplorerAppWidget::RebuildScreen(EExplorerScreen Screen)
     Panel->ClearChildren(); auto* Slot = RootSlot.Get();
     Slot->SetAutoSize(true); Slot->SetAnchors(FAnchors(0.5, 0.5)); Slot->SetAlignment(FVector2D(0.5, 0.5)); Slot->SetPosition(FVector2D::ZeroVector);
     RootBorder->SetPadding(FMargin(28)); RootBorder->SetBrushColor(Session()->Preferences->Theme == TEXT("light") ? FLinearColor(0.93, 0.94, 0.95, 0.95) : FLinearColor(0.025, 0.035, 0.05, 0.95));
-    Status = nullptr; Query = nullptr; Results = nullptr;
+    Status = nullptr; Query = nullptr; Results = nullptr; NextButton = nullptr; FirstButton = nullptr;
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI screen=%d"), int32(Screen));
     // Dynamic delegates require literal member functions; the following calls keep bindings explicit.
     switch (Screen)
     {
@@ -69,10 +73,10 @@ void UExplorerAppWidget::RebuildScreen(EExplorerScreen Screen)
         Button(TEXT("Back"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::Home); break;
     case EExplorerScreen::Location:
         Text(TEXT("Where would you like to begin?"), 28); Text(TEXT("Search recorded Barcelona places and addresses"));
-        Query = WidgetTree->ConstructWidget<UEditableTextBox>(); Query->SetHintText(FText::FromString(TEXT("Address, landmark, hotel or restaurant"))); Panel->AddChild(Query);
+        Query = WidgetTree->ConstructWidget<UEditableTextBox>(); Query->SetHintText(FText::FromString(TEXT("Address, landmark, hotel or restaurant"))); Query->SetForegroundColor(FLinearColor::Black); Query->OnTextCommitted.AddDynamic(this, &UExplorerAppWidget::QueryCommitted); Query->OnTextChanged.AddDynamic(this, &UExplorerAppWidget::QueryChanged); Panel->AddChild(Query);
         Button(TEXT("Search"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::Search);
-        Results = WidgetTree->ConstructWidget<UComboBoxString>(); Panel->AddChild(Results);
-        Button(TEXT("Choose selected location"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::ChoosePlace);
+        Results = WidgetTree->ConstructWidget<UComboBoxString>(); Results->OnSelectionChanged.AddDynamic(this, &UExplorerAppWidget::ResultChanged); Panel->AddChild(Results);
+        NextButton = Button(TEXT("Next")); NextButton->OnClicked.AddDynamic(this, &UExplorerAppWidget::ChoosePlace); NextButton->SetIsEnabled(false); bSelected = false; Matches.Reset();
         Status = Text(TEXT("Offline city data · © OpenStreetMap contributors"), 16);
         Button(TEXT("Back"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::ExploreMode); break;
     case EExplorerScreen::Vehicle:
@@ -103,11 +107,15 @@ void UExplorerAppWidget::Refresh()
     if (Session()->Screen == EExplorerScreen::Exploring && Status)
         if (auto* Car = Cast<AExplorerVehicle>(GetOwningPlayerPawn())) Status->SetText(FText::FromString(FString::Printf(TEXT("%.0f km/h"), FMath::Abs(Car->DrivePhysics->GetForwardSpeed()) * 0.036)));
 }
-void UExplorerAppWidget::ExploreMode() { Session()->SetScreen(EExplorerScreen::City); }
+void UExplorerAppWidget::ExploreMode() { UE_LOG(LogTemp, Display, TEXT("CityExplorer UI Explore clicked")); Session()->SetScreen(EExplorerScreen::City); }
 void UExplorerAppWidget::ChooseCity() { Session()->SetScreen(EExplorerScreen::Location); }
 void UExplorerAppWidget::Search()
 {
-    if (!Query || !Results) return; Results->ClearOptions();
+    if (!Query || !Results) return;
+    const FString Clean = Query->GetText().ToString().TrimStartAndEnd();
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI search submitted length=%d"), Clean.Len());
+    if (Clean.Len() < 2) { Status->SetText(FText::FromString(TEXT("Enter at least two characters."))); Query->SetUserFocus(GetOwningPlayer()); return; }
+    Results->ClearOptions(); Matches.Reset(); NextButton->SetIsEnabled(false); bSelected = false;
     Status->SetText(FText::FromString(TEXT("Searching...")));
     GetGameInstance()->GetSubsystem<UExplorerPlaceSearchSubsystem>()->Search(Query->GetText().ToString());
 }
@@ -116,20 +124,25 @@ void UExplorerAppWidget::ReceiveResults(const TArray<FExplorerPlace>& Values)
     if (!Results || !Status || Session()->Screen != EExplorerScreen::Location) return;
     Results->ClearOptions(); Matches = Values;
     for (int32 I = 0; I < Matches.Num(); ++I) Results->AddOption(FString::Printf(TEXT("%d · %s"), I + 1, *Matches[I].Name));
-    if (!Matches.IsEmpty()) Results->SetSelectedIndex(0);
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI results displayed count=%d"), Matches.Num());
     Status->SetText(FText::FromString(Matches.IsEmpty() ? TEXT("No recorded matches. Refine your search.") : TEXT("Choose a match from the list.")));
 }
 void UExplorerAppWidget::ChoosePlace()
 {
-    if (!Results) return; const int32 Index = Results->GetSelectedIndex(); if (!Matches.IsValidIndex(Index)) return;
+    if (!Results) return; const int32 Index = Results->GetSelectedIndex();
+    if (!Matches.IsValidIndex(Index)) { if (Status) Status->SetText(FText::FromString(TEXT("Select a search result first."))); return; }
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI resolving selected index=%d"), Index); NextButton->SetIsEnabled(false);
     GetGameInstance()->GetSubsystem<UExplorerPlaceSearchSubsystem>()->Resolve(Matches[Index]);
 }
 void UExplorerAppWidget::ReceiveResolved(FExplorerPlace Place)
 {
     if (Session()->Screen != EExplorerScreen::Location || !Status) return;
     FVector P; FRotator R; auto* Map = GetGameInstance()->GetSubsystem<UExplorerMapSubsystem>();
-    if (!Map->SafeSpawn(Place.Point, P, R)) { Status->SetText(FText::FromString(TEXT("Unable to start here. Choose another location."))); return; }
-    SelectedPoint = Place.Point; bSelected = true; Session()->SetScreen(EExplorerScreen::Vehicle);
+    if (!Map->SafeSpawn(Place.Point, P, R)) { NextButton->SetIsEnabled(true); Status->SetText(FText::FromString(TEXT("Unable to start here. Choose another location."))); return; }
+    SelectedPoint = Place.Point; bSelected = true;
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI selected location stored; safe spawn validated"));
+    if (FParse::Param(FCommandLine::Get(), TEXT("CityExplorerInputTrace"))) UE_LOG(LogTemp, Display, TEXT("CityExplorer UI selected point=%s"), *SelectedPoint.ToString());
+    Session()->SetScreen(EExplorerScreen::Vehicle);
 }
 void UExplorerAppWidget::StartDriving()
 {
@@ -154,4 +167,29 @@ void UExplorerAppWidget::ToggleTheme()
 void UExplorerAppWidget::ReceiveError(FString Message)
 {
     if (Status) Status->SetText(FText::FromString(Message));
+}
+
+UWidget* UExplorerAppWidget::GetFocusTarget() const { return Query ? static_cast<UWidget*>(Query) : static_cast<UWidget*>(FirstButton); }
+void UExplorerAppWidget::QueryCommitted(const FText&, ETextCommit::Type Method) { if (Method == ETextCommit::OnEnter) Search(); }
+void UExplorerAppWidget::QueryChanged(const FText&)
+{
+    if (NextButton) NextButton->SetIsEnabled(false);
+    bSelected = false; Matches.Reset(); if (Results) Results->ClearOptions();
+    GetGameInstance()->GetSubsystem<UExplorerPlaceSearchSubsystem>()->InvalidateSearch();
+}
+void UExplorerAppWidget::ResultChanged(FString, ESelectInfo::Type)
+{
+    const bool Valid = Results && Matches.IsValidIndex(Results->GetSelectedIndex());
+    if (NextButton) NextButton->SetIsEnabled(Valid);
+    UE_LOG(LogTemp, Display, TEXT("CityExplorer UI result selected index=%d next=%d"), Results ? Results->GetSelectedIndex() : INDEX_NONE, Valid);
+}
+FReply UExplorerAppWidget::NativeOnPreviewMouseButtonDown(const FGeometry& Geometry, const FPointerEvent& Event)
+{
+    if (FParse::Param(FCommandLine::Get(), TEXT("CityExplorerInputTrace"))) UE_LOG(LogTemp, Display, TEXT("CityExplorer UI pointer screen=%s local=%s"), *Event.GetScreenSpacePosition().ToString(), *Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition()).ToString());
+    return Super::NativeOnPreviewMouseButtonDown(Geometry, Event);
+}
+FReply UExplorerAppWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
+{
+    if ((Event.GetKey() == EKeys::Escape || Event.GetKey() == EKeys::P) && (Session()->Screen == EExplorerScreen::Paused || Session()->Screen == EExplorerScreen::Settings)) { Pause(); return FReply::Handled(); }
+    return Super::NativeOnKeyDown(Geometry, Event);
 }
