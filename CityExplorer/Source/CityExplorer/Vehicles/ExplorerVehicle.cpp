@@ -3,7 +3,7 @@
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
-#include "ExplorerVehicleAnimation.h"
+#include "Animation/AnimInstance.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
@@ -60,7 +60,8 @@ AExplorerVehicle::AExplorerVehicle(const FObjectInitializer& ObjectInitializer)
     Chassis = GetMesh(); DrivePhysics = CastChecked<UExplorerVehicleMovement>(GetVehicleMovementComponent());
     static ConstructorHelpers::FObjectFinder<USkeletalMesh> CarMesh(TEXT("/Game/CityExplorer/Vehicles/TouringCar/TouringCarRigged/SkeletalMeshes/SK_TouringCar.SK_TouringCar"));
     if (CarMesh.Succeeded()) Chassis->SetSkeletalMesh(CarMesh.Object);
-    Chassis->SetAnimInstanceClass(UExplorerVehicleAnimation::StaticClass());
+    static ConstructorHelpers::FClassFinder<UAnimInstance> CarAnimation(TEXT("/Game/CityExplorer/Vehicles/ABP_TouringCar"));
+    if (CarAnimation.Succeeded()) Chassis->SetAnimInstanceClass(CarAnimation.Class);
     Chassis->SetSimulatePhysics(true); Chassis->SetEnableGravity(true); Chassis->SetUseCCD(true);
     CameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ChaseArm")); CameraArm->SetupAttachment(Chassis);
     CameraArm->TargetArmLength = 850; CameraArm->SetRelativeLocation(FVector(0, 0, 170)); CameraArm->SetRelativeRotation(FRotator(-15, 0, 0));

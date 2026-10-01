@@ -9,5 +9,6 @@ public class CityExplorer : ModuleRules
             "UMG", "HTTP", "Json", "JsonUtilities", "DeveloperSettings", "ProceduralMeshComponent", "GeometryCore", "ChaosVehicles", "PhysicsCore", "AnimGraphRuntime"
         });
         PrivateDependencyModuleNames.AddRange(new[] { "Slate", "SlateCore" });
+        if (Target.bBuildEditor) PrivateDependencyModuleNames.AddRange(new[] { "UnrealEd", "Kismet", "AnimGraph", "BlueprintGraph", "ChaosVehiclesEditor" });
     }
 }

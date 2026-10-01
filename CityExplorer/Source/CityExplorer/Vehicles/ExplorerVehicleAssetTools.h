@@ -10,4 +10,6 @@ class CITYEXPLORER_API UExplorerVehicleAssetTools : public UBlueprintFunctionLib
 public:
     UFUNCTION(BlueprintCallable, Category="CityExplorer|Editor")
     static bool ConfigureChassis(UPhysicsAsset* Asset);
+    UFUNCTION(BlueprintCallable, Category="CityExplorer|Editor")
+    static class UBlueprint* CreateWheelAnimation(class USkeleton* Skeleton);
 };

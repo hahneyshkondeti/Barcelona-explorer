@@ -1,6 +1,6 @@
 # Chaos vehicle milestone
 
-The prototype transform-driven pawn is replaced by AWheeledVehiclePawn with ChaosWheeledVehicleMovementComponent. The existing touring-car geometry is preserved, exported as a five-bone rig, and imported with its original materials. A single chassis box provides collision; wheels use the standard Chaos suspension, tire, drivetrain, ABS and traction-control simulation. The native vehicle animation graph uses Unreal's WheelController for suspension, rotation and steering.
+The prototype transform-driven pawn is replaced by AWheeledVehiclePawn with ChaosWheeledVehicleMovementComponent. The existing touring-car geometry is preserved, exported as a five-bone rig, and imported with its original materials. A single chassis box provides collision; wheels use the standard Chaos suspension, tire, drivetrain, ABS and traction-control simulation. A compiled vehicle Animation Blueprint uses Unreal's WheelController for suspension, rotation and steering. A temporary native graph passed editor checks but failed cooked initialization; it has been removed.
 
 ## Automated runtime evidence (UE 5.8.3, arm64, Xcode 27)
 
@@ -10,8 +10,8 @@ The core offline-map, terrain, directed-route and historical handling tests also
 
 ## Remaining validation
 
-Visible wheel animation, mouse and keyboard menu flow, sustained driving, curb/building collision, camera clearance, frame timing and packaged launch still require checks. A locked Mac prevented the latest visible inspection. Passing this short simulation is not proof of production driving quality. Roads, world materials and lighting remain at the migration baseline and need the subsequent quality phases.
+The signed staged arm64 development application passed the same physics probe outside Unreal Editor. Visible wheel animation, mouse and keyboard menu flow, sustained driving, curb/building collision, camera clearance and frame timing still require checks. A locked Mac prevented the latest visible inspection. Passing this short simulation is not proof of production driving quality. Roads, world materials and lighting remain at the migration baseline and need the subsequent quality phases.
 
 ## Rebuilding the imported vehicle
 
-`Tools/export_rigged_touring_car.gd` exports the preserved Godot touring-car geometry without altering the original Godot checkout. `Tools/import_touring_car.py` imports the rig. After an import, run `Tools/configure_vehicle_physics.py` in Unreal's Python commandlet to replace automatically generated multi-body collision with the intended chassis body. Import and configure scripts save the assets; runtime does not rewrite collision assets.
+`Tools/export_rigged_touring_car.gd` exports the preserved Godot touring-car geometry without altering the original Godot checkout. `Tools/import_touring_car.py` imports the rig. After an import, run `Tools/configure_vehicle_physics.py` in Unreal's Python commandlet to replace automatically generated multi-body collision with the intended chassis body. Run `Tools/create_vehicle_animation.py` once to create the standard compiled Animation Blueprint. Import and configure scripts save the assets; runtime does not rewrite collision assets.
