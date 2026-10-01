@@ -37,9 +37,10 @@ for name, keys in [('Gas', ['W', 'Up']), ('Brake', ['S', 'Down', 'SpaceBar']), (
         context.map_key(actions[name], input_key)
 mapping_data = context.get_editor_property('default_key_mappings')
 mappings = mapping_data.get_editor_property('mappings')
-for mapping in mappings:
-    if mapping.get_editor_property('key').get_editor_property('key_name') in ['A', 'Left']:
+for index, mapping in enumerate(mappings):
+    if str(mapping.get_editor_property('key').get_editor_property('key_name')) in ['A', 'Left']:
         mapping.set_editor_property('modifiers', [unreal.InputModifierNegate(outer=context)])
+        mappings[index] = mapping
 mapping_data.set_editor_property('mappings', mappings)
 context.set_editor_property('default_key_mappings', mapping_data)
 car = blueprint('BP_TouringCar', '/Script/CityExplorer.ExplorerVehicle', 'Vehicles')
