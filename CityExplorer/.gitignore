@@ -8,3 +8,6 @@ DerivedDataCache/
 
 Content/CityExplorer/Data/Offline/
 Tools/__pycache__/
+
+Build/Mac/*.PackageVersionCounter
+Build/Mac/FileOpenOrder/
