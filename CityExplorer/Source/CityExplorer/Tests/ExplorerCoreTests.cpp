@@ -66,4 +66,21 @@ bool FExplorerMapTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Recorded address query returns results"), Map->SearchOffline(TEXT("Carrer Gretel Ammann Martinez 12")).Num() > 0);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FExplorerDirectedRouteTest, "CityExplorer.Core.DirectedRoute", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FExplorerDirectedRouteTest::RunTest(const FString& Parameters)
+{
+    TArray<FExplorerRoad> Roads;
+    auto Add = [&](FString AId, FString BId, FVector2D A, FVector2D B) { FExplorerRoad R; R.AId = AId; R.BId = BId; R.A = A; R.B = B; R.OneWay = 1; Roads.Add(R); };
+    Add(TEXT("a"), TEXT("b"), {0, 0}, {10, 0});
+    FExplorerRoadHit S, F; S.Road = F.Road = 0; S.Point = {2, 0}; F.Point = {8, 0};
+    FExplorerRoadGraph Graph; Graph.Build(Roads);
+    TestEqual(TEXT("Allowed partial edge routes directly"), Graph.Route(Roads, S, F).Num(), 2);
+    Swap(S.Point, F.Point);
+    TestTrue(TEXT("Forbidden reverse direction is unreachable"), Graph.Route(Roads, S, F).IsEmpty());
+    Add(TEXT("b"), TEXT("c"), {10, 0}, {10, 10}); Add(TEXT("c"), TEXT("a"), {10, 10}, {0, 0}); Graph.Build(Roads);
+    const auto Detour = Graph.Route(Roads, S, F);
+    TestTrue(TEXT("Reverse partial edge takes permitted directed loop"), Detour.Num() >= 5);
+    if (!Detour.IsEmpty()) { TestEqual(TEXT("Detour starts at partial edge"), Detour[0], S.Point); TestEqual(TEXT("Detour ends at partial edge"), Detour.Last(), F.Point); }
+    return true;
+}
 #endif

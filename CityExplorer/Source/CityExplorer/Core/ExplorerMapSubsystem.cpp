@@ -47,6 +47,7 @@ bool UExplorerMapSubsystem::LoadCity()
     {
         auto R = Value->AsObject(); if (!R->GetBoolField(TEXT("routable"))) continue;
         FExplorerRoad Road; Road.Id = R->GetStringField(TEXT("id")); Road.Name = R->GetStringField(TEXT("name"));
+        Road.AId = R->GetStringField(TEXT("a_id")); Road.BId = R->GetStringField(TEXT("b_id"));
         Road.A = Point(R->GetArrayField(TEXT("a"))); Road.B = Point(R->GetArrayField(TEXT("b")));
         Road.Width = R->GetNumberField(TEXT("width")); Road.OneWay = R->GetIntegerField(TEXT("oneway"));
         const int32 Index = Roads.Add(Road);
@@ -70,6 +71,7 @@ bool UExplorerMapSubsystem::LoadCity()
         auto& List = Dependencies.FindOrAdd(CellKey(FString(Pair.Key)));
         for (const auto& Value : Pair.Value->AsArray()) List.Add(CellKey(Value->AsString()));
     }
+    Graph.Build(Roads);
     AddressIndex = ReadJson(FPaths::Combine(DataRoot, TEXT("city/address_index.json")));
     bReady = Roads.Num() > 0 && AddressIndex.IsValid();
     if (!bReady) LastError = TEXT("Incomplete road or address index");

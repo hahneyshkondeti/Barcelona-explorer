@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "ExplorerTerrain.h"
+#include "ExplorerRoadGraph.h"
 #include "ExplorerMapSubsystem.generated.h"
 
 USTRUCT(BlueprintType)
@@ -16,7 +17,7 @@ struct FExplorerPlace
 };
 struct FExplorerRoad
 {
-    FString Id, Name;
+    FString Id, Name, AId, BId;
     FVector2D A, B;
     double Width = 0;
     int32 OneWay = 0;
@@ -41,6 +42,7 @@ public:
     UFUNCTION(BlueprintPure) FString GetLastError() const { return LastError; }
     UFUNCTION(BlueprintCallable) TArray<FExplorerPlace> SearchOffline(const FString& Query, int32 Limit = 20);
     UFUNCTION(BlueprintCallable) bool SafeSpawn(FVector2D Point, FVector& OutPosition, FRotator& OutRotation) const;
+    TArray<FVector2D> Route(FVector2D From, FVector2D To) const { return Graph.Route(Roads, NearestRoad(From), NearestRoad(To)); }
     FExplorerRoadHit NearestRoad(FVector2D Point) const;
     TSet<FIntPoint> RequiredTiles(FVector2D Point, int32 Radius = 2) const;
     TSharedPtr<FJsonObject> LoadTile(FIntPoint Cell) const;
@@ -56,6 +58,7 @@ private:
     bool bReady = false;
     FString LastError, DataRoot;
     FExplorerTerrain Terrain;
+    FExplorerRoadGraph Graph;
     FVector2D Start, OriginLonLat, BoundsMin, BoundsMax;
     TArray<FExplorerRoad> Roads;
     TArray<FExplorerPlace> Places;
