@@ -101,7 +101,7 @@ void UExplorerAppWidget::RebuildScreen(EExplorerScreen Screen)
 void UExplorerAppWidget::Refresh()
 {
     if (Session()->Screen == EExplorerScreen::Exploring && Status)
-        if (auto* Car = Cast<AExplorerVehicle>(GetOwningPlayerPawn())) Status->SetText(FText::FromString(FString::Printf(TEXT("%.0f km/h"), FMath::Abs(Car->Movement->Handling.Speed) * 3.6)));
+        if (auto* Car = Cast<AExplorerVehicle>(GetOwningPlayerPawn())) Status->SetText(FText::FromString(FString::Printf(TEXT("%.0f km/h"), FMath::Abs(Car->DrivePhysics->GetForwardSpeed()) * 0.036)));
 }
 void UExplorerAppWidget::ExploreMode() { Session()->SetScreen(EExplorerScreen::City); }
 void UExplorerAppWidget::ChooseCity() { Session()->SetScreen(EExplorerScreen::Location); }

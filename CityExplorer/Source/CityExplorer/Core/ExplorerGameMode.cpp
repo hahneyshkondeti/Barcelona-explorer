@@ -9,6 +9,9 @@
 #include "Engine/Engine.h"
 #include "Misc/CoreDelegates.h"
 #include "TimerManager.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#include "../Tests/ExplorerPhysicsProbe.h"
 #include "Components/InputComponent.h"
 #include "UObject/ConstructorHelpers.h"
 AExplorerGameMode::AExplorerGameMode()
@@ -28,7 +31,10 @@ void AExplorerGameMode::StartPlay()
     if (auto* PC = GetWorld()->GetFirstPlayerController()) if (auto* Car = Cast<AExplorerVehicle>(PC->GetPawn()))
     {
         Car->Recover(Map->GetStart()); GetWorld()->GetSubsystem<UExplorerWorldSubsystem>()->StreamAt(Car->GetActorLocation(), true);
-        Car->Movement->SetComponentTickEnabled(false);
+        PC->SetPause(true);
+#if WITH_DEV_AUTOMATION_TESTS
+        if (FParse::Param(FCommandLine::Get(), TEXT("CityExplorerPhysicsProbe"))) GetWorld()->SpawnActor<AExplorerPhysicsProbe>();
+#endif
     }
 }
 void AExplorerPlayerController::BeginPlay()
@@ -50,7 +56,7 @@ void AExplorerPlayerController::SetupInputComponent()
 }
 void AExplorerPlayerController::ShowHome()
 {
-    if (auto* Car = Cast<AExplorerVehicle>(GetPawn())) { Car->Movement->ClearInput(); Car->Movement->SetComponentTickEnabled(false); }
+    if (auto* Car = Cast<AExplorerVehicle>(GetPawn())) { Car->DrivePhysics->ClearInput(); SetPause(true); }
     GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->SetScreen(EExplorerScreen::Home);
     bShowMouseCursor = true; SetInputMode(FInputModeUIOnly());
 }
@@ -58,7 +64,7 @@ bool AExplorerPlayerController::BeginExplore(FVector2D Point)
 {
     auto* Car = Cast<AExplorerVehicle>(GetPawn()); if (!Car || !Car->Recover(Point)) return false;
     GetWorld()->GetSubsystem<UExplorerWorldSubsystem>()->StreamAt(Car->GetActorLocation(), true);
-    Car->Movement->SetComponentTickEnabled(true);
+    SetPause(false);
     GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->SetScreen(EExplorerScreen::Exploring);
     bShowMouseCursor = true; FInputModeGameAndUI Mode; Mode.SetHideCursorDuringCapture(false); SetInputMode(Mode); Persist(); return true;
 }
@@ -67,12 +73,12 @@ void AExplorerPlayerController::TogglePause()
     auto* Session = GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>(); auto* Car = Cast<AExplorerVehicle>(GetPawn()); if (!Car) return;
     if (Session->Screen == EExplorerScreen::Exploring)
     {
-        Car->Movement->ClearInput(); Car->Movement->SetComponentTickEnabled(false); Persist();
+        Car->DrivePhysics->ClearInput(); SetPause(true); Persist();
         Session->SetScreen(EExplorerScreen::Paused); bShowMouseCursor = true; SetInputMode(FInputModeGameAndUI());
     }
     else if (Session->Screen == EExplorerScreen::Paused || Session->Screen == EExplorerScreen::Settings)
     {
-        Car->Movement->SetComponentTickEnabled(true); Session->SetScreen(EExplorerScreen::Exploring); bShowMouseCursor = true; FInputModeGameAndUI Mode; Mode.SetHideCursorDuringCapture(false); SetInputMode(Mode);
+        SetPause(false); Session->SetScreen(EExplorerScreen::Exploring); bShowMouseCursor = true; FInputModeGameAndUI Mode; Mode.SetHideCursorDuringCapture(false); SetInputMode(Mode);
     }
 }
 void AExplorerPlayerController::Persist()
