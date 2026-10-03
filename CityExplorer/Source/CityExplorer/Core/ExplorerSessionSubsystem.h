@@ -35,5 +35,6 @@ public:
     UPROPERTY(BlueprintAssignable) FExplorerScreenChanged OnScreenChanged;
     UFUNCTION(BlueprintCallable) void SetScreen(EExplorerScreen Value);
     UFUNCTION(BlueprintCallable) bool SavePreferences();
+    void ApplyAudioPreference();
     UFUNCTION(BlueprintCallable) bool RecordSafePosition(FVector Position, FRotator Heading);
 };

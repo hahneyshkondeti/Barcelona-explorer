@@ -18,13 +18,24 @@
 #include "Framework/Application/SlateApplication.h"
 #include "Framework/Application/IInputProcessor.h"
 #include "Layout/WidgetPath.h"
+#include "Widgets/SWindow.h"
 namespace {
 class FExplorerInputTrace : public IInputProcessor
 {
 public:
     virtual void Tick(float, FSlateApplication&, TSharedRef<ICursor>) override {}
+    virtual bool HandleKeyDownEvent(FSlateApplication& App, const FKeyEvent& Event) override
+    {
+        if (Event.GetKey() == EKeys::Tab || Event.GetKey() == EKeys::Enter || Event.GetKey() == EKeys::Down || Event.GetKey() == EKeys::Escape)
+        {
+            auto Focus = App.GetKeyboardFocusedWidget();
+            if (Focus) UE_LOG(LogTemp, Display, TEXT("CityExplorer focus key=%s widget=%s origin=%s size=%s"), *Event.GetKey().ToString(), *Focus->GetTypeAsString(), *Focus->GetCachedGeometry().GetAbsolutePosition().ToString(), *Focus->GetCachedGeometry().GetLocalSize().ToString());
+        }
+        return false;
+    }
     virtual bool HandleMouseButtonDownEvent(FSlateApplication& App, const FPointerEvent& Event) override
     {
+        for (auto Window : App.GetInteractiveTopLevelWindows()) UE_LOG(LogTemp, Display, TEXT("CityExplorer window origin=%s size=%s dpi=%.2f"), *Window->GetPositionInScreen().ToString(), *Window->GetSizeInScreen().ToString(), Window->GetDPIScaleFactor());
         const auto Path = App.LocateWindowUnderMouse(Event.GetScreenSpacePosition(), App.GetInteractiveTopLevelWindows());
         FString Types; for (int32 I = 0; I < Path.Widgets.Num(); ++I) Types += Path.Widgets[I].Widget->GetTypeAsString() + TEXT("/");
         UE_LOG(LogTemp, Display, TEXT("CityExplorer Slate mouse down position=%s path=%s"), *Event.GetScreenSpacePosition().ToString(), *Types); return false;
@@ -62,6 +73,7 @@ void AExplorerPlayerController::BeginPlay()
     AppWidget->AddToViewport();
     GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->OnScreenChanged.AddDynamic(this, &AExplorerPlayerController::ConfigureScreenInput); ShowHome();
     GEngine->SetMaxFPS(GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->Preferences->FrameCap);
+    GetGameInstance()->GetSubsystem<UExplorerSessionSubsystem>()->ApplyAudioPreference();
     FCoreDelegates::ApplicationWillDeactivateDelegate.AddUObject(this, &AExplorerPlayerController::PauseOnFocusLoss);
     GetWorldTimerManager().SetTimer(SaveTimer, this, &AExplorerPlayerController::Persist, 3, true);
 }

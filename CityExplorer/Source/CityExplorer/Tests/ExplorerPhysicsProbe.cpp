@@ -7,6 +7,9 @@
 #include "Engine/GameInstance.h"
 #include "HAL/PlatformTime.h"
 #include "Misc/CoreDelegates.h"
+#include "InputMappingContext.h"
+#include "InputModifiers.h"
+#include "EnhancedPlayerInput.h"
 AExplorerPhysicsProbe::AExplorerPhysicsProbe()
 {
     PrimaryActorTick.bCanEverTick = true; PrimaryActorTick.bTickEvenWhenPaused = true;
@@ -25,6 +28,20 @@ void AExplorerPhysicsProbe::BeginPlay()
     auto* Map = GetGameInstance()->GetSubsystem<UExplorerMapSubsystem>();
     if (!Car || !Controller->BeginExplore(Map->GetStart())) { Fail(TEXT("startup or safe spawn")); return; }
     FCoreDelegates::ApplicationWillDeactivateDelegate.RemoveAll(Controller); // Headless test has no foreground window.
+    int32 SteeringMappings = 0;
+    if (!Car->DriveContext || !Car->SteerAction) { Fail(TEXT("cooked driving input assets missing")); return; }
+    for (const auto& Mapping : Car->DriveContext->GetMappings())
+    {
+        if (Mapping.Action != Car->SteerAction) continue;
+        FInputActionValue Value(1.f);
+        for (const auto& Modifier : Mapping.Modifiers) if (Modifier) Value = Modifier->ModifyRaw(Cast<UEnhancedPlayerInput>(Controller->PlayerInput), Value, 1.f / 60.f);
+        const bool Left = Mapping.Key == EKeys::Left || Mapping.Key == EKeys::A;
+        const bool Right = Mapping.Key == EKeys::Right || Mapping.Key == EKeys::D;
+        if (!Left && !Right) continue;
+        if ((Left && Value.Get<float>() >= 0) || (Right && Value.Get<float>() <= 0)) { Fail(TEXT("cooked steering key direction")); return; }
+        UE_LOG(LogTemp, Display, TEXT("Physics input mapping: %s=%.1f"), *Mapping.Key.ToString(), Value.Get<float>()); ++SteeringMappings;
+    }
+    if (SteeringMappings != 4) { Fail(TEXT("missing steering key mappings")); return; }
     StageStart = FPlatformTime::Seconds(); Car->DrivePhysics->SetHandbrakeInput(true);
 }
 void AExplorerPhysicsProbe::Tick(float Delta)
@@ -57,7 +74,14 @@ void AExplorerPhysicsProbe::Tick(float Delta)
     }
     else if (Stage == 3 && Elapsed > 1)
     {
-        if (Car->DrivePhysics->Wheels.Num() < 4 || FMath::Abs(Car->DrivePhysics->Wheels[0]->GetSteerAngle()) < 5) { Fail(TEXT("front wheel steering")); return; }
+        if (Car->DrivePhysics->Wheels.Num() < 4 || Car->DrivePhysics->Wheels[0]->GetSteerAngle() < 5) { Fail(TEXT("front wheel steering")); return; }
+        UE_LOG(LogTemp, Display, TEXT("Physics probe: right steering angle=%.1f"), Car->DrivePhysics->Wheels[0]->GetSteerAngle());
+        Car->DrivePhysics->SetSteeringInput(-0.5); Stage = 5; StageStart = FPlatformTime::Seconds();
+    }
+    else if (Stage == 5 && Elapsed > 1)
+    {
+        if (Car->DrivePhysics->Wheels[0]->GetSteerAngle() > -5) { Fail(TEXT("left wheel steering direction")); return; }
+        UE_LOG(LogTemp, Display, TEXT("Physics probe: left steering angle=%.1f"), Car->DrivePhysics->Wheels[0]->GetSteerAngle());
         Controller->TogglePause(); PausePosition = Car->GetActorLocation(); Stage = 4; StageStart = FPlatformTime::Seconds();
     }
     else if (Stage == 4 && Elapsed > 0.5)

@@ -42,6 +42,7 @@ private:
     UFUNCTION() void Search();
     UFUNCTION() void QueryCommitted(const FText& Text, ETextCommit::Type Method);
     UFUNCTION() void QueryChanged(const FText& Text);
+    UFUNCTION() UWidget* GenerateResultWidget(FString Item);
     UFUNCTION() void ResultChanged(FString Value, ESelectInfo::Type Method);
     UFUNCTION() void ReceiveResults(const TArray<FExplorerPlace>& Values);
     UFUNCTION() void ReceiveResolved(FExplorerPlace Place);

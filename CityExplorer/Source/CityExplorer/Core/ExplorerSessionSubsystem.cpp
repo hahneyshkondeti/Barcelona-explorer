@@ -2,6 +2,8 @@
 #include "ExplorerMapSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/GameInstance.h"
+#include "Engine/World.h"
+#include "AudioDevice.h"
 namespace { const FString Slot = TEXT("CityExplorerUnrealJourney_v1"); }
 void UExplorerSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -33,4 +35,9 @@ bool UExplorerSessionSubsystem::RecordSafePosition(FVector Position, FRotator Ro
     if (!Map->SafeSpawn(Point, Safe, Heading)) return false;
     Preferences->SafePosition = Safe; Preferences->Heading = Rotation; Preferences->bHasJourney = true;
     return SavePreferences();
+}
+
+void UExplorerSessionSubsystem::ApplyAudioPreference()
+{
+    if (Preferences && GetWorld()) if (auto Audio = GetWorld()->GetAudioDevice()) Audio->SetTransientPrimaryVolume(Preferences->bMuted ? 0.f : 1.f);
 }

@@ -73,9 +73,9 @@ void UExplorerAppWidget::RebuildScreen(EExplorerScreen Screen)
         Button(TEXT("Back"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::Home); break;
     case EExplorerScreen::Location:
         Text(TEXT("Where would you like to begin?"), 28); Text(TEXT("Search recorded Barcelona places and addresses"));
-        Query = WidgetTree->ConstructWidget<UEditableTextBox>(); Query->SetHintText(FText::FromString(TEXT("Address, landmark, hotel or restaurant"))); Query->SetForegroundColor(FLinearColor::Black); Query->OnTextCommitted.AddDynamic(this, &UExplorerAppWidget::QueryCommitted); Query->OnTextChanged.AddDynamic(this, &UExplorerAppWidget::QueryChanged); Panel->AddChild(Query);
+        Query = WidgetTree->ConstructWidget<UEditableTextBox>(); Query->SetHintText(FText::FromString(TEXT("Address, landmark, hotel or restaurant"))); Query->SetForegroundColor(FLinearColor::Black); Query->SetClearKeyboardFocusOnCommit(false); Query->OnTextCommitted.AddDynamic(this, &UExplorerAppWidget::QueryCommitted); Query->OnTextChanged.AddDynamic(this, &UExplorerAppWidget::QueryChanged); Panel->AddChild(Query);
         Button(TEXT("Search"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::Search);
-        Results = WidgetTree->ConstructWidget<UComboBoxString>(); Results->OnSelectionChanged.AddDynamic(this, &UExplorerAppWidget::ResultChanged); Panel->AddChild(Results);
+        Results = WidgetTree->ConstructWidget<UComboBoxString>(); Results->OnGenerateWidgetEvent.BindDynamic(this, &UExplorerAppWidget::GenerateResultWidget); Results->SetContentPadding(FMargin(8, 8)); Results->SetEnableGamepadNavigationMode(false); Results->OnSelectionChanged.AddDynamic(this, &UExplorerAppWidget::ResultChanged); Panel->AddChild(Results);
         NextButton = Button(TEXT("Next")); NextButton->OnClicked.AddDynamic(this, &UExplorerAppWidget::ChoosePlace); NextButton->SetIsEnabled(false); bSelected = false; Matches.Reset();
         Status = Text(TEXT("Offline city data · © OpenStreetMap contributors"), 16);
         Button(TEXT("Back"))->OnClicked.AddDynamic(this, &UExplorerAppWidget::ExploreMode); break;
@@ -125,6 +125,7 @@ void UExplorerAppWidget::ReceiveResults(const TArray<FExplorerPlace>& Values)
     Results->ClearOptions(); Matches = Values;
     for (int32 I = 0; I < Matches.Num(); ++I) Results->AddOption(FString::Printf(TEXT("%d · %s"), I + 1, *Matches[I].Name));
     UE_LOG(LogTemp, Display, TEXT("CityExplorer UI results displayed count=%d"), Matches.Num());
+    if (!Matches.IsEmpty()) Results->SetUserFocus(GetOwningPlayer());
     Status->SetText(FText::FromString(Matches.IsEmpty() ? TEXT("No recorded matches. Refine your search.") : TEXT("Choose a match from the list.")));
 }
 void UExplorerAppWidget::ChoosePlace()
@@ -153,15 +154,15 @@ void UExplorerAppWidget::Home() { Cast<AExplorerPlayerController>(GetOwningPlaye
 void UExplorerAppWidget::Settings() { Session()->SetScreen(EExplorerScreen::Settings); }
 void UExplorerAppWidget::ChangeLocation() { Session()->SetScreen(EExplorerScreen::Location); }
 void UExplorerAppWidget::Recover() { Cast<AExplorerPlayerController>(GetOwningPlayer())->RecoverVehicle(); }
-void UExplorerAppWidget::ToggleSound() { auto* S = Session(); S->Preferences->bMuted = !S->Preferences->bMuted; S->SavePreferences(); }
+void UExplorerAppWidget::ToggleSound() { auto* S = Session(); S->Preferences->bMuted = !S->Preferences->bMuted; S->ApplyAudioPreference(); S->SavePreferences(); if (Status) Status->SetText(FText::FromString(S->Preferences->bMuted ? TEXT("Sound off") : TEXT("Sound on"))); }
 void UExplorerAppWidget::ToggleFrameCap()
 {
     auto* S = Session(); S->Preferences->FrameCap = S->Preferences->FrameCap == 30 ? 60 : 30;
-    if (GEngine) GEngine->SetMaxFPS(S->Preferences->FrameCap); S->SavePreferences();
+    if (GEngine) GEngine->SetMaxFPS(S->Preferences->FrameCap); S->SavePreferences(); if (Status) Status->SetText(FText::FromString(FString::Printf(TEXT("Frame limit: %d FPS"), S->Preferences->FrameCap)));
 }
 void UExplorerAppWidget::ToggleTheme()
 {
-    auto* S = Session(); S->Preferences->Theme = S->Preferences->Theme == TEXT("dark") ? TEXT("light") : TEXT("dark"); S->SavePreferences(); RebuildScreen(S->Screen);
+    auto* S = Session(); S->Preferences->Theme = S->Preferences->Theme == TEXT("dark") ? TEXT("light") : TEXT("dark"); S->SavePreferences(); RebuildScreen(S->Screen); if (auto* Focus = GetFocusTarget()) { Focus->TakeWidget(); Focus->SetUserFocus(GetOwningPlayer()); }
 }
 
 void UExplorerAppWidget::ReceiveError(FString Message)
@@ -181,6 +182,17 @@ void UExplorerAppWidget::ResultChanged(FString, ESelectInfo::Type)
 {
     const bool Valid = Results && Matches.IsValidIndex(Results->GetSelectedIndex());
     if (NextButton) NextButton->SetIsEnabled(Valid);
+    if (Valid)
+    {
+        // The combo's key reply restores focus while closing its popup. Move to
+        // Next after Slate finishes that reply, including while the world is paused.
+        const TWeakObjectPtr<UExplorerAppWidget> WeakThis(this);
+        TakeWidget()->RegisterActiveTimer(0.f, FWidgetActiveTimerDelegate::CreateLambda([WeakThis](double, float)
+        {
+            if (auto* Self = WeakThis.Get()) if (Self->NextButton && Self->Session()->Screen == EExplorerScreen::Location && Self->NextButton->GetIsEnabled()) Self->NextButton->SetUserFocus(Self->GetOwningPlayer());
+            return EActiveTimerReturnType::Stop;
+        }));
+    }
     UE_LOG(LogTemp, Display, TEXT("CityExplorer UI result selected index=%d next=%d"), Results ? Results->GetSelectedIndex() : INDEX_NONE, Valid);
 }
 FReply UExplorerAppWidget::NativeOnPreviewMouseButtonDown(const FGeometry& Geometry, const FPointerEvent& Event)
@@ -192,4 +204,17 @@ FReply UExplorerAppWidget::NativeOnKeyDown(const FGeometry& Geometry, const FKey
 {
     if ((Event.GetKey() == EKeys::Escape || Event.GetKey() == EKeys::P) && (Session()->Screen == EExplorerScreen::Paused || Session()->Screen == EExplorerScreen::Settings)) { Pause(); return FReply::Handled(); }
     return Super::NativeOnKeyDown(Geometry, Event);
+}
+
+UWidget* UExplorerAppWidget::GenerateResultWidget(FString Item)
+{
+    auto* Label = WidgetTree->ConstructWidget<UTextBlock>();
+    Label->SetText(FText::FromString(Item.IsEmpty() ? TEXT("Select a street or place...") : Item));
+    Label->SetColorAndOpacity(FSlateColor(FLinearColor::Black));
+    Label->SetVisibility(ESlateVisibility::HitTestInvisible);
+    auto Font = Label->GetFont(); Font.Size = 18; Label->SetFont(Font);
+    auto* Row = WidgetTree->ConstructWidget<UBorder>();
+    Row->SetBrushColor(FLinearColor(0.9f, 0.9f, 0.9f)); Row->SetPadding(FMargin(4));
+    Row->SetContent(Label); Row->SetVisibility(ESlateVisibility::HitTestInvisible);
+    return Row;
 }

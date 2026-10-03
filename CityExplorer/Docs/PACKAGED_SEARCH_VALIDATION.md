@@ -24,3 +24,8 @@ The search subsystem ensures city data is loaded, cancels stale requests on edit
 ## Acceptance still pending
 
 Physical mouse Explore → Barcelona → focus/type address → Search/Enter → open results → select result → Next → Start exploring; prove stored point and car/world spawn at that safe road. Also verify no-results feedback, edited-query invalidation, and pause/resume input. Do not mark the blocker resolved or restart visual work until these pass in the installed app.
+
+
+## October 3 follow-up
+
+Installed keyboard search → selection → Next → car/world startup now passes for Mallorca and Balmes. Pause, settings and navigation buttons also passed. See [the updated checklist](PLAYABILITY_CHECK_2026-10-03.md) for repairs, test boundaries and remaining physical mouse coverage. The historical October 1 pending results above are retained as the original record.
